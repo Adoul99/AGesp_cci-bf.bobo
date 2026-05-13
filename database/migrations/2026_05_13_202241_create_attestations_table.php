@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attestations', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->date('dateDelivrance');
+    $table->string('numeroAttestation')->unique();
+    $table->foreignId('candidat_id')->constrained('candidats')->onDelete('cascade');
+    $table->foreignId('examen_id')->nullable()->constrained('examens')->onDelete('set null');
+    $table->timestamps();
+});
     }
 
     /**

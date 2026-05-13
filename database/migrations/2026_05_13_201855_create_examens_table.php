@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('examens', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->string('libelle');
+    $table->date('dateDebut');
+    $table->date('dateFin');
+    $table->enum('statutExamen', ['en_attente', 'admis', 'ajourne', 'abandon'])->default('en_attente');
+    $table->unsignedBigInteger('moniteur_id')->nullable();
+    $table->timestamps();
+});
     }
 
     /**

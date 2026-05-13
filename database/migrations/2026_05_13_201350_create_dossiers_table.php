@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('dossiers', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->string('nomDossier');
+    $table->text('description')->nullable();
+    $table->date('dateDepot');
+    $table->enum('statutDossier', ['en_attente', 'valide', 'rejete'])->default('en_attente');
+    $table->foreignId('candidat_id')->constrained('candidats')->onDelete('cascade');
+    $table->timestamps();
+});
     }
 
     /**

@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('moniteurs', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->string('nom');
+    $table->string('prenom');
+    $table->string('telephone')->nullable();
+    $table->string('email')->nullable();
+    $table->string('specialite')->nullable();
+    $table->boolean('disponibilite')->default(true);
+    $table->timestamps();
+});
     }
 
     /**

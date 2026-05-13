@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inscriptions', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->date('dateInscription');
+    $table->enum('statutInscription', ['actif', 'abandon', 'ajourne'])->default('actif');
+    $table->date('dataDebut_formation')->nullable();
+    $table->foreignId('candidat_id')->constrained('candidats')->onDelete('cascade');
+    $table->unsignedBigInteger('paiement_id')->nullable();
+    $table->timestamps();
+});
     }
 
     /**

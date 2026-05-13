@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('formations', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->date('dateDebut');
+    $table->date('dateFin');
+    $table->enum('typeFormation', ['theorique', 'pratique', 'mixte']);
+    $table->string('lieu')->nullable();
+    $table->unsignedBigInteger('moniteur_id')->nullable();
+$table->unsignedBigInteger('vehicule_id')->nullable();
+    $table->timestamps();
+});
     }
 
     /**

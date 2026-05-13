@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('paiements', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->decimal('montant', 10, 2);
+    $table->date('datePaiement');
+    $table->enum('statut', ['paye', 'en_attente', 'annule'])->default('en_attente');
+    $table->foreignId('candidat_id')->constrained('candidats')->onDelete('cascade');
+    $table->timestamps();
+});
     }
 
     /**
