@@ -10,6 +10,11 @@ use App\Http\Controllers\InscriptionController;
  use App\Http\Controllers\MoniteurController;
  use App\Http\Controllers\VehiculeController;
  use App\Http\Controllers\AttestationController;
+ use App\Http\Controllers\CategoriePermisController;
+ use App\Http\Controllers\EvaluationController;
+    use App\Http\Controllers\GroupeController;
+    use App\Http\Controllers\LieuFormationController;
+
 
 Route::view('/', 'welcome')->name('home');
 
@@ -24,6 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('moniteurs', MoniteurController::class);
     Route::resource('vehicules', VehiculeController::class);
     Route::resource('attestations', AttestationController::class);
+    Route::resource('categorie_permis', CategoriePermisController::class);
+    Route::resource('evaluations', EvaluationController::class);
+    Route::resource('groupes', GroupeController::class);
+    Route::resource('lieu_formations', LieuFormationController::class);
 });
 
 require __DIR__.'/settings.php';
