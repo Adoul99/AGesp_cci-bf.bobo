@@ -14,6 +14,9 @@ use App\Http\Controllers\InscriptionController;
  use App\Http\Controllers\EvaluationController;
     use App\Http\Controllers\GroupeController;
     use App\Http\Controllers\LieuFormationController;
+    use App\Http\Controllers\ProgrammationController;
+    use App\Http\Controllers\RecusController;
+    use App\Http\Controllers\SessionFormationController;
 
 
 Route::view('/', 'welcome')->name('home');
@@ -33,6 +36,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('evaluations', EvaluationController::class);
     Route::resource('groupes', GroupeController::class);
     Route::resource('lieu_formations', LieuFormationController::class);
+    Route::resource('programmations', ProgrammationController::class);
+    Route::resource('recus', RecusController::class);
+    Route::resource('session_formations', SessionFormationController::class);
 });
 
 require __DIR__.'/settings.php';

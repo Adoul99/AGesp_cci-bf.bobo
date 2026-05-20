@@ -30,6 +30,14 @@ class Candidat extends Model
     }
 
     /**
+     * Un candidat peut avoir plusieurs programmations
+     */
+    public function programmations()
+    {
+        return $this->belongsToMany(Programmation::class, 'candidat_programmation');
+    }
+
+    /**
      * Un candidat peut avoir plusieurs dossiers
      */
     public function dossiers()

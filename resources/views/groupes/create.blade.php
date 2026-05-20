@@ -17,11 +17,21 @@
                     <label class="block font-medium mb-2">Candidats</label>
                     <div class="border rounded p-3 grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                         @foreach($candidats as $candidat)
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="candidat_ids[]" value="{{ $candidat->id }}"
-                                   class="w-4 h-4">
-                            {{ $candidat->nom }} {{ $candidat->prenom }}
-                        </label>
+                            @php
+                                $groupeExistant = $candidat->groupes->first();
+                            @endphp
+                            @if($groupeExistant)
+                                <label class="flex items-center gap-2 cursor-not-allowed opacity-50">
+                                    <input type="checkbox" disabled class="w-4 h-4">
+                                    {{ $candidat->nom }} {{ $candidat->prenom }}
+                                    <span class="text-red-500 text-xs">(Déjà dans {{ $groupeExistant->nomGroupe }})</span>
+                                </label>
+                            @else
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="candidat_ids[]" value="{{ $candidat->id }}" class="w-4 h-4">
+                                    {{ $candidat->nom }} {{ $candidat->prenom }}
+                                </label>
+                            @endif
                         @endforeach
                     </div>
                 </div>

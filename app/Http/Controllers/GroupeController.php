@@ -22,7 +22,8 @@ class GroupeController extends Controller
      */
     public function create()
     {
-        $candidats = Candidat::all();
+        // Charger les candidats avec leurs groupes
+        $candidats = Candidat::with('groupes')->get();
         return view('groupes.create', compact('candidats'));
     }
 
@@ -53,7 +54,8 @@ class GroupeController extends Controller
      */
     public function edit(Groupe $groupe)
     {
-        $candidats = Candidat::all();
+        // Charger les candidats avec leurs groupes
+        $candidats = Candidat::with('groupes')->get();
         $candidatsSelectionnes = $groupe->candidats->pluck('id')->toArray();
         return view('groupes.edit', compact('groupe', 'candidats', 'candidatsSelectionnes'));
     }
