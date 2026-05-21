@@ -76,13 +76,20 @@
             var(--v) 66%,var(--v) 100%);
     }
 
-    /* En-tête logo */
+    /* En-tête logo ajusté pour intégrer la déconnexion */
     .as-head {
         padding      : 10px;
         border-bottom: 1px solid rgba(255,255,255,0.06);
         display      : flex;
-        align-items  : center;
+        flex-direction: column;
         gap          : 8px;
+    }
+
+    .as-head-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
     }
 
     .as-logo {
@@ -174,7 +181,7 @@
 
     .as-lnk.active i { opacity:1; }
 
-    /* Pied sidebar */
+    /* Pied sidebar simplifié */
     .as-foot {
         margin-top : auto;
         padding    : 8px 10px;
@@ -209,8 +216,9 @@
         cursor        : pointer;
         display       : flex;
         align-items   : center;
+        justify-content: center;
         gap           : 5px;
-        margin-top    : 6px;
+        margin-top    : 2px;
         transition    : background 0.2s;
     }
 
@@ -366,19 +374,27 @@
     <div class="as-tri"></div>
 
     <div class="as-head">
-        <div class="as-logo">
-            @if(file_exists(public_path('images/logo.jpeg')) || file_exists(public_path('images/logo.jpg')) || file_exists(public_path('images/logo.jpeg')))
-                <img src="{{ asset('images/logo.jpeg') }}" alt="Logo" onerror="this.style.display='none';this.parentElement.innerText='AG'">
-            @else
-                AG
-            @endif
+        <div class="as-head-top">
+            <div class="as-logo">
+                @if(file_exists(public_path('images/logo.jpeg')) || file_exists(public_path('images/logo.jpg')) || file_exists(public_path('images/logo.png')))
+                    <img src="{{ asset('images/logo.jpeg') }}" alt="Logo" onerror="this.style.display='none';this.parentElement.innerText='AG'">
+                @else
+                    AG
+                @endif
+            </div>
+            <div style="min-width:0; flex: 1;">
+                <div class="as-name">AGesp</div>
+                <div class="as-sub">Gestion Auto-École</div>
+            </div>
         </div>
-        <div style="min-width:0;">
-            <div class="as-name">AGesp</div>
-            <div class="as-sub">Gestion Auto-École</div>
-
-            
-        </div>
+        
+        {{-- Bouton Déconnexion placé ici en haut à gauche --}}
+        <form method="POST" action="{{ route('logout') }}" class="w-100">
+            @csrf
+            <button type="submit" class="as-logout">
+                <i class="bi bi-box-arrow-right"></i> Déconnexion
+            </button>
+        </form>
     </div>
 
     <nav style="flex:1;padding:3px 0;overflow-y:auto;">
@@ -464,7 +480,7 @@
     </nav>
 
     <div class="as-foot">
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:7px;">
             <div class="as-avatar">
                 {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
             </div>
@@ -473,12 +489,6 @@
                 <div class="as-uemail">{{ auth()->user()->email ?? '' }}</div>
             </div>
         </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="as-logout">
-                <i class="bi bi-box-arrow-right"></i> Déconnexion
-            </button>
-        </form>
     </div>
 </aside>
 
