@@ -16,16 +16,82 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Gestion Candidats')" class="grid">
+                    <flux:sidebar.item icon="users" :href="route('candidats.index')" :current="request()->routeIs('candidats.*')" wire:navigate>
+                        Candidats
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="folder" :href="route('dossiers.index')" :current="request()->routeIs('dossiers.*')" wire:navigate>
+                        Dossiers
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="check-circle" :href="route('inscriptions.index')" :current="request()->routeIs('inscriptions.*')" wire:navigate>
+                        Inscriptions
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Gestion Formation')" class="grid">
+                    <flux:sidebar.item icon="document" :href="route('formations.index')" :current="request()->routeIs('formations.*')" wire:navigate>
+                        Formations
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="map-pin" :href="route('lieu_formations.index')" :current="request()->routeIs('lieu_formations.*')" wire:navigate>
+                        Lieux Formation
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="user-group" :href="route('groupes.index')" :current="request()->routeIs('groupes.*')" wire:navigate>
+                        Groupes
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar" :href="route('session_formations.index')" :current="request()->routeIs('session_formations.*')" wire:navigate>
+                        Sessions Formation
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="rectangle-stack" :href="route('type_sessions.index')" :current="request()->routeIs('type_sessions.*')" wire:navigate>
+                        Types Session
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Gestion Examens')" class="grid">
+                    <flux:sidebar.item icon="pencil" :href="route('examens.index')" :current="request()->routeIs('examens.*')" wire:navigate>
+                        Examens
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="star" :href="route('evaluations.index')" :current="request()->routeIs('evaluations.*')" wire:navigate>
+                        Évaluations
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar" :href="route('programmations.index')" :current="request()->routeIs('programmations.*')" wire:navigate>
+                        Programmations
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Gestion Administrative')" class="grid">
+                    <flux:sidebar.item icon="credit-card" :href="route('paiements.index')" :current="request()->routeIs('paiements.*')" wire:navigate>
+                        Paiements
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-list" :href="route('recus.index')" :current="request()->routeIs('recus.*')" wire:navigate>
+                        Reçus
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="academic-cap" :href="route('attestations.index')" :current="request()->routeIs('attestations.*')" wire:navigate>
+                        Attestations
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="tag" :href="route('categorie_permis.index')" :current="request()->routeIs('categorie_permis.*')" wire:navigate>
+                        Catégories Permis
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Gestion Ressources')" class="grid">
+                    <flux:sidebar.item icon="user" :href="route('moniteurs.index')" :current="request()->routeIs('moniteurs.*')" wire:navigate>
+                        Moniteurs
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="cube" :href="route('vehicules.index')" :current="request()->routeIs('vehicules.*')" wire:navigate>
+                        Véhicules
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
             <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+                <flux:sidebar.item icon="code-bracket" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
                     {{ __('Repository') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
+                <flux:sidebar.item icon="document-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
                     {{ __('Documentation') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
@@ -43,7 +109,7 @@
                 <flux:profile
                     :initials="auth()->user()->initials()"
                     icon-trailing="chevron-down"
-                />
+/>
 
                 <flux:menu>
                     <flux:menu.radio.group>

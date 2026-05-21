@@ -17,6 +17,7 @@ use App\Http\Controllers\InscriptionController;
     use App\Http\Controllers\ProgrammationController;
     use App\Http\Controllers\RecusController;
     use App\Http\Controllers\SessionFormationController;
+    use App\Http\Controllers\TypeSessionController;
 
 
 Route::view('/', 'welcome')->name('home');
@@ -39,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('programmations', ProgrammationController::class);
     Route::resource('recus', RecusController::class);
     Route::resource('session_formations', SessionFormationController::class);
+    Route::resource('type_sessions', TypeSessionController::class);
 });
 
 require __DIR__.'/settings.php';
