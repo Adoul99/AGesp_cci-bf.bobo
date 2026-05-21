@@ -23,7 +23,7 @@ use App\Http\Controllers\InscriptionController;
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('candidats', CandidatController::class);
     Route::resource('dossiers', DossierController::class);
     Route::resource('inscriptions', InscriptionController::class);
