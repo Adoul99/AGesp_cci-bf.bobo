@@ -1,167 +1,535 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
-    <head>
-        @include('partials.head')
-    </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
-            </flux:sidebar.header>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $title ?? config('app.name', 'AGesp') }}</title>
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 
-                <flux:sidebar.group :heading="__('Gestion Candidats')" class="grid">
-                    <flux:sidebar.item icon="users" :href="route('candidats.index')" :current="request()->routeIs('candidats.*')" wire:navigate>
-                        Candidats
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="folder" :href="route('dossiers.index')" :current="request()->routeIs('dossiers.*')" wire:navigate>
-                        Dossiers
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="check-circle" :href="route('inscriptions.index')" :current="request()->routeIs('inscriptions.*')" wire:navigate>
-                        Inscriptions
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    @livewireStyles
 
-                <flux:sidebar.group :heading="__('Gestion Formation')" class="grid">
-                    <flux:sidebar.item icon="document" :href="route('formations.index')" :current="request()->routeIs('formations.*')" wire:navigate>
-                        Formations
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="map-pin" :href="route('lieu_formations.index')" :current="request()->routeIs('lieu_formations.*')" wire:navigate>
-                        Lieux Formation
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="user-group" :href="route('groupes.index')" :current="request()->routeIs('groupes.*')" wire:navigate>
-                        Groupes
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="calendar" :href="route('session_formations.index')" :current="request()->routeIs('session_formations.*')" wire:navigate>
-                        Sessions Formation
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="rectangle-stack" :href="route('type_sessions.index')" :current="request()->routeIs('type_sessions.*')" wire:navigate>
-                        Types Session
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    <style>
+    :root {
+        --v  : #1a6b3a;
+        --vc : #22883f;
+        --vp : #e8f2ec;
+        --r  : #c0281e;
+        --rp : #fbeaea;
+        --o  : #d4a017;
+        --op : #fdf8e1;
+        --sb : #0f2e1c;
+        --sh : #183d26;
+        --st : #90b8a0;
+        --dk : #1a2520;
+        --bg : #f3f6f4;
+        --sw : 210px;   /* largeur sidebar */
+    }
 
-                <flux:sidebar.group :heading="__('Gestion Examens')" class="grid">
-                    <flux:sidebar.item icon="pencil" :href="route('examens.index')" :current="request()->routeIs('examens.*')" wire:navigate>
-                        Examens
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="star" :href="route('evaluations.index')" :current="request()->routeIs('evaluations.*')" wire:navigate>
-                        Évaluations
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="calendar" :href="route('programmations.index')" :current="request()->routeIs('programmations.*')" wire:navigate>
-                        Programmations
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    *, *::before, *::after { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
 
-                <flux:sidebar.group :heading="__('Gestion Administrative')" class="grid">
-                    <flux:sidebar.item icon="credit-card" :href="route('paiements.index')" :current="request()->routeIs('paiements.*')" wire:navigate>
-                        Paiements
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="clipboard-document-list" :href="route('recus.index')" :current="request()->routeIs('recus.*')" wire:navigate>
-                        Reçus
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="academic-cap" :href="route('attestations.index')" :current="request()->routeIs('attestations.*')" wire:navigate>
-                        Attestations
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="tag" :href="route('categorie_permis.index')" :current="request()->routeIs('categorie_permis.*')" wire:navigate>
-                        Catégories Permis
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    body {
+        font-family     : 'Source Sans 3', sans-serif;
+        background-color: var(--bg);
+        color           : #3a4a40;
+        margin          : 0;
+        min-height      : 100vh;
+        font-size       : 13px;
+    }
 
-                <flux:sidebar.group :heading="__('Gestion Ressources')" class="grid">
-                    <flux:sidebar.item icon="user" :href="route('moniteurs.index')" :current="request()->routeIs('moniteurs.*')" wire:navigate>
-                        Moniteurs
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="cube" :href="route('vehicules.index')" :current="request()->routeIs('vehicules.*')" wire:navigate>
-                        Véhicules
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-            </flux:sidebar.nav>
+    h1,h2,h3,h4,h5,h6 {
+        font-family: 'Nunito', sans-serif;
+        font-weight: 700;
+        color      : var(--dk);
+    }
 
-            <flux:spacer />
+    .aw { display:flex; min-height:100vh; }
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="code-bracket" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
+    /* ══ SIDEBAR ══ */
+    .as {
+        width         : var(--sw);
+        min-height    : 100vh;
+        background    : var(--sb);
+        display       : flex;
+        flex-direction: column;
+        position      : fixed;
+        top:0; left:0;
+        z-index       : 1000;
+        box-shadow    : 3px 0 20px rgba(0,0,0,0.28);
+        overflow-y    : auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--sh) transparent;
+        transition    : transform 0.3s ease;
+    }
 
-                <flux:sidebar.item icon="document-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
+    /* Barre tricolore haut */
+    .as-tri {
+        height    : 3px;
+        flex-shrink: 0;
+        background: linear-gradient(90deg,
+            var(--r) 0%,var(--r) 33%,
+            var(--o) 33%,var(--o) 66%,
+            var(--v) 66%,var(--v) 100%);
+    }
 
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
-        </flux:sidebar>
+    /* En-tête logo */
+    .as-head {
+        padding      : 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display      : flex;
+        align-items  : center;
+        gap          : 8px;
+    }
 
-        <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+    .as-logo {
+        width          : 36px;
+        height         : 36px;
+        border-radius  : 8px;
+        display        : flex;
+        align-items    : center;
+        justify-content: center;
+        font-family    : 'Nunito',sans-serif;
+        font-weight    : 900;
+        font-size      : 0.75rem;
+        color          : var(--sb);
+        flex-shrink    : 0;
+        overflow       : hidden;
+        background     : var(--o);
+    }
 
-            <flux:spacer />
+    .as-logo img {
+        width     : 100%;
+        height    : 100%;
+        object-fit: cover;
+        border-radius: 8px;
+    }
 
-            <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-/>
+    .as-name {
+        font-family: 'Nunito',sans-serif;
+        font-weight: 800;
+        font-size  : 0.9rem;
+        color      : #fff;
+        line-height: 1.2;
+    }
 
-                <flux:menu>
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar
-                                    :name="auth()->user()->name"
-                                    :initials="auth()->user()->initials()"
-                                />
+    .as-sub { font-size:0.6rem; color:var(--st); }
 
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
-                                    <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
-                                </div>
-                            </div>
-                        </div>
-                    </flux:menu.radio.group>
+    /* Navigation groupes */
+    .as-grp { padding:6px 0 2px; }
 
-                    <flux:menu.separator />
+    .as-lbl {
+        font-size     : 0.55rem;
+        font-weight   : 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color         : rgba(144,184,160,0.4);
+        padding       : 0 10px 2px;
+        display       : block;
+        font-family   : 'Nunito',sans-serif;
+    }
 
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
+    .as-lnk {
+        display      : flex;
+        align-items  : center;
+        gap          : 7px;
+        padding      : 5px 10px;
+        color        : var(--st);
+        font-size    : 0.8rem;
+        font-weight  : 500;
+        text-decoration: none;
+        border-left  : 3px solid transparent;
+        transition   : all 0.15s;
+        white-space  : nowrap;
+        overflow     : hidden;
+        text-overflow: ellipsis;
+    }
 
-                    <flux:menu.separator />
+    .as-lnk i {
+        font-size : 0.85rem;
+        width     : 15px;
+        text-align: center;
+        opacity   : 0.6;
+        flex-shrink: 0;
+    }
 
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
-                        <flux:menu.item
-                            as="button"
-                            type="submit"
-                            icon="arrow-right-start-on-rectangle"
-                            class="w-full cursor-pointer"
-                            data-test="logout-button"
-                        >
-                            {{ __('Log out') }}
-                        </flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
-        </flux:header>
+    .as-lnk:hover {
+        background       : var(--sh);
+        color            : #fff;
+        padding-left     : 13px;
+        border-left-color: var(--o);
+    }
+
+    .as-lnk:hover i { opacity:1; }
+
+    .as-lnk.active {
+        background       : rgba(26,107,58,0.85);
+        color            : #fff;
+        font-weight      : 700;
+        border-left-color: var(--o);
+    }
+
+    .as-lnk.active i { opacity:1; }
+
+    /* Pied sidebar */
+    .as-foot {
+        margin-top : auto;
+        padding    : 8px 10px;
+        border-top : 1px solid rgba(255,255,255,0.06);
+    }
+
+    .as-avatar {
+        width          : 28px; height:28px;
+        border-radius  : 50%;
+        background     : var(--o);
+        display        : flex;
+        align-items    : center;
+        justify-content: center;
+        font-family    : 'Nunito',sans-serif;
+        font-weight    : 900;
+        font-size      : 0.65rem;
+        color          : var(--sb);
+        flex-shrink    : 0;
+    }
+
+    .as-uname  { font-size:0.72rem; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .as-uemail { font-size:0.58rem; color:var(--st); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .as-logout {
+        width         : 100%;
+        background    : rgba(255,255,255,0.06);
+        border        : 1px solid rgba(255,255,255,0.08);
+        color         : var(--st);
+        border-radius : 5px;
+        padding       : 4px 8px;
+        font-size     : 0.72rem;
+        cursor        : pointer;
+        display       : flex;
+        align-items   : center;
+        gap           : 5px;
+        margin-top    : 6px;
+        transition    : background 0.2s;
+    }
+
+    .as-logout:hover { background:rgba(192,40,30,0.3); color:#fff; }
+
+    /* ══ MAIN ══ */
+    .am {
+        margin-left   : var(--sw);
+        flex          : 1;
+        display       : flex;
+        flex-direction: column;
+        min-height    : 100vh;
+    }
+
+    /* ══ TOPBAR ══ */
+    .at {
+        background    : #fff;
+        border-bottom : 1px solid rgba(26,107,58,0.1);
+        padding       : 8px 20px;
+        display       : flex;
+        align-items   : center;
+        justify-content: space-between;
+        position      : sticky;
+        top:0; z-index:500;
+        box-shadow    : 0 2px 8px rgba(26,107,58,0.07);
+    }
+
+    .at-title {
+        font-family: 'Nunito',sans-serif;
+        font-weight: 800;
+        font-size  : 1.05rem;
+        color      : var(--dk);
+        display    : flex;
+        align-items: center;
+        gap        : 7px;
+        margin     : 0;
+    }
+
+    .at-bar {
+        width:4px; height:18px;
+        border-radius: 3px;
+        background: linear-gradient(180deg, var(--r), var(--o) 50%, var(--v));
+        flex-shrink: 0;
+    }
+
+    .at-date {
+        font-size  : 0.68rem;
+        color      : #6b7a70;
+        background : var(--bg);
+        padding    : 3px 10px;
+        border-radius: 20px;
+        border     : 1px solid rgba(26,107,58,0.12);
+    }
+
+    /* ══ CONTENT ══ */
+    .ac { padding:1.25rem; flex:1; }
+
+    /* ══ CARDS ══ */
+    .card { border:none !important; border-radius:10px !important; box-shadow:0 2px 8px rgba(26,107,58,0.08) !important; background:#fff !important; transition:box-shadow 0.2s,transform 0.2s; }
+    .card:hover { box-shadow:0 4px 16px rgba(26,107,58,0.14) !important; transform:translateY(-1px); }
+    .card-header { background:transparent !important; border-bottom:1px solid rgba(26,107,58,0.08) !important; padding:0.75rem 1rem !important; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.9rem; color:var(--dk); border-radius:10px 10px 0 0 !important; }
+    .card-body { padding:1rem !important; }
+
+    /* Stat cards */
+    .sc { border-radius:10px !important; padding:1rem !important; color:#fff; position:relative; overflow:hidden; box-shadow:0 3px 12px rgba(0,0,0,0.12) !important; }
+    .sc::after { content:''; position:absolute; bottom:-14px; right:-14px; width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.1); }
+    .sc-ico { width:38px; height:38px; background:rgba(255,255,255,0.18); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; margin-bottom:8px; }
+    .sc-val { font-family:'Nunito',sans-serif; font-size:1.6rem; font-weight:900; line-height:1; }
+    .sc-lbl { font-size:0.7rem; opacity:0.85; font-weight:600; margin-top:3px; }
+    .sc-v { background:linear-gradient(135deg,#1a6b3a,#22883f) !important; }
+    .sc-r { background:linear-gradient(135deg,#c0281e,#e03328) !important; }
+    .sc-o { background:linear-gradient(135deg,#a07810,#d4a017) !important; }
+    .sc-d { background:linear-gradient(135deg,#1a2520,#3a4a40) !important; }
+
+    /* ══ TABLES ══ */
+    .table { font-size:0.82rem; }
+    .table thead th { background:var(--vp) !important; color:var(--v) !important; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.68rem; letter-spacing:0.05em; text-transform:uppercase; border-bottom:2px solid rgba(26,107,58,0.15) !important; padding:0.65rem 0.85rem !important; }
+    .table tbody tr { border-bottom:1px solid rgba(26,107,58,0.05) !important; transition:background 0.15s; }
+    .table tbody tr:hover { background:var(--vp) !important; }
+    .table tbody td { padding:0.55rem 0.85rem !important; vertical-align:middle !important; border:none !important; }
+
+    /* ══ BUTTONS ══ */
+    .btn { font-family:'Nunito',sans-serif !important; font-weight:600 !important; border-radius:6px !important; font-size:0.82rem !important; transition:all 0.2s !important; }
+    .btn:hover { transform:translateY(-1px); }
+    .btn-success,.btn-primary { background:var(--v) !important; border-color:var(--v) !important; color:#fff !important; }
+    .btn-success:hover,.btn-primary:hover { background:var(--vc) !important; border-color:var(--vc) !important; }
+    .btn-danger { background:var(--r) !important; border-color:var(--r) !important; color:#fff !important; }
+    .btn-outline-success { color:var(--v) !important; border-color:var(--v) !important; }
+    .btn-outline-success:hover { background:var(--v) !important; color:#fff !important; }
+    .btn-outline-danger { color:var(--r) !important; border-color:var(--r) !important; }
+    .btn-outline-danger:hover { background:var(--r) !important; color:#fff !important; }
+    .btn-warning { background:var(--o) !important; border-color:var(--o) !important; color:var(--dk) !important; }
+
+    /* ══ FORMS ══ */
+    .form-control,.form-select { border-radius:6px !important; border:1.5px solid #cdd8d0 !important; font-size:0.85rem !important; background:#f9fbfa !important; }
+    .form-control:focus,.form-select:focus { border-color:var(--v) !important; box-shadow:0 0 0 3px rgba(26,107,58,0.12) !important; background:#fff !important; outline:none !important; }
+    .form-label { font-family:'Nunito',sans-serif; font-weight:600; font-size:0.78rem; }
+    .input-group-text { background:var(--vp) !important; border-color:#cdd8d0 !important; color:var(--v) !important; font-size:0.85rem !important; }
+
+    /* ══ BADGES ══ */
+    .badge { font-family:'Nunito',sans-serif; font-weight:600; border-radius:20px !important; padding:0.25em 0.65em !important; font-size:0.68rem !important; }
+    .badge.bg-success { background:var(--v) !important; }
+    .badge.bg-danger  { background:var(--r) !important; }
+    .badge.bg-warning { background:var(--o) !important; color:var(--dk) !important; }
+    .badge.bg-success-subtle { background:var(--vp) !important; color:var(--v) !important; }
+    .badge.bg-danger-subtle  { background:var(--rp) !important; color:var(--r) !important; }
+    .badge.bg-warning-subtle { background:var(--op) !important; color:#7a5800 !important; }
+
+    /* ══ ALERTS ══ */
+    .alert { border-radius:8px !important; border:none !important; font-size:0.85rem; }
+    .alert-success { background:var(--vp) !important; color:var(--v) !important; border-left:4px solid var(--v) !important; }
+    .alert-danger  { background:var(--rp) !important; color:var(--r) !important; border-left:4px solid var(--r) !important; }
+
+    /* ══ PAGINATION ══ */
+    .pagination .page-link { color:var(--v) !important; border-color:rgba(26,107,58,0.2) !important; border-radius:5px !important; margin:0 2px; font-family:'Nunito',sans-serif; font-weight:600; font-size:0.82rem; }
+    .pagination .page-link:hover { background:var(--vp) !important; }
+    .pagination .page-item.active .page-link { background:var(--v) !important; border-color:var(--v) !important; color:#fff !important; }
+
+    /* ══ MODALS ══ */
+    .modal-content { border-radius:12px !important; border:none !important; box-shadow:0 8px 40px rgba(0,0,0,0.15) !important; }
+    .modal-header { border-radius:12px 12px 0 0 !important; padding:0.85rem 1.2rem !important; }
+    .modal-header.bg-success { background:var(--v) !important; }
+    .modal-header.bg-danger  { background:var(--r) !important; }
+    .modal-footer { border-top:1px solid rgba(26,107,58,0.08) !important; }
+
+    /* ══ SCROLLBAR ══ */
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-thumb { background:rgba(26,107,58,0.2); border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:var(--v); }
+
+    /* ══ ANIMATIONS ══ */
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .ac > * { animation:fadeInUp 0.28s ease both; }
+    .ac > *:nth-child(1){animation-delay:0.04s}
+    .ac > *:nth-child(2){animation-delay:0.08s}
+    .ac > *:nth-child(3){animation-delay:0.12s}
+
+    /* ══ RESPONSIVE ══ */
+    @media (max-width:991.98px) {
+        .as { transform:translateX(-100%); }
+        .as.show { transform:translateX(0); }
+        .am { margin-left:0; }
+        .ac { padding:0.85rem; }
+    }
+    </style>
+</head>
+<body>
+
+<div class="aw">
+
+{{-- ══ SIDEBAR ══ --}}
+<aside class="as" id="agespSidebar">
+    <div class="as-tri"></div>
+
+    <div class="as-head">
+        <div class="as-logo">
+            @if(file_exists(public_path('images/logo.jpeg')) || file_exists(public_path('images/logo.jpg')) || file_exists(public_path('images/logo.jpeg')))
+                <img src="{{ asset('images/logo.jpeg') }}" alt="Logo" onerror="this.style.display='none';this.parentElement.innerText='AG'">
+            @else
+                AG
+            @endif
+        </div>
+        <div style="min-width:0;">
+            <div class="as-name">AGesp</div>
+            <div class="as-sub">Gestion Auto-École</div>
+
+            
+        </div>
+    </div>
+
+    <nav style="flex:1;padding:3px 0;overflow-y:auto;">
+
+        <div class="as-grp">
+            <span class="as-lbl">Tableau de bord</span>
+            <a href="{{ route('dashboard') }}" class="as-lnk {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2"></i> Tableau de bord
+            </a>
+        </div>
+
+        <div class="as-grp">
+            <span class="as-lbl">Candidats</span>
+            <a href="{{ route('candidats.index') }}" class="as-lnk {{ request()->routeIs('candidats.*') ? 'active' : '' }}">
+                <i class="bi bi-people"></i> Candidats
+            </a>
+            <a href="{{ route('dossiers.index') }}" class="as-lnk {{ request()->routeIs('dossiers.*') ? 'active' : '' }}">
+                <i class="bi bi-folder2-open"></i> Dossiers
+            </a>
+            <a href="{{ route('inscriptions.index') }}" class="as-lnk {{ request()->routeIs('inscriptions.*') ? 'active' : '' }}">
+                <i class="bi bi-check2-circle"></i> Inscriptions
+            </a>
+            <a href="{{ route('categorie_permis.index') }}" class="as-lnk {{ request()->routeIs('categorie_permis.*') ? 'active' : '' }}">
+                <i class="bi bi-card-list"></i> Catégories Permis
+            </a>
+        </div>
+
+        <div class="as-grp">
+            <span class="as-lbl">Formation</span>
+            <a href="{{ route('formations.index') }}" class="as-lnk {{ request()->routeIs('formations.*') ? 'active' : '' }}">
+                <i class="bi bi-journal-bookmark"></i> Formations
+            </a>
+            <a href="{{ route('lieu_formations.index') }}" class="as-lnk {{ request()->routeIs('lieu_formations.*') ? 'active' : '' }}">
+                <i class="bi bi-geo-alt"></i> Lieux Formation
+            </a>
+            <a href="{{ route('groupes.index') }}" class="as-lnk {{ request()->routeIs('groupes.*') ? 'active' : '' }}">
+                <i class="bi bi-diagram-3"></i> Groupes
+            </a>
+            <a href="{{ route('session_formations.index') }}" class="as-lnk {{ request()->routeIs('session_formations.*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-week"></i> Sessions Formation
+            </a>
+            <a href="{{ route('type_sessions.index') }}" class="as-lnk {{ request()->routeIs('type_sessions.*') ? 'active' : '' }}">
+                <i class="bi bi-stack"></i> Types Session
+            </a>
+        </div>
+
+        <div class="as-grp">
+            <span class="as-lbl">Examens</span>
+            <a href="{{ route('examens.index') }}" class="as-lnk {{ request()->routeIs('examens.*') ? 'active' : '' }}">
+                <i class="bi bi-pencil-square"></i> Examens
+            </a>
+            <a href="{{ route('evaluations.index') }}" class="as-lnk {{ request()->routeIs('evaluations.*') ? 'active' : '' }}">
+                <i class="bi bi-star-half"></i> Évaluations
+            </a>
+            <a href="{{ route('programmations.index') }}" class="as-lnk {{ request()->routeIs('programmations.*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-check"></i> Programmations
+            </a>
+        </div>
+
+        <div class="as-grp">
+            <span class="as-lbl">Administration</span>
+            <a href="{{ route('paiements.index') }}" class="as-lnk {{ request()->routeIs('paiements.*') ? 'active' : '' }}">
+                <i class="bi bi-credit-card"></i> Paiements
+            </a>
+            <a href="{{ route('recus.index') }}" class="as-lnk {{ request()->routeIs('recus.*') ? 'active' : '' }}">
+                <i class="bi bi-receipt"></i> Reçus
+            </a>
+            <a href="{{ route('attestations.index') }}" class="as-lnk {{ request()->routeIs('attestations.*') ? 'active' : '' }}">
+                <i class="bi bi-award"></i> Attestations
+            </a>
+        </div>
+
+        <div class="as-grp">
+            <span class="as-lbl">Ressources</span>
+            <a href="{{ route('moniteurs.index') }}" class="as-lnk {{ request()->routeIs('moniteurs.*') ? 'active' : '' }}">
+                <i class="bi bi-person-badge"></i> Moniteurs
+            </a>
+            <a href="{{ route('vehicules.index') }}" class="as-lnk {{ request()->routeIs('vehicules.*') ? 'active' : '' }}">
+                <i class="bi bi-truck-front"></i> Véhicules
+            </a>
+        </div>
+
+    </nav>
+
+    <div class="as-foot">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+            <div class="as-avatar">
+                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
+            </div>
+            <div style="min-width:0;">
+                <div class="as-uname">{{ auth()->user()->name ?? 'Utilisateur' }}</div>
+                <div class="as-uemail">{{ auth()->user()->email ?? '' }}</div>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="as-logout">
+                <i class="bi bi-box-arrow-right"></i> Déconnexion
+            </button>
+        </form>
+    </div>
+</aside>
+
+{{-- ══ MAIN ══ --}}
+<div class="am">
+
+    <div class="at">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm d-lg-none" id="sidebarToggle"
+                    style="background:var(--vp);color:var(--v);border:none;border-radius:6px;padding:4px 8px;">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+            <h1 class="at-title">
+                <span class="at-bar"></span>
+                {{ $title ?? 'Tableau de bord' }}
+            </h1>
+        </div>
+        <span class="at-date">
+            <i class="bi bi-calendar3 me-1"></i>
+            {{ now()->locale('fr')->isoFormat('ddd D MMM YYYY') }}
+        </span>
+    </div>
+
+    <div class="ac">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-3">
+                <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
 
         {{ $slot }}
+    </div>
 
-        @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
-        @endpersist
+</div>
+</div>
 
-        @fluxScripts
-    </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('agespSidebar').classList.toggle('show');
+    });
+</script>
+
+@livewireScripts
+@stack('scripts')
+</body>
 </html>
