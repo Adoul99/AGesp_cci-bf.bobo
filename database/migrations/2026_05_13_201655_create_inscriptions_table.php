@@ -12,14 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inscriptions', function (Blueprint $table) {
-    $table->id();
-    $table->date('dateInscription');
-    $table->enum('statutInscription', ['actif', 'abandon', 'ajourne'])->default('actif');
-    $table->date('dataDebut_formation')->nullable();
-    $table->foreignId('candidat_id')->constrained('candidats')->onDelete('cascade');
-    $table->unsignedBigInteger('paiement_id')->nullable();
-    $table->timestamps();
-});
+            $table->id();
+            
+            // Ajout du champ référence (Unique et indexé pour des recherches ultra-rapides)
+            $table->string('reference', 20)->unique()->nullable(); 
+            
+            $table->date('dateInscription');
+            
+            // Harmonisation de l'ENUM avec l'ajout de 'en attente' pour les inscriptions publiques
+            $table->enum('statutInscription', ['en attente', 'actif', 'abandon', 'ajourne'])->default('en attente');
+            
+            $table->date('dataDebut_formation')->nullable();
+            $table->foreignId('candidat_id')->constrained('candidats')->onDelete('cascade');
+            $table->unsignedBigInteger('paiement_id')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**

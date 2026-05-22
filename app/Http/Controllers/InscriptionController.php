@@ -6,6 +6,7 @@ use App\Models\Inscription;
 use App\Models\Candidat;
 use App\Models\CategoriePermis;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // Important pour les transactions
 
 class InscriptionController extends Controller
 {
@@ -93,41 +94,62 @@ class InscriptionController extends Controller
             'dataDebut_formation.required' => 'La date de début de formation est obligatoire.',
         ]);
 
-        // ── Créer le candidat ─────────────────────────────────
-        $candidat = Candidat::create([
-            'nom'                   => strtoupper(trim($request->nom)),
-            'prenom'                => ucwords(strtolower(trim($request->prenom))),
-            'telephone'             => $request->telephone,
-            'email'                 => $request->email,
-            'dateNaissance'         => $request->dateNaissance,
-            'lieuNaissance'         => $request->lieuNaissance,
-            'numeroPermisC'         => $request->numeroPermisC,
-            'dateDelivrancePermisC' => $request->dateDelivrancePermisC,
-            'lieuDelivrancePermisC' => $request->lieuDelivrancePermisC,
-        ]);
+        // Utilisation d'une transaction pour sécuriser la double écriture
+        $data = DB::transaction(function () use ($request) {
+            
+            // 1. Créer le candidat
+            $candidat = Candidat::create([
+                'nom'                   => strtoupper(trim($request->nom)),
+                'prenom'                => ucwords(strtolower(trim($request->prenom))),
+                'telephone'             => $request->telephone,
+                'email'                 => $request->email,
+                'dateNaissance'         => $request->dateNaissance,
+                'lieuNaissance'         => $request->lieuNaissance,
+                'numeroPermisC'         => $request->numeroPermisC,
+                'dateDelivrancePermisC' => $request->dateDelivrancePermisC,
+                'lieuDelivrancePermisC' => $request->lieuDelivrancePermisC,
+            ]);
 
-        // ── Créer l'inscription ───────────────────────────────
-        Inscription::create([
-            'candidat_id'         => $candidat->id,
-            'dateInscription'     => $request->dateInscription ?? now()->toDateString(),
-            'statutInscription'   => 'en_attente',
-            'dataDebut_formation' => $request->dataDebut_formation,
-        ]);
+            // Formater le statut d'inscription en minuscules (pour correspondre à l'enum MySQL)
+            $statutFormate = 'en attente';
+            if ($request->statutInscription && strtolower($request->statutInscription) === 'actif') {
+                $statutFormate = 'actif';
+            }
 
-        // ── Numéro de référence ───────────────────────────────
-        $reference = 'GESP-' . date('Y') . '-' . str_pad($candidat->id, 5, '0', STR_PAD_LEFT);
+            // 2. Générer la référence unique basée sur l'ID fraîchement généré
+            $reference = 'GESP-' . date('Y') . '-' . str_pad($candidat->id, 5, '0', STR_PAD_LEFT);
 
+            // 3. Créer l'inscription avec sa référence intégrée
+            Inscription::create([
+                'candidat_id'         => $candidat->id,
+                'reference'           => $reference, 
+                'dateInscription'     => $request->dateInscription ?? now()->toDateString(),
+                'statutInscription'   => $statutFormate,
+                'dataDebut_formation' => $request->dataDebut_formation,
+            ]);
+
+            return [
+                'reference'    => $reference,
+                'candidat_nom' => $candidat->nom . ' ' . $candidat->prenom
+            ];
+        });
+
+        // Redirection vers la vue succès avec les données flashées
         return redirect()
             ->route('inscription.succes')
-            ->with('reference', $reference)
-            ->with('candidat_nom', $candidat->nom . ' ' . $candidat->prenom);
+            ->with('reference', $data['reference'])
+            ->with('candidat_nom', $data['candidat_nom']);
     }
 
     public function succes()
-    {
-        if (!session('reference')) {
-            return redirect()->route('inscription.public');
-        }
-        return view('inscription-success');
+{
+    // Si la session n'a pas de référence (accès direct à l'URL sans s'inscrire)
+    if (!session('reference')) {
+        // Redirige vers la route nommée 'inscription.public' définie dans votre web.php
+        return redirect()->route('inscription.public'); 
     }
+    
+    // Affiche votre vue 'inscription-success.blade.php'
+    return view('inscription-success'); 
+}
 }
