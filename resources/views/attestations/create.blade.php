@@ -1,46 +1,174 @@
 <x-layouts::app.sidebar title="Nouvelle Attestation">
-    <div class="p-6">
-        <h1 class="text-2xl font-bold mb-6">Nouvelle Attestation</h1>
+    <style>
+        :root {
+            /* Couleurs principales */
+            --color-red: #CE1126;
+            --color-green: #007A5E;
+            --color-gold: #FCD116;
+            
+            /* Nuances */
+            --color-red-light: #E85040;
+            --color-red-dark: #A00D20;
+            --color-green-light: #00A572;
+            --color-green-dark: #004D3A;
+            --color-gold-light: #FFE657;
+            --color-gold-dark: #E5B800;
+            
+            /* Neutres */
+            --color-dark: #1A1A1A;
+            --color-light: #F8F8F8;
+            --color-gray-100: #E8E8E8;
+            --color-gray-200: #D1D1D1;
+            --color-gray-500: #666666;
+            
+            /* Ombres */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+            
+            /* Transitions */
+            --transition-normal: 300ms ease-in-out;
+            
+            /* Bordures */
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+    </style>
 
-        <form method="POST" action="{{ route('attestations.store') }}">
+    <div class="content-wrapper" style="padding: 2rem;">
+        <!-- En-tête avec titre -->
+        <div class="header-section" style="margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
+            <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-dark); margin: 0; display: flex; align-items: center;">
+                <span style="width: 5px; height: 35px; background: linear-gradient(180deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%); margin-right: 1rem; border-radius: 2px;"></span>
+                Nouvelle Attestation
+            </h1>
+        </div>
+
+        <!-- Formulaire -->
+        <form method="POST" action="{{ route('attestations.store') }}" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
             @csrf
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block font-medium">Numéro Attestation</label>
-                    <input type="text" name="numeroAttestation" class="w-full border rounded p-2" required>
+            
+            <!-- Grille de formulaire -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                
+                <!-- Numéro Attestation -->
+                <div class="form-group">
+                    <label for="numeroAttestation" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Numéro Attestation <span style="color: var(--color-red);">*</span>
+                    </label>
+                    <input type="text" 
+                           id="numeroAttestation"
+                           name="numeroAttestation" 
+                           value="{{ old('numeroAttestation') }}"
+                           style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
+                           onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
+                           onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
+                           placeholder="Ex: ATT-2024-001"
+                           required>
+                    @error('numeroAttestation')
+                        <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
-                <div>
-                    <label class="block font-medium">Date Délivrance</label>
-                    <input type="date" name="dateDelivrance" class="w-full border rounded p-2" required>
+
+                <!-- Date Délivrance -->
+                <div class="form-group">
+                    <label for="dateDelivrance" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Date Délivrance <span style="color: var(--color-red);">*</span>
+                    </label>
+                    <input type="date" 
+                           id="dateDelivrance"
+                           name="dateDelivrance" 
+                           value="{{ old('dateDelivrance') }}"
+                           style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
+                           onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
+                           onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
+                           required>
+                    @error('dateDelivrance')
+                        <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
-                <div>
-                    <label class="block font-medium">Candidat</label>
-                    <select name="candidat_id" class="w-full border rounded p-2" required>
+
+                <!-- Candidat -->
+                <div class="form-group">
+                    <label for="candidat_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Candidat <span style="color: var(--color-red);">*</span>
+                    </label>
+                    <select name="candidat_id" 
+                            id="candidat_id"
+                            style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark); background-color: white; cursor: pointer;"
+                            onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
+                            onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
+                            required>
                         <option value="">-- Choisir un candidat --</option>
                         @foreach($candidats as $candidat)
-                        <option value="{{ $candidat->id }}">{{ $candidat->nom }} {{ $candidat->prenom }}</option>
+                        <option value="{{ $candidat->id }}" {{ old('candidat_id') == $candidat->id ? 'selected' : '' }}>
+                            {{ $candidat->nom }} {{ $candidat->prenom }}
+                        </option>
                         @endforeach
                     </select>
+                    @error('candidat_id')
+                        <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
-                <div>
-                    <label class="block font-medium">Examen</label>
-                    <select name="examen_id" class="w-full border rounded p-2">
+
+                <!-- Examen -->
+                <div class="form-group">
+                    <label for="examen_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Examen <span style="color: var(--color-gray-500); font-weight: 400; font-size: 0.75rem;">(Facultatif)</span>
+                    </label>
+                    <select name="examen_id" 
+                            id="examen_id"
+                            style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark); background-color: white; cursor: pointer;"
+                            onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
+                            onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'">
                         <option value="">-- Choisir un examen --</option>
                         @foreach($examens as $examen)
-                        <option value="{{ $examen->id }}">{{ $examen->libelle }}</option>
+                        <option value="{{ $examen->id }}" {{ old('examen_id') == $examen->id ? 'selected' : '' }}>
+                            {{ $examen->libelle }}
+                        </option>
                         @endforeach
                     </select>
+                    @error('examen_id')
+                        <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
-            <div class="mt-6 flex gap-4">
-                <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-                    Enregistrer
+            <!-- Messages d'erreur généraux -->
+            @if ($errors->any())
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(206, 17, 38, 0.1); border-left: 4px solid var(--color-red); border-radius: var(--radius-md); color: var(--color-red-dark);">
+                    <strong>⚠️ Erreurs de validation :</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                        @foreach ($errors->all() as $error)
+                            <li style="margin: 0.25rem 0;">{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <!-- Boutons d'action -->
+            <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--color-gray-100);">
+                <!-- Bouton Enregistrer (Rouge) -->
+                <button type="submit" 
+                        style="background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-red); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.875rem;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(206, 17, 38, 0.3)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+                    ✓ Enregistrer
                 </button>
-                <a href="{{ route('attestations.index') }}" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
-                    Annuler
+
+                <!-- Bouton Annuler (Gris) -->
+                <a href="{{ route('attestations.index') }}" 
+                   style="background: linear-gradient(135deg, var(--color-gray-200) 0%, var(--color-gray-100) 100%); color: var(--color-dark); padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-gray-200); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); text-decoration: none; font-size: 0.875rem;"
+                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.1)'"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+                    ✕ Annuler
                 </a>
             </div>
         </form>
+
+        <!-- Info contextuelle -->
+        <div style="margin-top: 2rem; padding: 1rem; background: rgba(0, 122, 94, 0.1); border-left: 4px solid var(--color-green); border-radius: var(--radius-md); color: var(--color-green-dark); font-size: 0.875rem;">
+            <strong>ℹ️ Information :</strong> Les champs marqués avec un <span style="color: var(--color-red); font-weight: bold;">*</span> sont obligatoires. L'examen est facultatif et peut être ajouté ultérieurement.
+        </div>
     </div>
 </x-layouts::app.sidebar>
