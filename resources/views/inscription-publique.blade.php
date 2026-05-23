@@ -231,6 +231,10 @@
             color: var(--color-green);
         }
 
+        .step-label.done {
+            color: var(--color-green-dark);
+        }
+
         .step-label.todo {
             color: #999;
         }
@@ -632,8 +636,7 @@
     <div class="form-wrap">
 
         <div id="client-error-box" class="alert-err" style="display: none;">
-            <i class="bi bi-exclamation-triangle"></i> <strong>Erreur de saisie :</strong>
-            <span id="client-error-msg"></span>
+            <i class="bi bi-exclamation-triangle"></i> <strong>Erreur de saisie :</strong> <span id="client-error-msg"></span>
         </div>
 
         @if($errors->any())
@@ -673,14 +676,12 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="lbl">Nom <span class="req">*</span></label>
-                                <input type="text" id="inp-nom" name="nom" class="inp @error('nom') is-invalid @enderror"
-                                       value="{{ old('nom') }}" placeholder="Nom de famille" required>
+                                <input type="text" id="inp-nom" name="nom" class="inp @error('nom') is-invalid @enderror" value="{{ old('nom') }}" placeholder="Nom de famille" required>
                                 @error('nom')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="lbl">Prénom <span class="req">*</span></label>
-                                <input type="text" id="inp-prenom" name="prenom" class="inp @error('prenom') is-invalid @enderror"
-                                       value="{{ old('prenom') }}" placeholder="Prénom(s)" required>
+                                <input type="text" id="inp-prenom" name="prenom" class="inp @error('prenom') is-invalid @enderror" value="{{ old('prenom') }}" placeholder="Prénom(s)" required>
                                 @error('prenom')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -688,14 +689,12 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="lbl">Date de naissance <span class="req">*</span></label>
-                                <input type="date" id="inp-ddn" name="dateNaissance" class="inp @error('dateNaissance') is-invalid @enderror"
-                                       value="{{ old('dateNaissance') }}" required>
+                                <input type="date" id="inp-ddn" name="dateNaissance" class="inp @error('dateNaissance') is-invalid @enderror" value="{{ old('dateNaissance') }}" required>
                                 @error('dateNaissance')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="lbl">Lieu de naissance <span class="req">*</span></label>
-                                <input type="text" id="inp-lieu" name="lieuNaissance" class="inp @error('lieuNaissance') is-invalid @enderror"
-                                       value="{{ old('lieuNaissance') }}" placeholder="Ex: Bobo-Dioulasso" required>
+                                <input type="text" id="inp-lieu" name="lieuNaissance" class="inp @error('lieuNaissance') is-invalid @enderror" value="{{ old('lieuNaissance') }}" placeholder="Ex: Bobo-Dioulasso" required>
                                 @error('lieuNaissance')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -705,14 +704,12 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="lbl">Téléphone <span class="req">*</span></label>
-                                <input type="tel" id="inp-tel" name="telephone" class="inp @error('telephone') is-invalid @enderror"
-                                       value="{{ old('telephone') }}" placeholder="+226 XX XX XX XX" required>
+                                <input type="tel" id="inp-tel" name="telephone" class="inp @error('telephone') is-invalid @enderror" value="{{ old('telephone') }}" placeholder="+226 XX XX XX XX" required>
                                 @error('telephone')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="lbl">Email <span style="color: var(--color-gray-500); font-weight: 400; font-size: 0.7rem;">(Facultatif)</span></label>
-                                <input type="email" id="inp-email" name="email" class="inp @error('email') is-invalid @enderror"
-                                       value="{{ old('email') }}" placeholder="votre@email.com">
+                                <input type="email" id="inp-email" name="email" class="inp @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="votre@email.com">
                                 @error('email')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -773,8 +770,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="lbl">Date de début formation <span class="req">*</span></label>
-                                <input type="date" id="inp-debut" name="dataDebut_formation" class="inp @error('dataDebut_formation') is-invalid @enderror"
-                                       value="{{ old('dataDebut_formation') }}" required>
+                                <input type="date" id="inp-debut" name="dataDebut_formation" class="inp @error('dataDebut_formation') is-invalid @enderror" value="{{ old('dataDebut_formation') }}" required>
                                 @error('dataDebut_formation')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -917,7 +913,6 @@
                 const tel = document.getElementById('inp-tel').value.trim();
                 
                 const numPermis = document.getElementById('inp-num-permis').value.trim();
-                const datePermis = document.getElementById('inp-date-permis').value;
                 const lieuPermis = document.getElementById('inp-lieu-permis').value.trim();
 
                 // Obligatoires génériques
@@ -976,7 +971,7 @@
                     return;
                 }
 
-                // Sécurisation optionnelle du nom de dossier (Pas de caractères spéciaux dangereux)
+                // Sécurisation optionnelle du nom de dossier
                 if (nomDossier && !/^[a-zA-Z0-9_\-\sÀ-ÿ]+$/.test(nomDossier)) {
                     showError("Le nom du dossier contient des caractères non autorisés.");
                     return;
@@ -1019,21 +1014,64 @@
             // Mise à jour de la barre de progression (Stepper)
             for (let i = 1; i <= 3; i++) {
                 const numNode = document.getElementById('snum' + i);
-                const lblNode = document.getElementById('slbl1'); // Note: id unique, s'occuper uniquement de la classe active/todo
+                const lblNode = document.getElementById('slbl' + i); // Correction ici : Sélection dynamique par ID de l'itération
 
                 if (i < step) {
                     numNode.className = 'step-num done';
                     numNode.innerHTML = '<i class="bi bi-check"></i>';
+                    if (lblNode) lblNode.className = 'step-label done';
                 } else if (i === step) {
                     numNode.className = 'step-num active';
                     numNode.innerText = i;
+                    if (lblNode) lblNode.className = 'step-label active';
                 } else {
                     numNode.className = 'step-num todo';
                     numNode.innerText = i;
+                    if (lblNode) lblNode.className = 'step-label todo';
                 }
             }
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
+
+        // RECONSTRUCTION ET NETTOYAGE DE L'ATTESTATION CONFORME
+        function ouvrirAttestation() {
+    const nom = document.getElementById('inp-nom').value.toUpperCase();
+    const prenom = document.getElementById('inp-prenom').value.toUpperCase();
+    const cat = document.getElementById('inp-cat');
+    
+    // Récupération sécurisée des valeurs
+    const rawDdn = document.getElementById('inp-ddn').value;
+    const rawDebut = document.getElementById('inp-debut').value;
+    const rawInscr = document.getElementById('inp-dateinscr').value;
+    
+    // Formatage robuste des dates
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        return new Date(d.getTime() + d.getTimezoneOffset() * 60000).toLocaleDateString('fr-FR');
+    };
+
+    // Alimentation des éléments HTML de la modal
+    document.getElementById('at-nom').innerText = nom;
+    document.getElementById('at-prenom').innerText = prenom;
+    document.getElementById('at-ddn').innerText = formatDate(rawDdn);
+    document.getElementById('at-lieu').innerText = document.getElementById('inp-lieu').value || '—';
+    document.getElementById('at-tel').innerText = document.getElementById('inp-tel').value || '—';
+    
+    if(cat.selectedIndex !== -1) {
+        document.getElementById('at-cat').innerText = cat.options[cat.selectedIndex].text;
+        document.getElementById('at-categorie-titre').innerText = cat.options[cat.selectedIndex].text;
+    }
+
+    document.getElementById('at-debut').innerText = formatDate(rawDebut);
+    document.getElementById('at-ref-date').innerText = formatDate(rawInscr || new Date().toISOString().split('T')[0]);
+    document.getElementById('at-ref-num').innerText = 'GESP-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
+
+    // Affichage modal
+    const modal = document.getElementById('modalAttestation');
+    modal.style.display = 'block'; // Assurez-vous que le CSS gère le display block/none
+    modal.classList.add('show');
+}
     </script>
 </body>
 </html>

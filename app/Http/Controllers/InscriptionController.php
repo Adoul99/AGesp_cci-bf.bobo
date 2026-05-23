@@ -67,7 +67,7 @@ class InscriptionController extends Controller
         return view('inscription-publique', compact('categories'));
     }
 
-    public function storePublic(Request $request)
+   public function storePublic(Request $request)
     {
         // ── Validation ────────────────────────────────────────
         $request->validate([
@@ -128,17 +128,27 @@ class InscriptionController extends Controller
                 'dataDebut_formation' => $request->dataDebut_formation,
             ]);
 
+            // Récupérer le nom de la catégorie pour le récépissé
+            $categorie = CategoriePermis::find($request->categoriePermis_id);
+            $nomCategorie = $categorie ? ($categorie->pareCategorie ?? $categorie->nomCategorie ?? $categorie->nom) : '—';
+
             return [
-                'reference'    => $reference,
-                'candidat_nom' => $candidat->nom . ' ' . $candidat->prenom
+                'reference'            => $reference,
+                'nom'                  => $candidat->nom,
+                'prenom'               => $candidat->prenom,
+                'telephone'            => $candidat->telephone,
+                'dateNaissance'        => $candidat->dateNaissance,
+                'lieuNaissance'        => $candidat->lieuNaissance,
+                'categorie_nom'        => $nomCategorie,
+                'dataDebut_formation'  => $request->dataDebut_formation,
+                'dateInscription'      => $request->dateInscription ?? now()->toDateString()
             ];
         });
 
-        // Redirection vers la vue succès avec les données flashées
+        // Redirection vers la vue succès avec TOUTES les données flashées
         return redirect()
             ->route('inscription.succes')
-            ->with('reference', $data['reference'])
-            ->with('candidat_nom', $data['candidat_nom']);
+            ->with($data);
     }
 
     public function succes()
