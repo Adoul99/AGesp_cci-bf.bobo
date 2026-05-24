@@ -358,6 +358,26 @@
             display: block;
         }
 
+        /* Groupe de sélecteurs de date */
+        .date-selects-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .date-selects-group .inp-jour {
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .date-selects-group .inp-mois {
+            flex: 1;
+        }
+
+        .date-selects-group .inp-annee {
+            width: 100px;
+            flex-shrink: 0;
+        }
+
         /* INFO BOX */
         .info-box {
             background: rgba(0, 122, 94, 0.1);
@@ -572,6 +592,19 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .date-selects-group {
+                flex-wrap: wrap;
+            }
+
+            .date-selects-group .inp-jour,
+            .date-selects-group .inp-annee {
+                width: calc(50% - 4px);
+            }
+
+            .date-selects-group .inp-mois {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -659,6 +692,9 @@
         <form method="POST" action="{{ route('inscription.public.store') }}" id="inscriptionForm">
             @csrf
 
+            {{-- ══════════════════════════════════════════════ --}}
+            {{-- ÉTAPE 1 — Informations personnelles           --}}
+            {{-- ══════════════════════════════════════════════ --}}
             <div id="step1">
                 <div class="form-card">
                     <div class="form-card-head">
@@ -687,10 +723,50 @@
                         </div>
 
                         <div class="row g-3 mb-3">
+                            {{-- ── DATE DE NAISSANCE : 3 listes déroulantes ── --}}
                             <div class="col-md-6">
                                 <label class="lbl">Date de naissance <span class="req">*</span></label>
-                                <input type="date" id="inp-ddn" name="dateNaissance" class="inp @error('dateNaissance') is-invalid @enderror" value="{{ old('dateNaissance') }}" required>
+                                <div class="date-selects-group">
+                                    {{-- Jour --}}
+                                    <select id="inp-ddn-jour" class="inp inp-jour" aria-label="Jour de naissance">
+                                        <option value="">JJ</option>
+                                        @for($j = 1; $j <= 31; $j++)
+                                            <option value="{{ str_pad($j, 2, '0', STR_PAD_LEFT) }}"
+                                                {{ (old('dateNaissance') && intval(explode('-', old('dateNaissance'))[2] ?? 0) === $j) ? 'selected' : '' }}>
+                                                {{ str_pad($j, 2, '0', STR_PAD_LEFT) }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                    {{-- Mois --}}
+                                    <select id="inp-ddn-mois" class="inp inp-mois" aria-label="Mois de naissance">
+                                        <option value="">Mois</option>
+                                        @php
+                                            $moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                                        @endphp
+                                        @foreach($moisNoms as $idx => $moisNom)
+                                            <option value="{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}"
+                                                {{ (old('dateNaissance') && intval(explode('-', old('dateNaissance'))[1] ?? 0) === ($idx + 1)) ? 'selected' : '' }}>
+                                                {{ $moisNom }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    {{-- Année : de (année courante - 21) jusqu'à (année courante - 80) --}}
+                                    <select id="inp-ddn-annee" class="inp inp-annee" aria-label="Année de naissance">
+                                        <option value="">AAAA</option>
+                                        @for($a = date('Y') - 21; $a >= date('Y') - 80; $a--)
+                                            <option value="{{ $a }}"
+                                                {{ (old('dateNaissance') && intval(explode('-', old('dateNaissance'))[0] ?? 0) === $a) ? 'selected' : '' }}>
+                                                {{ $a }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                {{-- Champ caché alimenté par JS, soumis au serveur --}}
+                                <input type="hidden" id="inp-ddn" name="dateNaissance" value="{{ old('dateNaissance') }}">
                                 @error('dateNaissance')<span class="invalid-msg">{{ $message }}</span>@enderror
+                                <span style="font-size:0.68rem; color: var(--color-gray-500); margin-top:4px; display:block;">
+                                    <i class="bi bi-info-circle"></i> Âge minimum requis : 21 ans
+                                </span>
                             </div>
                             <div class="col-md-6">
                                 <label class="lbl">Lieu de naissance <span class="req">*</span></label>
@@ -740,6 +816,9 @@
                 </div>
             </div>
 
+            {{-- ══════════════════════════════════════════════ --}}
+            {{-- ÉTAPE 2 — Inscription & Catégorie de permis   --}}
+            {{-- ══════════════════════════════════════════════ --}}
             <div id="step2" style="display: none;">
                 <div class="form-card">
                     <div class="form-card-head">
@@ -769,9 +848,19 @@
                                 @error('categoriePermis_id')<span class="invalid-msg">{{ $message }}</span>@enderror
                             </div>
                             <div class="col-md-6">
+                                {{-- ── DATE DÉBUT FORMATION : min = aujourd'hui ── --}}
                                 <label class="lbl">Date de début formation <span class="req">*</span></label>
-                                <input type="date" id="inp-debut" name="dataDebut_formation" class="inp @error('dataDebut_formation') is-invalid @enderror" value="{{ old('dataDebut_formation') }}" required>
+                                <input type="date"
+                                       id="inp-debut"
+                                       name="dataDebut_formation"
+                                       class="inp @error('dataDebut_formation') is-invalid @enderror"
+                                       value="{{ old('dataDebut_formation') }}"
+                                       min="{{ date('Y-m-d') }}"
+                                       required>
                                 @error('dataDebut_formation')<span class="invalid-msg">{{ $message }}</span>@enderror
+                                <span style="font-size:0.68rem; color: var(--color-gray-500); margin-top:4px; display:block;">
+                                    <i class="bi bi-info-circle"></i> La date doit être à partir d'aujourd'hui ({{ date('d/m/Y') }})
+                                </span>
                             </div>
                         </div>
 
@@ -814,6 +903,9 @@
                 </div>
             </div>
 
+            {{-- ══════════════════════════════════════════════ --}}
+            {{-- ÉTAPE 3 — Récapitulatif                       --}}
+            {{-- ══════════════════════════════════════════════ --}}
             <div id="step3" style="display: none;">
                 <div class="form-card">
                     <div class="form-card-head">
@@ -877,6 +969,45 @@
     </div>
 
     <script>
+        // ══════════════════════════════════════════════════════════════
+        // SYNCHRONISATION DES LISTES DÉROULANTES → champ hidden dateNaissance
+        // ══════════════════════════════════════════════════════════════
+        function syncDateNaissance() {
+            const j = document.getElementById('inp-ddn-jour').value;
+            const m = document.getElementById('inp-ddn-mois').value;
+            const a = document.getElementById('inp-ddn-annee').value;
+            if (j && m && a) {
+                document.getElementById('inp-ddn').value = a + '-' + m + '-' + j;
+            } else {
+                document.getElementById('inp-ddn').value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Écoute des changements sur les 3 sélecteurs
+            ['inp-ddn-jour', 'inp-ddn-mois', 'inp-ddn-annee'].forEach(function (id) {
+                document.getElementById(id).addEventListener('change', syncDateNaissance);
+            });
+
+            // Pré-remplissage si old() existe (retour erreur serveur Laravel)
+            const oldVal = document.getElementById('inp-ddn').value;
+            if (oldVal && oldVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const parts = oldVal.split('-');
+                document.getElementById('inp-ddn-annee').value = parts[0];
+                document.getElementById('inp-ddn-mois').value  = parts[1];
+                document.getElementById('inp-ddn-jour').value  = parts[2];
+            }
+
+            // Bloquer la date début formation dans le passé (sécurité JS en plus du min="")
+            const inputDebut = document.getElementById('inp-debut');
+            if (inputDebut) {
+                inputDebut.setAttribute('min', new Date().toISOString().split('T')[0]);
+            }
+        });
+
+        // ══════════════════════════════════════════════════════════════
+        // UTILITAIRES
+        // ══════════════════════════════════════════════════════════════
         function showError(message) {
             const errorBox = document.getElementById('client-error-box');
             const errorMsg = document.getElementById('client-error-msg');
@@ -901,27 +1032,38 @@
             return age;
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // NAVIGATION ENTRE LES ÉTAPES
+        // ══════════════════════════════════════════════════════════════
         function goToStep(step) {
             hideError();
 
-            // --- VALIDATION ÉTAPE 1 -> ÉTAPE 2 ---
+            // ── VALIDATION ÉTAPE 1 → ÉTAPE 2 ──────────────────────────
             if (step === 2) {
-                const nom = document.getElementById('inp-nom').value.trim();
-                const prenom = document.getElementById('inp-prenom').value.trim();
-                const ddn = document.getElementById('inp-ddn').value;
-                const lieu = document.getElementById('inp-lieu').value.trim();
-                const tel = document.getElementById('inp-tel').value.trim();
-                
-                const numPermis = document.getElementById('inp-num-permis').value.trim();
+                const nom      = document.getElementById('inp-nom').value.trim();
+                const prenom   = document.getElementById('inp-prenom').value.trim();
+                const ddn      = document.getElementById('inp-ddn').value;   // valeur du champ hidden
+                const lieu     = document.getElementById('inp-lieu').value.trim();
+                const tel      = document.getElementById('inp-tel').value.trim();
+                const numPermis  = document.getElementById('inp-num-permis').value.trim();
                 const lieuPermis = document.getElementById('inp-lieu-permis').value.trim();
 
-                // Obligatoires génériques
-                if (!nom || !prenom || !ddn || !lieu || !tel) {
+                // Vérification que les 3 sélecteurs DDN sont remplis
+                const ddnJour  = document.getElementById('inp-ddn-jour').value;
+                const ddnMois  = document.getElementById('inp-ddn-mois').value;
+                const ddnAnnee = document.getElementById('inp-ddn-annee').value;
+
+                if (!nom || !prenom || !lieu || !tel) {
                     showError("Veuillez remplir tous les champs obligatoires (*) de l'étape 1.");
                     return;
                 }
 
-                // Contrôle de l'âge >= 21
+                if (!ddnJour || !ddnMois || !ddnAnnee) {
+                    showError("Veuillez sélectionner le jour, le mois et l'année de naissance.");
+                    return;
+                }
+
+                // Contrôle de l'âge >= 21 (redondant avec les listes mais sécurité supplémentaire)
                 if (calculerAge(ddn) < 21) {
                     showError("L'âge requis doit être supérieur ou égal à 21 ans.");
                     return;
@@ -933,7 +1075,7 @@
                     return;
                 }
 
-                // Contact : pas de lettres (seulement chiffres, espaces, tirets, +)
+                // Téléphone : pas de lettres
                 if (/[a-zA-Z]/.test(tel)) {
                     showError("Le numéro de téléphone ne doit pas contenir de lettres.");
                     return;
@@ -952,69 +1094,91 @@
                 }
             }
 
-            // --- VALIDATION ÉTAPE 2 -> ÉTAPE 3 ---
+            // ── VALIDATION ÉTAPE 2 → ÉTAPE 3 ──────────────────────────
             if (step === 3) {
-                const catSelect = document.getElementById('inp-cat');
-                const dateDebut = document.getElementById('inp-debut').value;
-                const dateInscr = document.getElementById('inp-dateinscr').value;
+                const catSelect  = document.getElementById('inp-cat');
+                const dateDebut  = document.getElementById('inp-debut').value;
+                const dateInscr  = document.getElementById('inp-dateinscr').value;
                 const nomDossier = document.getElementById('inp-nom-dossier').value.trim();
+                const today      = new Date().toISOString().split('T')[0];
 
                 if (!catSelect.value || !dateDebut) {
                     showError("Veuillez choisir une catégorie de permis et spécifier une date de début de formation.");
                     return;
                 }
 
-                // Contrôle syntaxique basique du format de date (AAAA-MM-JJ)
+                // Contrôle : date début ne peut pas être dans le passé
+                if (dateDebut < today) {
+                    showError("La date de début de formation ne peut pas être une date passée.");
+                    return;
+                }
+
+                // Contrôle syntaxique du format de date (AAAA-MM-JJ)
                 const regexDate = /^\d{4}-\d{2}-\d{2}$/;
                 if (!regexDate.test(dateDebut) || !regexDate.test(dateInscr)) {
                     showError("Le format des dates saisies est invalide.");
                     return;
                 }
 
-                // Sécurisation optionnelle du nom de dossier
+                // Sécurisation du nom de dossier
                 if (nomDossier && !/^[a-zA-Z0-9_\-\sÀ-ÿ]+$/.test(nomDossier)) {
                     showError("Le nom du dossier contient des caractères non autorisés.");
                     return;
                 }
 
-                // Remplissage dynamique des champs du récapitulatif
-                document.getElementById('r-nom').innerText = document.getElementById('inp-nom').value.toUpperCase() + ' ' + document.getElementById('inp-prenom').value;
-                
-                // Formatage lisible de la date de naissance
-                const ddnFormatee = new Date(document.getElementById('inp-ddn').value).toLocaleDateString('fr-FR');
-                document.getElementById('r-naissance').innerText = ddnFormatee + ' à ' + document.getElementById('inp-lieu').value;
-                
-                document.getElementById('r-tel').innerText = document.getElementById('inp-tel').value;
-                document.getElementById('r-email').innerText = document.getElementById('inp-email').value || 'Non renseigné';
+                // ── Remplissage du récapitulatif ──
+                document.getElementById('r-nom').innerText =
+                    document.getElementById('inp-nom').value.toUpperCase() + ' ' +
+                    document.getElementById('inp-prenom').value;
 
-                // Gestion de l'affichage conditionnel du permis existant au récap
+                // Formatage lisible de la date de naissance depuis le champ hidden
+                const ddnVal = document.getElementById('inp-ddn').value;
+                const ddnFormatee = ddnVal
+                    ? new Date(ddnVal + 'T00:00:00').toLocaleDateString('fr-FR')
+                    : '—';
+                document.getElementById('r-naissance').innerText =
+                    ddnFormatee + ' à ' + document.getElementById('inp-lieu').value;
+
+                document.getElementById('r-tel').innerText =
+                    document.getElementById('inp-tel').value;
+                document.getElementById('r-email').innerText =
+                    document.getElementById('inp-email').value || 'Non renseigné';
+
+                // Permis existant
                 const numP = document.getElementById('inp-num-permis').value;
-                if(numP) {
+                if (numP) {
                     document.getElementById('recap-permis-section').style.display = 'block';
                     document.getElementById('r-num-permis').innerText = numP;
-                    const datePFormatee = document.getElementById('inp-date-permis').value ? new Date(document.getElementById('inp-date-permis').value).toLocaleDateString('fr-FR') : '—';
-                    document.getElementById('r-deliv-permis').innerText = datePFormatee + ' (' + (document.getElementById('inp-lieu-permis').value || '—') + ')';
+                    const dateP = document.getElementById('inp-date-permis').value;
+                    const datePFormatee = dateP
+                        ? new Date(dateP + 'T00:00:00').toLocaleDateString('fr-FR')
+                        : '—';
+                    document.getElementById('r-deliv-permis').innerText =
+                        datePFormatee + ' (' + (document.getElementById('inp-lieu-permis').value || '—') + ')';
                 } else {
                     document.getElementById('recap-permis-section').style.display = 'none';
                 }
 
                 // Inscription
-                const catText = catSelect.options[catSelect.selectedIndex].text;
-                document.getElementById('r-cat').innerText = catText;
-                document.getElementById('r-debut').innerText = new Date(dateDebut).toLocaleDateString('fr-FR');
-                document.getElementById('r-dateinscr').innerText = new Date(dateInscr).toLocaleDateString('fr-FR');
-                document.getElementById('r-nom-dossier').innerText = nomDossier || 'Généré automatiquement';
+                document.getElementById('r-cat').innerText =
+                    catSelect.options[catSelect.selectedIndex].text;
+                document.getElementById('r-debut').innerText =
+                    new Date(dateDebut + 'T00:00:00').toLocaleDateString('fr-FR');
+                document.getElementById('r-dateinscr').innerText =
+                    new Date(dateInscr + 'T00:00:00').toLocaleDateString('fr-FR');
+                document.getElementById('r-nom-dossier').innerText =
+                    nomDossier || 'Généré automatiquement';
             }
 
-            // Bascule visuelle des blocs d'étapes
+            // ── Bascule visuelle des blocs d'étapes ───────────────────
             document.getElementById('step1').style.display = (step === 1) ? 'block' : 'none';
             document.getElementById('step2').style.display = (step === 2) ? 'block' : 'none';
             document.getElementById('step3').style.display = (step === 3) ? 'block' : 'none';
 
-            // Mise à jour de la barre de progression (Stepper)
+            // ── Mise à jour de la barre de progression (Stepper) ──────
             for (let i = 1; i <= 3; i++) {
                 const numNode = document.getElementById('snum' + i);
-                const lblNode = document.getElementById('slbl' + i); // Correction ici : Sélection dynamique par ID de l'itération
+                const lblNode = document.getElementById('slbl' + i);
 
                 if (i < step) {
                     numNode.className = 'step-num done';
@@ -1030,48 +1194,9 @@
                     if (lblNode) lblNode.className = 'step-label todo';
                 }
             }
+
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
-
-        // RECONSTRUCTION ET NETTOYAGE DE L'ATTESTATION CONFORME
-        function ouvrirAttestation() {
-    const nom = document.getElementById('inp-nom').value.toUpperCase();
-    const prenom = document.getElementById('inp-prenom').value.toUpperCase();
-    const cat = document.getElementById('inp-cat');
-    
-    // Récupération sécurisée des valeurs
-    const rawDdn = document.getElementById('inp-ddn').value;
-    const rawDebut = document.getElementById('inp-debut').value;
-    const rawInscr = document.getElementById('inp-dateinscr').value;
-    
-    // Formatage robuste des dates
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '—';
-        const d = new Date(dateStr);
-        return new Date(d.getTime() + d.getTimezoneOffset() * 60000).toLocaleDateString('fr-FR');
-    };
-
-    // Alimentation des éléments HTML de la modal
-    document.getElementById('at-nom').innerText = nom;
-    document.getElementById('at-prenom').innerText = prenom;
-    document.getElementById('at-ddn').innerText = formatDate(rawDdn);
-    document.getElementById('at-lieu').innerText = document.getElementById('inp-lieu').value || '—';
-    document.getElementById('at-tel').innerText = document.getElementById('inp-tel').value || '—';
-    
-    if(cat.selectedIndex !== -1) {
-        document.getElementById('at-cat').innerText = cat.options[cat.selectedIndex].text;
-        document.getElementById('at-categorie-titre').innerText = cat.options[cat.selectedIndex].text;
-    }
-
-    document.getElementById('at-debut').innerText = formatDate(rawDebut);
-    document.getElementById('at-ref-date').innerText = formatDate(rawInscr || new Date().toISOString().split('T')[0]);
-    document.getElementById('at-ref-num').innerText = 'GESP-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
-
-    // Affichage modal
-    const modal = document.getElementById('modalAttestation');
-    modal.style.display = 'block'; // Assurez-vous que le CSS gère le display block/none
-    modal.classList.add('show');
-}
     </script>
 </body>
 </html>
