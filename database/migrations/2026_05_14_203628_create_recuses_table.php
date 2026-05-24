@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('recus', function (Blueprint $table) {
-    $table->id();
-    $table->decimal('montant', 10, 2);
-    $table->date('dateRecus');
-    $table->unsignedBigInteger('paiement_id')->nullable();
-    $table->timestamps();
-});
+        // On vérifie si la table n'existe pas déjà pour éviter l'erreur
+        if (!Schema::hasTable('recus')) {
+            Schema::create('recus', function (Blueprint $table) {
+                $table->id();
+                $table->decimal('montant', 10, 2);
+                $table->date('dateRecus');
+                $table->unsignedBigInteger('paiement_id')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -25,6 +28,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('recuses');
+        // On utilise le même nom que dans up()
+        Schema::dropIfExists('recus');
     }
 };
