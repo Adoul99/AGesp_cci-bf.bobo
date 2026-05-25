@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Moniteur;
+use App\Traits\ExportableTrait;
 use Illuminate\Http\Request;
 
 class MoniteurController extends Controller
 {
+    use ExportableTrait;
     public function index()
     {
         $moniteurs = Moniteur::all();

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Paiement;
 use App\Models\Candidat;
+use App\Traits\ExportableTrait;
 use Illuminate\Http\Request;
 
 class PaiementController extends Controller
 {
+    use ExportableTrait;
     public function index()
     {
         $paiements = Paiement::with('candidat')->get();

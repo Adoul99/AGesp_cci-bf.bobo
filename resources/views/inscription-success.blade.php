@@ -226,7 +226,8 @@
 
         <h1>Inscription confirmée avec succès !</h1>
         <p style="font-size:0.95rem;color:#6b7a70;">
-            Félicitations, votre dossier en ligne a été transmis. Veuillez imprimer votre récépissé officiel ci-dessous.
+            Félicitations, votre dossier en ligne a été transmis. Un dossier lié à votre inscription a bien été créé et pourra être vérifié par l'administration.
+            Veuillez imprimer votre récépissé officiel ci-dessous.
         </p>
 
         <div class="recepisse-officiel">

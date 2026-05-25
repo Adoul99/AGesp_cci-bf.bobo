@@ -15,6 +15,7 @@ class SessionFormation extends Model
         'vehicule_id',
         'evaluation_id',
         'groupe_id',
+        'typeSession_id',
     ];
 
     /**
@@ -39,5 +40,13 @@ class SessionFormation extends Model
     public function groupe()
     {
         return $this->belongsTo(Groupe::class);
+    }
+
+    /**
+     * Une session appartient à un type de session
+     */
+    public function typeSession()
+    {
+        return $this->belongsTo(TypeSession::class);
     }
 }

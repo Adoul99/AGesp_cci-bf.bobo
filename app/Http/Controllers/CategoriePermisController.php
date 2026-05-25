@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CategoriePermis;
+use App\Traits\ExportableTrait;
 use Illuminate\Http\Request;
 
 class CategoriePermisController extends Controller

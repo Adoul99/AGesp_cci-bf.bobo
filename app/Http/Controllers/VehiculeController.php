@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vehicule;
+use App\Traits\ExportableTrait;
 use Illuminate\Http\Request;
 
 class VehiculeController extends Controller
 {
+    use ExportableTrait;
     public function index()
     {
         $vehicules = Vehicule::all();

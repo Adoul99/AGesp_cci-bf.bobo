@@ -6,10 +6,13 @@ use App\Models\SessionFormation;
 use App\Models\Vehicule;
 use App\Models\Evaluation;
 use App\Models\Groupe;
+use App\Models\TypeSession;
+use App\Traits\ExportableTrait;
 use Illuminate\Http\Request;
 
 class SessionFormationController extends Controller
 {
+    use ExportableTrait;
     /**
      * Affiche la liste de toutes les sessions de formation
      */
@@ -27,7 +30,8 @@ class SessionFormationController extends Controller
         $vehicules = Vehicule::all();
         $evaluations = Evaluation::all();
         $groupes = Groupe::all();
-        return view('session_formations.create', compact('vehicules', 'evaluations', 'groupes'));
+        $typesSessions = TypeSession::all();
+        return view('session_formations.create', compact('vehicules', 'evaluations', 'groupes', 'typesSessions'));
     }
 
     /**
@@ -54,7 +58,8 @@ class SessionFormationController extends Controller
         $vehicules = Vehicule::all();
         $evaluations = Evaluation::all();
         $groupes = Groupe::all();
-        return view('session_formations.edit', compact('sessionFormation', 'vehicules', 'evaluations', 'groupes'));
+        $typesSessions = TypeSession::all();
+        return view('session_formations.edit', compact('sessionFormation', 'vehicules', 'evaluations', 'groupes', 'typesSessions'));
     }
 
     /**
