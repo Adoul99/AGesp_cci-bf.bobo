@@ -4,9 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\TypeSession;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TypeSessionController extends Controller
 {
+    private function sessionTypes(): array
+    {
+        return [
+            'Théorique' => 'Théorique',
+            'Pratique'  => 'Pratique',
+            'Mixte'     => 'Mixte',
+        ];
+    }
+
     public function index()
     {
         $typeSessions = TypeSession::all();
@@ -15,20 +25,23 @@ class TypeSessionController extends Controller
 
     public function create()
     {
-        return view('type_sessions.create');
+        return view('type_sessions.create', [
+            'typeCodes' => $this->sessionTypes(),
+        ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'idSession' => 'required|unique:type_sessions',
-            'code'      => 'required|string|max:100',
-            'creneau'   => 'required|string|max:100',   // ← était manquant
-            'conduite'  => 'nullable|string|max:255',   // ← nullable si optionnel
+            'code'      => ['required', Rule::in(array_keys($this->sessionTypes()))],
+            'creneau'   => 'required|string|max:100',
+            'conduite'  => 'nullable|string|max:255',
         ], [
             'idSession.required' => 'L\'identifiant de session est obligatoire.',
             'idSession.unique'   => 'Cet identifiant de session existe déjà.',
-            'code.required'      => 'Le code est obligatoire.',
+            'code.required'      => 'Le type est obligatoire.',
+            'code.in'            => 'Le type sélectionné n\'est pas valide.',
             'creneau.required'   => 'Le créneau est obligatoire.',
         ]);
 
@@ -36,7 +49,7 @@ class TypeSessionController extends Controller
             'idSession' => $request->idSession,
             'code'      => $request->code,
             'creneau'   => $request->creneau,
-            'conduite'  => $request->conduite,
+            'conduite'  => $request->conduite ?? '',
         ]);
 
         return redirect()->route('type_sessions.index')
@@ -45,21 +58,32 @@ class TypeSessionController extends Controller
 
     public function edit(TypeSession $typeSession)
     {
-        return view('type_sessions.edit', compact('typeSession'));
+        return view('type_sessions.edit', [
+            'typeSession' => $typeSession,
+            'typeCodes'   => $this->sessionTypes(),
+        ]);
     }
 
     public function update(Request $request, TypeSession $typeSession)
     {
         $request->validate([
-            'code'     => 'required|string|max:100',
-            'creneau'  => 'required|string|max:100',
-            'conduite' => 'nullable|string|max:255',
+            'idSession' => 'required|unique:type_sessions,idSession,'.$typeSession->id,
+            'code'      => ['required', Rule::in(array_keys($this->sessionTypes()))],
+            'creneau'   => 'required|string|max:100',
+            'conduite'  => 'nullable|string|max:255',
+        ], [
+            'idSession.required' => 'L\'identifiant de session est obligatoire.',
+            'idSession.unique'   => 'Cet identifiant de session existe déjà.',
+            'code.required'      => 'Le type est obligatoire.',
+            'code.in'            => 'Le type sélectionné n\'est pas valide.',
+            'creneau.required'   => 'Le créneau est obligatoire.',
         ]);
 
         $typeSession->update([
-            'code'     => $request->code,
-            'creneau'  => $request->creneau,
-            'conduite' => $request->conduite,
+            'idSession' => $request->idSession,
+            'code'      => $request->code,
+            'creneau'   => $request->creneau,
+            'conduite'  => $request->conduite ?? '',
         ]);
 
         return redirect()->route('type_sessions.index')

@@ -33,6 +33,43 @@
             --radius-md: 8px;
             --radius-lg: 12px;
         }
+
+        /* --- CONFIGURATION POUR L'EXPORTATION PDF --- */
+        @media print {
+            .no-print,
+            .header-section div:last-child,
+            table th:last-child,
+            table td:last-child,
+            nav, .sidebar {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .content-wrapper {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .header-section {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                margin-bottom: 2rem !important;
+                border-left: 4px solid var(--color-red) !important;
+            }
+            table {
+                border-collapse: collapse !important;
+                border: 1px solid #000 !important;
+            }
+            th {
+                background: #f2f2f2 !important;
+                color: black !important;
+                border: 1px solid #000 !important;
+            }
+            td {
+                border: 1px solid #ccc !important;
+            }
+        }
     </style>
 
     <div class="content-wrapper" style="padding: 2rem;">
@@ -47,19 +84,28 @@
             
             <div style="display: flex; gap: 1rem;">
                 <a href="{{ route('candidats.create') }}" 
-                   style="background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-md); text-decoration: none; font-weight: 600; border: 2px solid var(--color-red); cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm);"
+                   style="background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-md); text-decoration: none; font-weight: 600; border: 2px solid var(--color-red); cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.8rem;"
                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(206, 17, 38, 0.3)'"
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
                     + Nouveau Candidat
                 </a>
-                <button 
-                   style="background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%); color: var(--color-dark); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); border: 2px solid var(--color-gold); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm);"
+
+                <!-- BOUTON EXPORTER PDF - onclick window.print() ajouté -->
+                <button onclick="window.print()"
+                   style="background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%); color: var(--color-dark); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); border: 2px solid var(--color-gold); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.8rem;"
                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(252, 209, 22, 0.3)'"
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ⬇️ Exporter
+                    ⬇️ Exporter en PDF
                 </button>
             </div>
         </div>
+
+        <!-- Alert Success -->
+        @if(session('success'))
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(0, 122, 94, 0.1); border-left: 4px solid var(--color-green); border-radius: var(--radius-md); color: var(--color-green-dark); font-weight: 600;">
+                ✅ {{ session('success') }}
+            </div>
+        @endif
 
         <!-- Table container -->
         <div style="background: white; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
@@ -98,7 +144,7 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: #D32F2F; border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; font-size: 1.2rem;"
+                                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: #D32F2F; border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; font-size: 1.2rem; padding: 0;"
                                             onmouseover="this.style.backgroundColor='#D32F2F'; this.style.color='white'; this.style.transform='scale(1.1)'"
                                             onmouseout="this.style.backgroundColor='var(--color-gray-100)'; this.style.color='#D32F2F'; this.style.transform='scale(1)'"
                                             title="Supprimer">

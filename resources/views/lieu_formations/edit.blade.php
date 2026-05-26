@@ -1,7 +1,7 @@
 <x-layouts::app.sidebar title="Modifier Lieu de Formation">
     <style>
         :root {
-            --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
+            --color-red: #CE1126; --color-green: #007A5E; --color-green-dark: #005A42; --color-gold: #FCD116;
             --color-dark: #1A1A1A; --color-gray-200: #D1D1D1;
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1); --radius-md: 8px; --radius-lg: 12px;
             --transition-normal: 300ms ease-in-out;
