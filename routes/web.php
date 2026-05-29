@@ -18,9 +18,19 @@ use App\Http\Controllers\ProgrammationController;
 use App\Http\Controllers\RecusController;
 use App\Http\Controllers\SessionFormationController;
 use App\Http\Controllers\TypeSessionController;
+use App\Http\Controllers\Auth\VerificationCodeController;
 
 // ── Page d'accueil ─────────────────────────────────────────────
 Route::view('/', 'welcome')->name('home');
+
+// ══ ROUTES PUBLIQUES — Vérification email ══════════════════════
+Route::post('/verify-email/send',   [VerificationCodeController::class, 'send'])->name('verify-email.send');
+Route::post('/verify-email/verify', [VerificationCodeController::class, 'verify'])->name('verify-email.verify');
+
+// ══ ROUTES PRIVÉES — Espace admin ═════════════════════════════
+Route::middleware(['auth', 'verified'])->group(function () {
+
+
 
 // ══ ROUTES PUBLIQUES — Inscription en ligne ════════════════════
 Route::get('/s-inscrire',
@@ -35,8 +45,6 @@ Route::get('/inscription-confirmee',
     [InscriptionController::class, 'succes']
 )->name('inscription.succes');
 
-// ══ ROUTES PRIVÉES — Espace admin ═════════════════════════════
-Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
          ->name('dashboard');
