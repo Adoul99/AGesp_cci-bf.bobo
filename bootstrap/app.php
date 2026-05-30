@@ -11,7 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+
+        // ── Middlewares de rôles AGesP ────────────────────────
+        $middleware->alias([
+            'admin.only'    => \App\Http\Middleware\AdminOnly::class,
+            'candidat.only' => \App\Http\Middleware\CandidatOnly::class,
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

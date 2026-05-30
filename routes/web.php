@@ -19,6 +19,7 @@ use App\Http\Controllers\RecusController;
 use App\Http\Controllers\SessionFormationController;
 use App\Http\Controllers\TypeSessionController;
 use App\Http\Controllers\Auth\VerificationCodeController;
+use App\Http\Controllers\EspaceCandidatController; // ← NOUVEAU
 
 // ══════════════════════════════════════════════════════════════
 // PAGE D'ACCUEIL
@@ -27,7 +28,6 @@ Route::view('/', 'welcome')->name('home');
 
 // ══════════════════════════════════════════════════════════════
 // VÉRIFICATION EMAIL — routes appelées par le register (AJAX)
-// Doivent être publiques car l'utilisateur n'est pas encore connecté
 // ══════════════════════════════════════════════════════════════
 Route::post('/verify-email/send',   [VerificationCodeController::class, 'send'])
      ->name('verify-email.send');
@@ -37,8 +37,6 @@ Route::post('/verify-email/verify', [VerificationCodeController::class, 'verify'
 
 // ══════════════════════════════════════════════════════════════
 // INSCRIPTION PUBLIQUE — accessibles SANS être connecté
-// Le candidat crée d'abord son compte (/register)
-// puis arrive ici automatiquement après la création du compte
 // ══════════════════════════════════════════════════════════════
 Route::get('/s-inscrire',
     [InscriptionController::class, 'formulairePublic']
@@ -53,9 +51,19 @@ Route::get('/inscription-confirmee',
 )->name('inscription.succes');
 
 // ══════════════════════════════════════════════════════════════
-// ESPACE PRIVÉ — nécessite d'être connecté ET vérifié
+// ESPACE CANDIDAT — connecté + rôle candidat uniquement ← NOUVEAU
 // ══════════════════════════════════════════════════════════════
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'candidat.only'])->group(function () {
+
+    Route::get('/mon-espace', [EspaceCandidatController::class, 'index'])
+         ->name('candidat.espace');
+
+});
+
+// ══════════════════════════════════════════════════════════════
+// ESPACE ADMIN — connecté + vérifié + rôle admin ← MODIFIÉ
+// ══════════════════════════════════════════════════════════════
+Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
 
     // ── Tableau de bord ──────────────────────────────────────
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])

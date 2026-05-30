@@ -6,11 +6,13 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\LoginResponse;                                          // ← NOUVEAU
 use App\Http\Responses\RegisterResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;         // ← NOUVEAU
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Fortify;
 
@@ -18,8 +20,11 @@ class FortifyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // ✅ Force la redirection vers /s-inscrire après register
+        // Après register → /s-inscrire
         $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
+
+        // Après login → /dashboard (admin) ou /mon-espace (candidat)  ← NOUVEAU
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
     }
 
     public function boot(): void

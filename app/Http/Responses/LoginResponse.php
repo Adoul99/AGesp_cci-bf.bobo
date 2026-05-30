@@ -11,12 +11,12 @@ class LoginResponse implements LoginResponseContract
     {
         $user = Auth::user();
 
-        // Si c'est un candidat, on le renvoie à l'inscription publique
+        // Candidat → espace personnel de suivi
         if ($user && $user->role === 'candidat') {
-            return redirect()->route('inscription.public');
+            return redirect()->route('candidat.espace'); // → /mon-espace
         }
 
-        // Sinon, on le laisse aller au dashboard (admin/personnel)
-        return redirect()->intended(config('fortify.home', '/dashboard'));
+        // Admin / moniteur / superadmin → tableau de bord
+        return redirect()->intended(config('fortify.home', '/dashboard')); // → /dashboard
     }
 }
