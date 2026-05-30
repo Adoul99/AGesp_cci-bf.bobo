@@ -6,28 +6,29 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\RegisterResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // ✅ Force la redirection vers /s-inscrire après register
+        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
     }
 
     public function boot(): void
     {
-        // ── Actions ──────────────────────────────────────────────
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
-        // ── Vues AGesP (Chemins mis à jour vers 'pages.auth...') ──
         Fortify::loginView(fn () => view('pages.auth.login'));
         Fortify::registerView(fn () => view('pages.auth.register'));
         Fortify::requestPasswordResetLinkView(fn () => view('pages.auth.forgot-password'));
@@ -36,10 +37,6 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::verifyEmailView(fn () => view('pages.auth.verify-email'));
         Fortify::twoFactorChallengeView(fn () => view('pages.auth.two-factor-challenge'));
 
-        // ── Redirection après inscription ─────────────────────────
-        Fortify::redirects('register', '/s-inscrire');
-
-        // ── Rate Limiting ─────────────────────────────────────────
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = strtolower($request->input(Fortify::username()))
                            . '|' . $request->ip();

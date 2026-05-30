@@ -20,7 +20,9 @@
 {{-- ── Formulaire ── --}}
 @section('form')
 
-{{-- ÉTAPE 1 — Informations --}}
+{{-- ══════════════════════════════════════ --}}
+{{-- ÉTAPE 1 — Informations du compte      --}}
+{{-- ══════════════════════════════════════ --}}
 <div id="reg-step1">
     <div class="f-eyebrow">Étape 1 sur 2</div>
     <h1 class="f-title">Créer un compte</h1>
@@ -29,9 +31,7 @@
     @if ($errors->any())
         <div class="alert alert-err">
             <i class="bi bi-exclamation-triangle-fill"></i>
-            <div>
-                @foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach
-            </div>
+            <div>@foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach</div>
         </div>
     @endif
 
@@ -40,6 +40,7 @@
         <span id="js-err-msg"></span>
     </div>
 
+    {{-- Nom + Prénom --}}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="fg" style="margin-bottom:0;">
             <label>Nom <span class="req">*</span></label>
@@ -59,8 +60,13 @@
         </div>
     </div>
 
+    {{-- Email --}}
     <div class="fg" style="margin-top:14px;">
-        <label><i class="bi bi-envelope" style="color:var(--v);margin-right:4px;"></i>Email <span class="req">*</span> <span style="font-weight:400;font-size:.68rem;color:var(--sub);text-transform:none;">(identifiant de connexion)</span></label>
+        <label>
+            <i class="bi bi-envelope" style="color:var(--v);margin-right:4px;"></i>
+            Email <span class="req">*</span>
+            <span style="font-weight:400;font-size:.68rem;color:var(--sub);text-transform:none;">(identifiant de connexion)</span>
+        </label>
         <div class="inp-wrap">
             <i class="bi bi-envelope inp-ico"></i>
             <input type="email" id="r-email" class="inp"
@@ -69,8 +75,13 @@
         </div>
     </div>
 
+    {{-- Téléphone (facultatif) --}}
     <div class="fg">
-        <label><i class="bi bi-phone" style="color:var(--sub);margin-right:4px;"></i>Téléphone <span style="font-weight:400;font-size:.68rem;color:var(--sub);text-transform:none;">(facultatif)</span></label>
+        <label>
+            <i class="bi bi-phone" style="color:var(--sub);margin-right:4px;"></i>
+            Téléphone
+            <span style="font-weight:400;font-size:.68rem;color:var(--sub);text-transform:none;">(facultatif)</span>
+        </label>
         <div class="phone-wrap">
             <div class="phone-prefix"><i class="bi bi-flag"></i> +226</div>
             <input type="tel" id="r-tel" class="inp"
@@ -80,6 +91,7 @@
         </div>
     </div>
 
+    {{-- Mot de passe --}}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="fg" style="margin-bottom:0;">
             <label>Mot de passe <span class="req">*</span></label>
@@ -111,7 +123,7 @@
 
     <div style="margin-top:20px;">
         <button type="button" class="btn btn-primary" onclick="toStep2()">
-            Suivant — Vérifier mon numéro <i class="bi bi-arrow-right"></i>
+            Suivant — Vérifier mon email <i class="bi bi-arrow-right"></i>
         </button>
     </div>
 
@@ -120,7 +132,9 @@
     </div>
 </div>
 
-{{-- ÉTAPE 2 — Vérification Email --}}
+{{-- ══════════════════════════════════════ --}}
+{{-- ÉTAPE 2 — Vérification Email          --}}
+{{-- ══════════════════════════════════════ --}}
 <div id="reg-step2" style="display:none;">
     <div class="f-eyebrow">Étape 2 sur 2</div>
     <h1 class="f-title">Vérification Email</h1>
@@ -162,24 +176,39 @@
     </div>
 </div>
 
-{{-- ÉTAPE 3 — Succès + soumission --}}
+{{-- ══════════════════════════════════════════════════════════ --}}
+{{-- ÉTAPE 3 — Compte créé → Formulaire POST → /s-inscrire    --}}
+{{-- ══════════════════════════════════════════════════════════ --}}
 <div id="reg-step3" style="display:none;">
     <div style="text-align:center;padding:10px 0 24px;">
-        <div style="width:68px;height:68px;background:var(--v);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 6px 20px rgba(26,107,58,.3);">
+        <div style="width:68px;height:68px;background:var(--v);border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    margin:0 auto 16px;box-shadow:0 6px 20px rgba(26,107,58,.3);">
             <i class="bi bi-check-lg" style="font-size:2rem;color:white;"></i>
         </div>
-        <div class="f-eyebrow" style="justify-content:center;margin-bottom:6px;">Compte vérifié</div>
+        <div class="f-eyebrow" style="justify-content:center;margin-bottom:6px;">Compte vérifié ✓</div>
         <h1 class="f-title" style="font-size:1.45rem;color:var(--v);">Compte créé avec succès !</h1>
-        <p class="f-sub" style="margin-bottom:4px;">Bienvenue, <strong id="welcome-name">Candidat</strong> !</p>
+        <p class="f-sub" style="margin-bottom:4px;">
+            Bienvenue, <strong id="welcome-name">Candidat</strong> !
+        </p>
         <p class="f-sub">Email confirmé : <strong id="welcome-email">votre@email.com</strong></p>
     </div>
 
     <div class="alert alert-warn" style="font-size:.78rem;">
         <i class="bi bi-info-circle-fill"></i>
-        <span>Votre identifiant de connexion est votre <strong>adresse email</strong>. Conservez bien votre mot de passe.</span>
+        <span>
+            Votre compte est prêt. Cliquez ci-dessous pour remplir votre
+            <strong>formulaire d'inscription candidat</strong> (4 étapes).
+        </span>
     </div>
 
-    {{-- Formulaire POST final --}}
+    {{--
+        ╔══════════════════════════════════════════════════════════╗
+        ║  Ce formulaire POST crée le compte via Fortify           ║
+        ║  Fortify redirige ensuite vers /s-inscrire               ║
+        ║  (configuré dans FortifyServiceProvider.php)             ║
+        ╚══════════════════════════════════════════════════════════╝
+    --}}
     <form method="POST" action="{{ route('register') }}" id="final-form">
         @csrf
         <input type="hidden" name="name"                  id="h-name">
@@ -190,12 +219,15 @@
         <input type="hidden" name="password_confirmation" id="h-pwd2">
         <input type="hidden" name="email_verified"        value="1">
 
+        {{-- ✅ Ce bouton soumet → register → Fortify → redirect /s-inscrire --}}
         <button type="submit" class="btn btn-primary" style="margin-bottom:10px;">
-            <i class="bi bi-pencil-square"></i> Continuer vers l'inscription candidat
+            <i class="bi bi-pencil-square"></i>
+            Continuer vers l'inscription candidat
+            <i class="bi bi-arrow-right"></i>
         </button>
     </form>
 
-    <a href="{{ url('/') }}" class="btn btn-ghost" style="text-decoration:none;">
+    <a href="{{ url('/') }}" class="btn btn-ghost" style="text-decoration:none;margin-top:4px;">
         <i class="bi bi-house"></i> Retour à l'accueil
     </a>
 </div>
@@ -204,7 +236,9 @@
 
 @push('scripts')
 <script>
-/* ── Utils ── */
+/* ────────────────────────────────────────────────
+   UTILS
+──────────────────────────────────────────────── */
 function togglePwd(id, ico) {
     const f = document.getElementById(id), i = document.getElementById(ico);
     f.type = f.type === 'password' ? 'text' : 'password';
@@ -217,7 +251,9 @@ function showErr(boxId, msgId, msg) {
 }
 function hideErr(boxId) { document.getElementById(boxId).style.display = 'none'; }
 
-/* ── Force mdp ── */
+/* ────────────────────────────────────────────────
+   FORCE MOT DE PASSE
+──────────────────────────────────────────────── */
 function pwdStrength(v) {
     const wrap = document.getElementById('pwd-bar-wrap');
     if (!v) { wrap.style.display='none'; return; }
@@ -228,49 +264,57 @@ function pwdStrength(v) {
     if (/[0-9]/.test(v))        s++;
     if (/[^A-Za-z0-9]/.test(v)) s++;
     const lvls = [
-        {pct:'25%',col:'#c0281e',txt:'Très faible'},
-        {pct:'50%',col:'#d4a017',txt:'Faible'},
-        {pct:'75%',col:'#00A572',txt:'Moyen'},
-        {pct:'100%',col:'#1a6b3a',txt:'Fort'},
+        {pct:'25%', col:'#c0281e', txt:'Très faible'},
+        {pct:'50%', col:'#d4a017', txt:'Faible'},
+        {pct:'75%', col:'#00A572', txt:'Moyen'},
+        {pct:'100%',col:'#1a6b3a', txt:'Fort'},
     ];
     const l = lvls[s-1] || lvls[0];
     document.getElementById('pwd-fill').style.cssText = `width:${l.pct};background:${l.col}`;
-    document.getElementById('pwd-text').textContent = 'Force : ' + l.txt;
-    document.getElementById('pwd-text').style.color = l.col;
+    const tx = document.getElementById('pwd-text');
+    tx.textContent = 'Force : ' + l.txt;
+    tx.style.color = l.col;
 }
 
-/* ── Navigation étapes ── */
-function show(id)  { document.getElementById(id).style.display = 'block'; }
-function hide(id)  { document.getElementById(id).style.display = 'none'; }
-
+/* ────────────────────────────────────────────────
+   NAVIGATION ÉTAPES
+──────────────────────────────────────────────── */
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
 function toStep1() { hide('reg-step2'); show('reg-step1'); window.scrollTo({top:0}); }
 
 function toStep2() {
     hideErr('js-err');
-    const nom  = document.getElementById('r-nom').value.trim();
-    const prn  = document.getElementById('r-prenom').value.trim();
+    const nom   = document.getElementById('r-nom').value.trim();
+    const prn   = document.getElementById('r-prenom').value.trim();
     const email = document.getElementById('r-email').value.trim();
-    const pwd  = document.getElementById('r-pwd').value;
-    const pwd2 = document.getElementById('r-pwd2').value;
+    const pwd   = document.getElementById('r-pwd').value;
+    const pwd2  = document.getElementById('r-pwd2').value;
 
-    if (!nom || !prn) { showErr('js-err','js-err-msg','Veuillez saisir votre nom et prénom.'); return; }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('js-err','js-err-msg','Veuillez saisir une adresse email valide.'); return; }
-    if (pwd.length < 8) { showErr('js-err','js-err-msg','Mot de passe trop court (min. 8 caractères).'); return; }
-    if (pwd !== pwd2) { showErr('js-err','js-err-msg','Les mots de passe ne correspondent pas.'); return; }
+    if (!nom || !prn)
+        { showErr('js-err','js-err-msg','Veuillez saisir votre nom et prénom.'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        { showErr('js-err','js-err-msg','Veuillez saisir une adresse email valide.'); return; }
+    if (pwd.length < 8)
+        { showErr('js-err','js-err-msg','Mot de passe trop court (min. 8 caractères).'); return; }
+    if (pwd !== pwd2)
+        { showErr('js-err','js-err-msg','Les mots de passe ne correspondent pas.'); return; }
 
-    // Envoyer le code de vérification par email
+    // Afficher l'email dans l'étape 2
+    document.getElementById('email-addr').textContent = email;
+
+    // Envoyer le code de vérification
     fetch('/verify-email/send', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({ email: email })
+        body: JSON.stringify({ email })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('email-addr').textContent = email;
             hide('reg-step1');
             show('reg-step2');
             startCountdown(180);
@@ -280,91 +324,113 @@ function toStep2() {
             showErr('js-err','js-err-msg', data.message || 'Erreur lors de l\'envoi du code.');
         }
     })
-    .catch(error => {
-        showErr('js-err','js-err-msg','Erreur réseau. Veuillez réessayer.');
-        console.error('Error:', error);
-    });
+    .catch(() => showErr('js-err','js-err-msg','Erreur réseau. Veuillez réessayer.'));
 }
 
-/* ── OTP ── */
+/* ────────────────────────────────────────────────
+   OTP — SAISIE CHIFFRES
+──────────────────────────────────────────────── */
 function dInput(el, pos) {
     el.value = el.value.replace(/\D/g, '');
     el.classList.toggle('filled', el.value.length === 1);
-    if (el.value.length === 1) { const n = document.getElementById('d'+(pos+1)); if(n) n.focus(); }
+    if (el.value.length === 1) {
+        const n = document.getElementById('d'+(pos+1));
+        if (n) n.focus();
+    }
     syncOtp();
 }
 function dBack(e, pos) {
     if (e.key === 'Backspace') {
         const el = document.getElementById('d'+pos);
-        if (!el.value) { const p = document.getElementById('d'+(pos-1)); if(p){p.value='';p.classList.remove('filled');p.focus();} }
+        if (!el.value) {
+            const p = document.getElementById('d'+(pos-1));
+            if (p) { p.value=''; p.classList.remove('filled'); p.focus(); }
+        }
     }
     syncOtp();
 }
 function syncOtp() {
     let c = '';
-    for (let i=1;i<=6;i++) c += document.getElementById('d'+i).value;
+    for (let i=1; i<=6; i++) c += document.getElementById('d'+i).value;
     document.getElementById('otp-hidden').value = c;
 }
 
+/* ────────────────────────────────────────────────
+   VÉRIFICATION OTP
+──────────────────────────────────────────────── */
 function verifyOtp() {
     hideErr('js-err2');
-    const code = document.getElementById('otp-hidden').value;
+    const code  = document.getElementById('otp-hidden').value;
     const email = document.getElementById('email-addr').textContent;
-    
-    if (code.length < 6) { showErr('js-err2','js-err2-msg','Veuillez entrer le code complet à 6 chiffres.'); return; }
 
-    // Vérifier le code auprès du serveur
+    if (code.length < 6) {
+        showErr('js-err2','js-err2-msg','Veuillez entrer le code complet à 6 chiffres.');
+        return;
+    }
+
     fetch('/verify-email/verify', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({ email: email, code: code })
+        body: JSON.stringify({ email, code })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
             toStep3();
         } else {
-            showErr('js-err2','js-err2-msg', data.message || 'Erreur lors de la vérification.');
+            showErr('js-err2','js-err2-msg', data.message || 'Code invalide. Réessayez.');
         }
     })
-    .catch(error => {
-        showErr('js-err2','js-err2-msg','Erreur réseau. Veuillez réessayer.');
-        console.error('Error:', error);
-    });
+    .catch(() => showErr('js-err2','js-err2-msg','Erreur réseau. Veuillez réessayer.'));
 }
 
+/* ────────────────────────────────────────────────
+   ÉTAPE 3 — Préparer et afficher
+──────────────────────────────────────────────── */
 function toStep3() {
-    const nom  = document.getElementById('r-nom').value.trim();
-    const prn  = document.getElementById('r-prenom').value.trim();
+    const nom   = document.getElementById('r-nom').value.trim();
+    const prn   = document.getElementById('r-prenom').value.trim();
     const email = document.getElementById('r-email').value.trim();
-    const tel  = document.getElementById('r-tel').value.trim();
+    const tel   = document.getElementById('r-tel').value.trim();
 
+    // Remplir les champs cachés du formulaire POST final
     document.getElementById('h-name').value   = nom;
     document.getElementById('h-prenom').value = prn;
     document.getElementById('h-tel').value    = tel;
     document.getElementById('h-email').value  = email;
     document.getElementById('h-pwd').value    = document.getElementById('r-pwd').value;
     document.getElementById('h-pwd2').value   = document.getElementById('r-pwd2').value;
-    document.getElementById('welcome-name').textContent = nom + ' ' + prn;
-    document.getElementById('welcome-email').textContent  = email;
+
+    // Affichage de bienvenue
+    document.getElementById('welcome-name').textContent  = nom + ' ' + prn;
+    document.getElementById('welcome-email').textContent = email;
 
     hide('reg-step2');
     show('reg-step3');
     window.scrollTo({top:0});
 }
 
-/* ── Countdown ── */
+/* ────────────────────────────────────────────────
+   COUNTDOWN RENVOI CODE
+──────────────────────────────────────────────── */
 let timer = null;
 function startCountdown(sec) {
     clearInterval(timer);
-    document.getElementById('resend-btn').style.display = 'none';
+    document.getElementById('resend-btn').style.display  = 'none';
     document.getElementById('resend-timer').style.display = 'inline';
     let r = sec;
     tick(r);
-    timer = setInterval(() => { r--; tick(r); if(r<=0){ clearInterval(timer); document.getElementById('resend-timer').style.display='none'; document.getElementById('resend-btn').style.display='inline'; } }, 1000);
+    timer = setInterval(() => {
+        r--; tick(r);
+        if (r <= 0) {
+            clearInterval(timer);
+            document.getElementById('resend-timer').style.display = 'none';
+            document.getElementById('resend-btn').style.display   = 'inline';
+        }
+    }, 1000);
 }
 function tick(s) {
     document.getElementById('cdown').textContent =
@@ -372,30 +438,28 @@ function tick(s) {
 }
 function resend() {
     const email = document.getElementById('email-addr').textContent;
-    
-    // Renvoyer le code par email
     fetch('/verify-email/send', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({ email: email })
+        body: JSON.stringify({ email })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
             startCountdown(180);
-            [1,2,3,4,5,6].forEach(i => { const d=document.getElementById('d'+i); d.value=''; d.classList.remove('filled'); });
+            [1,2,3,4,5,6].forEach(i => {
+                const d = document.getElementById('d'+i);
+                d.value = ''; d.classList.remove('filled');
+            });
             document.getElementById('d1').focus();
         } else {
-            showErr('js-err2','js-err2-msg', data.message || 'Erreur lors de l\'envoi du code.');
+            showErr('js-err2','js-err2-msg', data.message || 'Erreur lors du renvoi.');
         }
     })
-    .catch(error => {
-        showErr('js-err2','js-err2-msg','Erreur réseau. Veuillez réessayer.');
-        console.error('Error:', error);
-    });
+    .catch(() => showErr('js-err2','js-err2-msg','Erreur réseau.'));
 }
 </script>
 @endpush
