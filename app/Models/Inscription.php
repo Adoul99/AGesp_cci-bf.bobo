@@ -13,8 +13,8 @@ class Inscription extends Model
         'dataDebut_formation', 
         'candidat_id', 
         'paiement_id',
-        // Ajout des colonnes pour les fichiers
-        'cnib', 'photo_identite', 'certificat_medical', 'acte_naissance', 'recu_paiement', 'permis_c'
+        // 'recu_paiement' a été supprimé ici
+        'cnib', 'photo_identite', 'certificat_medical', 'acte_naissance', 'permis_c'
     ];
 
     public function candidat() { return $this->belongsTo(Candidat::class); }

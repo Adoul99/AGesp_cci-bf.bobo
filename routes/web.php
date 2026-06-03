@@ -20,7 +20,7 @@ use App\Http\Controllers\SessionFormationController;
 use App\Http\Controllers\TypeSessionController;
 use App\Http\Controllers\Auth\VerificationCodeController;
 use App\Http\Controllers\EspaceCandidatController;
-use App\Http\Controllers\PublicController;
+
 use App\Http\Controllers\UserController;
 
 // ══════════════════════════════════════════════════════════════
@@ -40,11 +40,6 @@ Route::post('/verify-email/verify', [VerificationCodeController::class, 'verify'
 // ══════════════════════════════════════════════════════════════
 // PAGES PUBLIQUES
 // ══════════════════════════════════════════════════════════════
-Route::get('/verifier-inscription', [PublicController::class, 'verifierInscription'])
-     ->name('public.verifier');
-
-Route::get('/resultats-examens', [PublicController::class, 'resultatsExamens'])
-     ->name('public.resultats');
 
 // ══════════════════════════════════════════════════════════════
 // INSCRIPTION PUBLIQUE
@@ -128,6 +123,10 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
 
     // ── Programmations ───────────────────────────────────────
     Route::resource('programmations',     ProgrammationController::class);
+
+    // ── AJAX : candidats d'un groupe (pour le formulaire de programmation) ──
+    Route::get('groupes/{groupe}/candidats', [ProgrammationController::class, 'candidatsParGroupe'])
+         ->name('groupes.candidats');
 
     // ── Reçus ────────────────────────────────────────────────
     Route::resource('recus',              RecusController::class);

@@ -29,7 +29,8 @@ class VehiculeController extends Controller
         ]);
 
         Vehicule::create($request->all());
-        return redirect()->route('vehicules.index');
+        return redirect()->route('vehicules.index')
+                         ->with('success', 'Véhicule ajouté avec succès.');
     }
 
     public function edit(Vehicule $vehicule)

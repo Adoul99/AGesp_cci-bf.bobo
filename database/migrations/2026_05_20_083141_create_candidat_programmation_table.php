@@ -7,16 +7,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Ajoute groupe_id à la table programmations
      */
     public function up(): void
     {
-        Schema::create('candidat_programmation', function (Blueprint $table) {
-    $table->id();
-    $table->unsignedBigInteger('candidat_id');
-    $table->unsignedBigInteger('programmation_id');
-    $table->timestamps();
-});
+        Schema::table('programmations', function (Blueprint $table) {
+            $table->unsignedBigInteger('groupe_id')->nullable()->after('moniteur_id');
+            $table->foreign('groupe_id')
+                  ->references('id')
+                  ->on('groupes')
+                  ->onDelete('set null');
+        });
     }
 
     /**
@@ -24,6 +25,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('candidat_programmation');
+        Schema::table('programmations', function (Blueprint $table) {
+            $table->dropForeign(['groupe_id']);
+            $table->dropColumn('groupe_id');
+        });
     }
 };

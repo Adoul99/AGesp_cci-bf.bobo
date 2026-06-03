@@ -13,6 +13,7 @@ class Programmation extends Model
         'dateDebut',
         'dateFin',
         'moniteur_id',
+        'groupe_id',
     ];
 
     /**
@@ -21,6 +22,14 @@ class Programmation extends Model
     public function moniteur()
     {
         return $this->belongsTo(Moniteur::class);
+    }
+
+    /**
+     * Une programmation appartient à un groupe
+     */
+    public function groupe()
+    {
+        return $this->belongsTo(Groupe::class);
     }
 
     /**

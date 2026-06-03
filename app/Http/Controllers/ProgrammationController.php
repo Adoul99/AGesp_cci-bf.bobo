@@ -5,82 +5,107 @@ namespace App\Http\Controllers;
 use App\Models\Programmation;
 use App\Models\Candidat;
 use App\Models\Moniteur;
+use App\Models\Groupe;
 use Illuminate\Http\Request;
 
 class ProgrammationController extends Controller
 {
-    /**
-     * Affiche la liste de toutes les programmations
-     */
     public function index()
     {
-        $programmations = Programmation::with(['moniteur', 'candidats'])->get();
+        $programmations = Programmation::with(['moniteur', 'groupe', 'candidats'])->get();
         return view('programmations.index', compact('programmations'));
     }
 
-    /**
-     * Affiche le formulaire de création d'une nouvelle programmation
-     */
     public function create()
     {
         $moniteurs = Moniteur::all();
-        $candidats = Candidat::with('programmations')->get();
-        return view('programmations.create', compact('moniteurs', 'candidats'));
+        $groupes   = Groupe::all();
+        return view('programmations.create', compact('moniteurs', 'groupes'));
     }
 
-    /**
-     * Enregistre une nouvelle programmation dans la base de données
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'dateDebut' => 'required|date',
-            'dateFin' => 'required|date',
+            'dateDebut'   => 'required|date',
+            'dateFin'     => 'required|date|after_or_equal:dateDebut',
+            'moniteur_id' => 'nullable|exists:moniteurs,id',
+            'groupe_id'   => 'nullable|exists:groupes,id',
         ]);
 
-        // Création de la programmation
-        $programmation = Programmation::create($request->only('dateDebut', 'dateFin', 'moniteur_id'));
+        $programmation = Programmation::create(
+            $request->only('dateDebut', 'dateFin', 'moniteur_id', 'groupe_id')
+        );
 
-        // Attacher les candidats sélectionnés
-        if ($request->has('candidat_ids')) {
-            $programmation->candidats()->attach($request->candidat_ids);
+        // Attacher les candidats du groupe sélectionné
+        if ($request->groupe_id) {
+            $groupe = Groupe::find($request->groupe_id);
+            if ($groupe) {
+                $candidatIds = $groupe->candidats->pluck('id')->toArray();
+                $programmation->candidats()->attach($candidatIds);
+            }
         }
 
-        return redirect()->route('programmations.index');
+        return redirect()->route('programmations.index')
+                         ->with('success', 'Programmation créée avec succès.');
     }
 
-    /**
-     * Affiche le formulaire de modification d'une programmation
-     */
     public function edit(Programmation $programmation)
     {
-        $moniteurs = Moniteur::all();
-        $candidats = Candidat::with('programmations')->get();
+        $moniteurs             = Moniteur::all();
+        $groupes               = Groupe::all();
         $candidatsSelectionnes = $programmation->candidats->pluck('id')->toArray();
-        return view('programmations.edit', compact('programmation', 'moniteurs', 'candidats', 'candidatsSelectionnes'));
+        // Candidats du groupe associé
+        $candidats = $programmation->groupe
+            ? $programmation->groupe->candidats
+            : collect();
+
+        return view('programmations.edit',
+            compact('programmation', 'moniteurs', 'groupes', 'candidats', 'candidatsSelectionnes')
+        );
     }
 
-    /**
-     * Met à jour une programmation existante
-     */
     public function update(Request $request, Programmation $programmation)
     {
-        $programmation->update($request->only('dateDebut', 'dateFin', 'moniteur_id'));
+        $request->validate([
+            'dateDebut'   => 'required|date',
+            'dateFin'     => 'required|date|after_or_equal:dateDebut',
+            'moniteur_id' => 'nullable|exists:moniteurs,id',
+            'groupe_id'   => 'nullable|exists:groupes,id',
+        ]);
 
-        // Synchroniser les candidats sélectionnés
-        $programmation->candidats()->sync($request->candidat_ids ?? []);
+        $programmation->update(
+            $request->only('dateDebut', 'dateFin', 'moniteur_id', 'groupe_id')
+        );
 
-        return redirect()->route('programmations.index');
+        // Si groupe changé, synchroniser avec les candidats du nouveau groupe
+        if ($request->groupe_id) {
+            $groupe = Groupe::find($request->groupe_id);
+            if ($groupe) {
+                $candidatIds = $groupe->candidats->pluck('id')->toArray();
+                $programmation->candidats()->sync($candidatIds);
+            }
+        } else {
+            $programmation->candidats()->sync($request->candidat_ids ?? []);
+        }
+
+        return redirect()->route('programmations.index')
+                         ->with('success', 'Programmation mise à jour.');
+    }
+
+    public function destroy(Programmation $programmation)
+    {
+        $programmation->candidats()->detach();
+        $programmation->delete();
+        return redirect()->route('programmations.index')
+                         ->with('success', 'Programmation supprimée.');
     }
 
     /**
-     * Supprime une programmation de la base de données
+     * API : retourne les candidats d'un groupe (appelé en AJAX)
      */
-    public function destroy(Programmation $programmation)
+    public function candidatsParGroupe(Groupe $groupe)
     {
-        // Détacher tous les candidats avant suppression
-        $programmation->candidats()->detach();
-        $programmation->delete();
-        return redirect()->route('programmations.index');
+        $candidats = $groupe->candidats()->select('id', 'nom', 'prenom')->get();
+        return response()->json($candidats);
     }
 }
