@@ -4,69 +4,106 @@ namespace App\Http\Controllers;
 
 use App\Models\Evaluation;
 use App\Models\Moniteur;
+use App\Models\Candidat;
+use App\Models\TypeSession;
 use Illuminate\Http\Request;
 
 class EvaluationController extends Controller
 {
-    /**
-     * Affiche la liste de toutes les évaluations
-     */
     public function index()
     {
-        $evaluations = Evaluation::with('moniteur')->get();
+        $evaluations = Evaluation::with(['candidat', 'moniteur'])->get();
         return view('evaluations.index', compact('evaluations'));
     }
 
-    /**
-     * Affiche le formulaire de création d'une nouvelle évaluation
-     */
     public function create()
     {
-        $moniteurs = Moniteur::all();
-        return view('evaluations.create', compact('moniteurs'));
+        $moniteurs    = Moniteur::all();
+        $candidats    = Candidat::orderBy('nom')->get();
+        $typeSessions = TypeSession::orderBy('type')->get(); // ← 'code' → 'type'
+        return view('evaluations.create', compact('moniteurs', 'candidats', 'typeSessions'));
     }
 
-    /**
-     * Enregistre une nouvelle évaluation dans la base de données
-     */
+    public function report()
+    {
+        $evaluations = Evaluation::with(['candidat', 'moniteur'])
+            ->orderBy('dateEvaluation', 'desc')
+            ->get();
+        return view('evaluations.report', compact('evaluations'));
+    }
+
     public function store(Request $request)
     {
-        // Validation des données du formulaire
         $request->validate([
+            'candidat_id'    => 'required|exists:candidats,id',
             'dateEvaluation' => 'required|date',
-            'resultat' => 'required',
-            'statut' => 'required',
+            'note'           => 'nullable|numeric|min:0|max:30',
+            'statut'         => 'required|in:en_attente,reussi,echoue',
+            'moniteur_id'    => 'nullable|exists:moniteurs,id',
         ]);
 
-        // Création de l'évaluation
-        Evaluation::create($request->all());
-        return redirect()->route('evaluations.index');
+        $note     = $request->note;
+        $resultat = 'En attente';
+        if (!is_null($note)) {
+            $resultat = $note >= 25 ? 'Admis' : 'Ajourné';
+        }
+
+        Evaluation::create([
+            'candidat_id'    => $request->candidat_id,
+            'dateEvaluation' => $request->dateEvaluation,
+            'note'           => $note,
+            'resultat'       => $resultat,
+            'statut'         => $request->statut,
+            'moniteur_id'    => $request->moniteur_id,
+            'observation'    => $request->observation,
+        ]);
+
+        return redirect()->route('evaluations.index')
+                         ->with('success', 'Évaluation enregistrée avec succès.');
     }
 
-    /**
-     * Affiche le formulaire de modification d'une évaluation
-     */
     public function edit(Evaluation $evaluation)
     {
-        $moniteurs = Moniteur::all();
-        return view('evaluations.edit', compact('evaluation', 'moniteurs'));
+        $moniteurs    = Moniteur::all();
+        $candidats    = Candidat::orderBy('nom')->get();
+        $typeSessions = TypeSession::orderBy('type')->get(); // ← 'code' → 'type'
+        return view('evaluations.edit', compact('evaluation', 'moniteurs', 'candidats', 'typeSessions'));
     }
 
-    /**
-     * Met à jour une évaluation existante
-     */
     public function update(Request $request, Evaluation $evaluation)
     {
-        $evaluation->update($request->all());
-        return redirect()->route('evaluations.index');
+        $request->validate([
+            'candidat_id'    => 'required|exists:candidats,id',
+            'dateEvaluation' => 'required|date',
+            'note'           => 'nullable|numeric|min:0|max:30',
+            'statut'         => 'required|in:en_attente,reussi,echoue',
+            'moniteur_id'    => 'nullable|exists:moniteurs,id',
+        ]);
+
+        $note     = $request->note;
+        $resultat = 'En attente';
+        if (!is_null($note)) {
+            $resultat = $note >= 25 ? 'Admis' : 'Ajourné';
+        }
+
+        $evaluation->update([
+            'candidat_id'    => $request->candidat_id,
+            'dateEvaluation' => $request->dateEvaluation,
+            'note'           => $note,
+            'resultat'       => $resultat,
+            'statut'         => $request->statut,
+            'moniteur_id'    => $request->moniteur_id,
+            'observation'    => $request->observation,
+        ]);
+
+        return redirect()->route('evaluations.index')
+                         ->with('success', 'Évaluation mise à jour.');
     }
 
-    /**
-     * Supprime une évaluation de la base de données
-     */
     public function destroy(Evaluation $evaluation)
     {
         $evaluation->delete();
-        return redirect()->route('evaluations.index');
+        return redirect()->route('evaluations.index')
+                         ->with('success', 'Évaluation supprimée.');
     }
 }

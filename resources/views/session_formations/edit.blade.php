@@ -103,7 +103,7 @@
                             <option value="">-- Choisir un type de session --</option>
                             @foreach($typesSessions as $type)
                                 <option value="{{ $type->id }}" {{ old('typeSession_id', $sessionFormation->typeSession_id) == $type->id ? 'selected' : '' }}>
-                                    {{ $type->nomTypeSession ?? $type->code }}
+                                    {{ $type->code }}
                                 </option>
                             @endforeach
                         </select>

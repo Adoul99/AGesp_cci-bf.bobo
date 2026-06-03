@@ -133,8 +133,60 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
 .pay-row:hover { background:#e8f2ec; }
 
 @media (max-width:768px) {
-    .db-stats  { grid-template-columns: repeat(2, 1fr); }
-    .db-tables { grid-template-columns: 1fr; }
+    .db-stats    { grid-template-columns: repeat(2, 1fr); }
+    .db-modules  { grid-template-columns: 1fr; }
+    .db-tables   { grid-template-columns: 1fr; }
+}
+
+.db-modules {
+    display              : grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap                  : 10px;
+    margin-bottom        : 14px;
+}
+
+.db-module-card {
+    background   : white;
+    border-radius: 10px;
+    border       : 1px solid rgba(26,107,58,0.12);
+    padding      : 14px;
+    display      : flex;
+    justify-content: space-between;
+    align-items  : center;
+    gap          : 12px;
+    box-shadow   : 0 2px 8px rgba(26,107,58,0.08);
+    text-decoration: none;
+    color        : inherit;
+}
+
+.db-module-info {
+    display: grid;
+    gap: 4px;
+}
+
+.db-module-title {
+    font-weight: 700;
+    color: #1a2520;
+}
+
+.db-module-sub {
+    font-size: 0.78rem;
+    color: #6b7a70;
+}
+
+.db-module-link {
+    background   : #1a6b3a;
+    color        : white;
+    border       : none;
+    border-radius: 8px;
+    padding      : 8px 12px;
+    font-size    : 0.78rem;
+    font-weight  : 700;
+    text-decoration: none;
+}
+
+.db-module-link:hover {
+    background: #19612e;
 }
 </style>
 
@@ -167,15 +219,75 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
             <span class="db-stat-ico">📝</span>
         </div>
         <div class="db-stat so">
-            <div class="db-stat-lbl">Paiements FCFA</div>
-            <div class="db-stat-val"></div>
-            <span class="db-stat-ico">💰</span>
+            <div class="db-stat-lbl">Moyenne des notes</div>
+            <div class="db-stat-val">{{ $moyenneNotes !== null ? number_format($moyenneNotes, 2, ',', ' ') : 'N/A' }}</div>
+            <span class="db-stat-ico">🧠</span>
         </div>
         <div class="db-stat sd">
             <div class="db-stat-lbl">Formations en cours</div>
             <div class="db-stat-val">{{ $formationsEnCours }}</div>
             <span class="db-stat-ico">🚗</span>
         </div>
+    </div>
+
+    {{-- ── Modules rapides ── --}}
+    <div class="db-modules">
+        <a href="{{ route('candidats.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Candidats</div>
+                <div class="db-module-sub">Gérer les candidats</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
+        <a href="{{ route('inscriptions.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Inscriptions</div>
+                <div class="db-module-sub">Suivre les inscriptions</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
+        <a href="{{ route('formations.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Formations</div>
+                <div class="db-module-sub">Planifier les formations</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
+        <a href="{{ route('examens.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Examens</div>
+                <div class="db-module-sub">Voir les examens</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
+        <a href="{{ route('paiements.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Paiements</div>
+                <div class="db-module-sub">Consulter les paiements</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
+        <a href="{{ route('evaluations.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Évaluations</div>
+                <div class="db-module-sub">Voir les évaluations</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
+        <a href="{{ route('moniteurs.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Moniteurs</div>
+                <div class="db-module-sub">Gestion des moniteurs</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
+        <a href="{{ route('vehicules.index') }}" class="db-module-card">
+            <div class="db-module-info">
+                <div class="db-module-title">Véhicules</div>
+                <div class="db-module-sub">Gérer le parc auto</div>
+            </div>
+            <span class="db-module-link">Ouvrir</span>
+        </a>
     </div>
 
     {{-- ── 2 Tableaux côte à côte ── --}}

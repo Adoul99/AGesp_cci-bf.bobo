@@ -19,7 +19,9 @@ use App\Http\Controllers\RecusController;
 use App\Http\Controllers\SessionFormationController;
 use App\Http\Controllers\TypeSessionController;
 use App\Http\Controllers\Auth\VerificationCodeController;
-use App\Http\Controllers\EspaceCandidatController; // ← NOUVEAU
+use App\Http\Controllers\EspaceCandidatController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\UserController;
 
 // ══════════════════════════════════════════════════════════════
 // PAGE D'ACCUEIL
@@ -27,7 +29,7 @@ use App\Http\Controllers\EspaceCandidatController; // ← NOUVEAU
 Route::view('/', 'welcome')->name('home');
 
 // ══════════════════════════════════════════════════════════════
-// VÉRIFICATION EMAIL — routes appelées par le register (AJAX)
+// VÉRIFICATION EMAIL (AJAX)
 // ══════════════════════════════════════════════════════════════
 Route::post('/verify-email/send',   [VerificationCodeController::class, 'send'])
      ->name('verify-email.send');
@@ -36,7 +38,16 @@ Route::post('/verify-email/verify', [VerificationCodeController::class, 'verify'
      ->name('verify-email.verify');
 
 // ══════════════════════════════════════════════════════════════
-// INSCRIPTION PUBLIQUE — accessibles SANS être connecté
+// PAGES PUBLIQUES
+// ══════════════════════════════════════════════════════════════
+Route::get('/verifier-inscription', [PublicController::class, 'verifierInscription'])
+     ->name('public.verifier');
+
+Route::get('/resultats-examens', [PublicController::class, 'resultatsExamens'])
+     ->name('public.resultats');
+
+// ══════════════════════════════════════════════════════════════
+// INSCRIPTION PUBLIQUE
 // ══════════════════════════════════════════════════════════════
 Route::get('/s-inscrire',
     [InscriptionController::class, 'formulairePublic']
@@ -51,23 +62,28 @@ Route::get('/inscription-confirmee',
 )->name('inscription.succes');
 
 // ══════════════════════════════════════════════════════════════
-// ESPACE CANDIDAT — connecté + rôle candidat uniquement ← NOUVEAU
+// ESPACE CANDIDAT
 // ══════════════════════════════════════════════════════════════
 Route::middleware(['auth', 'candidat.only'])->group(function () {
-
     Route::get('/mon-espace', [EspaceCandidatController::class, 'index'])
          ->name('candidat.espace');
-
 });
 
 // ══════════════════════════════════════════════════════════════
-// ESPACE ADMIN — connecté + vérifié + rôle admin ← MODIFIÉ
+// ESPACE ADMIN
 // ══════════════════════════════════════════════════════════════
 Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
 
     // ── Tableau de bord ──────────────────────────────────────
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
          ->name('dashboard');
+
+    // ── Gestion des utilisateurs & rôles ─────────────────────
+    Route::get   ('users',             [UserController::class, 'index'])      ->name('users.index');
+    Route::get   ('users/create',      [UserController::class, 'create'])     ->name('users.create');
+    Route::post  ('users',             [UserController::class, 'store'])      ->name('users.store');
+    Route::patch ('users/{user}/role', [UserController::class, 'updateRole']) ->name('users.role');
+    Route::delete('users/{user}',      [UserController::class, 'destroy'])    ->name('users.destroy');
 
     // ── Gestion des candidats ────────────────────────────────
     Route::resource('candidats',          CandidatController::class);
@@ -100,6 +116,8 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::resource('categorie_permis',   CategoriePermisController::class);
 
     // ── Évaluations ──────────────────────────────────────────
+    Route::get('evaluations/rapport', [EvaluationController::class, 'report'])
+         ->name('evaluations.report');
     Route::resource('evaluations',        EvaluationController::class);
 
     // ── Groupes ──────────────────────────────────────────────
