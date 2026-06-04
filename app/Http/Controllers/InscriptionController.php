@@ -6,23 +6,81 @@ use App\Models\Inscription;
 use App\Models\Candidat;
 use App\Models\CategoriePermis;
 use App\Models\Dossier;
-use App\Models\Paiement; // Assurez-vous que ce modèle existe
+use App\Models\Paiement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class InscriptionController extends Controller
 {
-    // [Les autres méthodes de l'administration restent inchangées...]
+    // ── ADMIN : liste ──────────────────────────────────────────
+    public function index()
+    {
+        $inscriptions = Inscription::with('candidat', 'paiement')->get();
+        return view('inscriptions.index', compact('inscriptions'));
+    }
 
+    // ── ADMIN : formulaire création ────────────────────────────
+    public function create()
+    {
+        $candidats = Candidat::all();
+        return view('inscriptions.create', compact('candidats'));
+    }
+
+    // ── ADMIN : enregistrer ────────────────────────────────────
+    public function store(Request $request)
+    {
+        $request->validate([
+            'dateInscription' => 'required|date',
+            'candidat_id'     => 'required',
+            'paiement_id'     => 'required',
+        ]);
+
+        Inscription::create($request->all());
+        return redirect()->route('inscriptions.index')->with('success', 'Inscription créée avec succès.');
+    }
+
+    // ── ADMIN : modifier ───────────────────────────────────────
+    public function edit(Inscription $inscription)
+    {
+        $candidats = Candidat::all();
+        return view('inscriptions.edit', compact('inscription', 'candidats'));
+    }
+
+    // ── ADMIN : mettre à jour ──────────────────────────────────
+    public function update(Request $request, Inscription $inscription)
+    {
+        $inscription->update($request->all());
+        return redirect()->route('inscriptions.index')->with('success', 'Inscription mise à jour.');
+    }
+
+    // ── ADMIN : supprimer ──────────────────────────────────────
+    public function destroy(Inscription $inscription)
+    {
+        $inscription->delete();
+        return redirect()->route('inscriptions.index')->with('success', 'Inscription supprimée.');
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // PUBLIC : formulaire d'inscription en ligne
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * Affiche le formulaire d'inscription en ligne
+     */
     public function formulairePublic()
     {
         $categories = CategoriePermis::orderBy('nomCategorie')->get();
         return view('inscription-publique', compact('categories'));
     }
 
+    /**
+     * Enregistre une nouvelle inscription
+     * SANS recu_paiement (le reçu sera remis à l'arrivée)
+     */
     public function storePublic(Request $request)
     {
-        // ── Validation sans reçu de paiement ────────────────────────────────────────
+        // ── Validation ────────────────────────────────────────
         $request->validate([
             'nom'                   => 'required|string|max:100',
             'prenom'                => 'required|string|max:100',
@@ -36,14 +94,24 @@ class InscriptionController extends Controller
             'categoriePermis_id'    => 'required|exists:categorie_permis,id',
             'dataDebut_formation'   => 'required|date',
             'dateInscription'       => 'nullable|date',
-            // Preuve ou statut du paiement direct requis depuis le front
-            'statut_paiement_en_ligne' => 'required|string|in:PAYE',
-            // Pièces jointes restantes
+            'statutInscription'     => 'nullable|string|max:50',
+
+            // Pièces jointes — SANS recu_paiement
             'cnib'                  => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
             'photo_identite'        => 'required|file|mimes:jpeg,jpg,png|max:5120',
             'certificat_medical'    => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
             'acte_naissance'        => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
             'permis_c'              => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
+
+            // Paiement — OBLIGATOIRE
+            'modePaiement'          => 'required|in:especes,mobile_money,virement',
+            'montantPaiement'       => 'required|numeric|min:1',
+            'tranchePaiement'       => 'required|string|in:total,tranche1,tranche2',
+            'operateur'             => 'nullable|string|max:100',
+            'numeroTransaction'     => 'nullable|string|max:100',
+            'referenceVirement'     => 'nullable|string|max:100',
+            'dateVirement'          => 'nullable|date',
+            'datePaiement'          => 'required|date',
         ], [
             'nom.required'                  => 'Le nom est obligatoire.',
             'prenom.required'               => 'Le prénom est obligatoire.',
@@ -52,11 +120,13 @@ class InscriptionController extends Controller
             'lieuNaissance.required'        => 'Le lieu de naissance est obligatoire.',
             'categoriePermis_id.required'   => 'Veuillez choisir une catégorie de permis.',
             'dataDebut_formation.required'  => 'La date de début de formation est obligatoire.',
-            'statut_paiement_en_ligne.required' => 'Le paiement des frais d\'inscription est obligatoire.',
             'cnib.required'                 => 'La CNIB est obligatoire.',
             'photo_identite.required'       => 'La photo d\'identité est obligatoire.',
             'certificat_medical.required'   => 'Le certificat médical est obligatoire.',
             'acte_naissance.required'       => 'L\'acte de naissance est obligatoire.',
+            'modePaiement.required'         => 'Veuillez choisir un mode de paiement.',
+            'montantPaiement.required'      => 'Le montant de paiement est obligatoire.',
+            'tranchePaiement.required'      => 'Veuillez choisir une modalité (total ou tranche).',
         ]);
 
         $data = DB::transaction(function () use ($request) {
@@ -74,37 +144,50 @@ class InscriptionController extends Controller
                 'lieuDelivrancePermisC' => $request->lieuDelivrancePermisC,
             ]);
 
+            // 2. Référence unique
             $reference = 'GESP-' . date('Y') . '-' . str_pad($candidat->id, 5, '0', STR_PAD_LEFT);
+
+            // 3. Upload pièces jointes — SANS recu_paiement
             $dossierPath = 'dossiers/' . $reference;
 
-            // 2. Enregistrement des fichiers physiques
             $cnibPath          = $request->file('cnib')->store($dossierPath, 'public');
             $photoIdentitePath = $request->file('photo_identite')->store($dossierPath, 'public');
             $certificatPath    = $request->file('certificat_medical')->store($dossierPath, 'public');
             $acteNaissancePath = $request->file('acte_naissance')->store($dossierPath, 'public');
-            $permisCPath       = $request->hasFile('permis_c') 
-                                    ? $request->file('permis_c')->store($dossierPath, 'public') 
+            $permisCPath       = $request->hasFile('permis_c')
+                                    ? $request->file('permis_c')->store($dossierPath, 'public')
                                     : null;
 
-            // 3. Génération automatique de la ligne de Paiement suite à la validation
-            // Modifiez les colonnes selon la structure réelle de votre table paiements
+            // 4. Créer le paiement
             $paiement = Paiement::create([
-                'montant'       => 15000, // Ajustez le montant par défaut si nécessaire
-                'datePaiement'  => now()->toDateString(),
-                'statutPaiement'=> 'valide',
-                'motif'         => 'Frais d\'inscription en ligne '.$reference,
+                'montant'           => $request->montantPaiement,
+                'modePaiement'      => $request->modePaiement,
+                'tranchePaiement'   => $request->tranchePaiement,
+                'operateur'         => $request->operateur,
+                'numeroTransaction' => $request->numeroTransaction,
+                'referenceVirement' => $request->referenceVirement,
+                'dateVirement'      => $request->dateVirement,
+                'datePaiement'      => $request->datePaiement,
+                'statut'            => 'en_attente',
+                'candidat_id'       => $candidat->id,
             ]);
 
-            $statutFormate = ($request->statutInscription && strtolower($request->statutInscription) === 'actif') ? 'actif' : 'en attente';
+            // 5. Statut inscription
+            $statutFormate = 'en_attente';
+            if ($request->statutInscription && strtolower($request->statutInscription) === 'actif') {
+                $statutFormate = 'actif';
+            }
 
-            // 4. Créer l'inscription avec liaison paiement_id
+            // 6. Créer l'inscription
             Inscription::create([
                 'candidat_id'         => $candidat->id,
-                'paiement_id'         => $paiement->id,
+                'categoriePermis_id'  => $request->categoriePermis_id,
                 'reference'           => $reference,
                 'dateInscription'     => $request->dateInscription ?? now()->toDateString(),
                 'statutInscription'   => $statutFormate,
                 'dataDebut_formation' => $request->dataDebut_formation,
+                'paiement_id'         => $paiement->id,
+                // Fichiers — SANS recu_paiement
                 'cnib'                => $cnibPath,
                 'photo_identite'      => $photoIdentitePath,
                 'certificat_medical'  => $certificatPath,
@@ -112,10 +195,10 @@ class InscriptionController extends Controller
                 'permis_c'            => $permisCPath,
             ]);
 
-            // 5. Créer le dossier administratif (sans colonne recu_paiement)
+            // 7. Créer le dossier lié
             Dossier::create([
                 'nomDossier'         => $reference,
-                'description'        => 'Dossier automatique créé après inscription et paiement en ligne',
+                'description'        => 'Dossier automatique créé après inscription en ligne',
                 'dateDepot'          => now()->toDateString(),
                 'statutDossier'      => 'en_attente',
                 'candidat_id'        => $candidat->id,
@@ -126,8 +209,11 @@ class InscriptionController extends Controller
                 'permis_c'           => $permisCPath,
             ]);
 
-            $categorie = CategoriePermis::find($request->categoriePermis_id);
-            $nomCategorie = $categorie ? ($categorie->pareCategorie ?? $categorie->nomCategorie ?? $categorie->nom) : '—';
+            // 8. Données pour le récépissé
+            $categorie    = CategoriePermis::find($request->categoriePermis_id);
+            $nomCategorie = $categorie
+                ? ($categorie->pareCategorie ?? $categorie->nomCategorie ?? $categorie->nom ?? '—')
+                : '—';
 
             return [
                 'reference'           => $reference,
@@ -139,15 +225,25 @@ class InscriptionController extends Controller
                 'categorie_nom'       => $nomCategorie,
                 'dataDebut_formation' => $request->dataDebut_formation,
                 'dateInscription'     => $request->dateInscription ?? now()->toDateString(),
+                'montantPaiement'     => $request->montantPaiement,
+                'modePaiement'        => $request->modePaiement,
+                'tranchePaiement'     => $request->tranchePaiement,
             ];
         });
 
-        return redirect()->route('inscription.succes')->with($data);
+        return redirect()
+            ->route('inscription.succes')
+            ->with($data);
     }
 
+    /**
+     * Affiche la page de succès avec le récépissé
+     */
     public function succes()
     {
-        if (!session('reference')) { return redirect()->route('inscription.public'); }
+        if (!session('reference')) {
+            return redirect()->route('inscription.public');
+        }
         return view('inscription-success');
     }
 }

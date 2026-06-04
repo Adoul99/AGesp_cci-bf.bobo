@@ -62,7 +62,7 @@
                     Pièces Jointes
                 </h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-                    @foreach(['cnib' => 'CNIB', 'photo_identite' => 'Photo Identité', 'certificat_medical' => 'Certificat Médical', 'acte_naissance' => 'Acte Naissance', 'recu_paiement' => 'Reçu Paiement', 'permis_c' => 'Copie Permis C'] as $field => $label)
+                    @foreach(['cnib' => 'CNIB', 'photo_identite' => 'Photo Identité', 'certificat_medical' => 'Certificat Médical', 'acte_naissance' => 'Acte Naissance', 'permis_c' => 'Copie Permis C'] as $field => $label)
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem;">{{ $label }}</label>
                             <input type="file" name="{{ $field }}" style="width: 100%; padding: 0.5rem; border: 1px dashed var(--color-gray-200); border-radius: var(--radius-md);">

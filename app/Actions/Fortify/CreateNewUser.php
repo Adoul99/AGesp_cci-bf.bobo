@@ -3,50 +3,33 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
-use App\Notifications\CodeVerification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
 {
     public function create(array $input): User
     {
-        // ── Validation : Téléphone facultatif, Email obligatoire ──
         Validator::make($input, [
-            'name'      => ['required', 'string', 'max:100'],
-            'prenom'    => ['required', 'string', 'max:100'],
-            'telephone' => ['nullable', 'string', 'min:8', 'max:20', 'unique:users,telephone', 'regex:/^[0-9]+$/'],
-            'email'     => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password'  => ['required', 'confirmed', Password::defaults()],
+            'name'      => ['required', 'string', 'max:255'],
+            'prenom'    => ['nullable', 'string', 'max:255'],
+            'email'     => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'telephone' => ['required', 'string', 'min:8', 'max:20', 'unique:users'],
+            'password'  => ['required', 'string', 'min:8', 'confirmed'],
         ], [
-            'name.required'      => 'Le nom est obligatoire.',
-            'prenom.required'    => 'Le prénom est obligatoire.',
-            'email.required'     => 'L\'adresse e-mail est obligatoire.',
-            'email.unique'       => 'Cette adresse e-mail est déjà utilisée.',
-            'telephone.unique'   => 'Ce numéro de téléphone est déjà utilisé.',
-            'password.required'  => 'Le mot de passe est obligatoire.',
-            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
+            'telephone.required' => 'Le numéro de téléphone est obligatoire.',
+            'telephone.min'      => 'Le numéro doit contenir au moins 8 chiffres.',
+            'telephone.unique'   => 'Ce numéro de téléphone est déjà associé à un compte existant.',
         ])->validate();
 
-        // ── Création de l'utilisateur ────────────────────────────
-        // On génère le code AVANT la création pour pouvoir le stocker
-        $code = rand(100000, 999999);
-
-        $user = User::create([
-            'name'              => strtoupper(trim($input['name'])) . ' ' . trim($input['prenom']),
-            'prenom'            => trim($input['prenom']),
-            'telephone'         => !empty($input['telephone']) ? trim($input['telephone']) : null,
-            'email'             => trim($input['email']),
-            'password'          => Hash::make($input['password']),
-            'role'              => 'candidat',
-            'verification_code' => $code, // Assurez-vous d'avoir cette colonne dans votre BDD
+        return User::create([
+            'name'      => $input['name'],
+            'prenom'    => $input['prenom'] ?? null,
+            'telephone' => $input['telephone'],
+            'email'     => $input['email'],
+            'password'  => Hash::make($input['password']),
+            'role'      => 'candidat',
         ]);
-
-        // ── Envoi par Mail ──────────────────────────────────────
-        $user->notify(new CodeVerification($code));
-
-        return $user;
     }
 }
