@@ -35,7 +35,8 @@
         </div>
 
         <!-- Formulaire -->
-        <form method="POST" action="{{ route('categorie_permis.update', $categorie->id) }}" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
+        {{-- ✅ CORRECTION 1 : bon paramètre de route + balise fermante style= ajoutée --}}
+        <form method="POST" action="{{ route('categorie_permis.update', ['categoriePermis' => $categoriePermis->id]) }}" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
             @csrf
             @method('PUT')
 
@@ -53,10 +54,11 @@
                         <label for="nomCategorie" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
                             Nom de la Catégorie <span style="color: var(--color-red);">*</span>
                         </label>
+                        {{-- ✅ CORRECTION 2 : $categorie -> $categoriePermis --}}
                         <input type="text"
                                id="nomCategorie"
                                name="nomCategorie"
-                               value="{{ old('nomCategorie', $categorie->nomCategorie) }}"
+                               value="{{ old('nomCategorie', $categoriePermis->nomCategorie) }}"
                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
@@ -72,10 +74,11 @@
                         <label for="description" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
                             Description <span style="color: var(--color-gray-500); font-weight: 400; font-size: 0.75rem;">(Facultatif)</span>
                         </label>
+                        {{-- ✅ CORRECTION 3 : $categorie -> $categoriePermis --}}
                         <input type="text"
                                id="description"
                                name="description"
-                               value="{{ old('description', $categorie->description) }}"
+                               value="{{ old('description', $categoriePermis->description) }}"
                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"

@@ -108,7 +108,8 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::resource('attestations',       AttestationController::class);
 
     // ── Catégories de permis ─────────────────────────────────
-    Route::resource('categorie_permis',   CategoriePermisController::class);
+   Route::resource('categorie_permis', CategoriePermisController::class)
+     ->parameters(['categorie_permis' => 'categoriePermis']);
 
     // ── Évaluations ──────────────────────────────────────────
     Route::get('evaluations/rapport', [EvaluationController::class, 'report'])
