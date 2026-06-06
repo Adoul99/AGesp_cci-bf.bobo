@@ -1,194 +1,183 @@
 <x-layouts::app.sidebar title="Modifier Session de Formation">
-    <style>
-        :root {
-            /* Couleurs principales */
-            --color-red: #CE1126;
-            --color-green: #007A5E;
-            --color-gold: #FCD116;
-            
-            /* Nuances */
-            --color-red-light: #E85040;
-            --color-red-dark: #A00D20;
-            --color-green-light: #00A572;
-            --color-green-dark: #004D3A;
-            --color-gold-light: #FFE657;
-            --color-gold-dark: #E5B800;
-            
-            /* Neutres */
-            --color-dark: #1A1A1A;
-            --color-light: #F8F8F8;
-            --color-gray-100: #E8E8E8;
-            --color-gray-200: #D1D1D1;
-            --color-gray-500: #666666;
-            
-            /* Ombres */
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-            
-            /* Transitions & Bordures */
-            --transition-normal: 300ms ease-in-out;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-        }
-    </style>
+<style>
+:root {
+    --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
+    --color-red-light: #E85040; --color-red-dark: #A00D20;
+    --color-green-light: #00A572; --color-green-dark: #004D3A;
+    --color-gold-dark: #E5B800; --color-dark: #1A1A1A;
+    --color-gray-100: #E8E8E8; --color-gray-200: #D1D1D1; --color-gray-500: #666666;
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --transition-normal: 300ms ease-in-out; --radius-md: 8px; --radius-lg: 12px;
+}
+</style>
 
-    <div class="content-wrapper" style="padding: 2rem;">
-        
-        <!-- En-tête avec titre -->
-        <div class="header-section" style="margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
-            <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-dark); margin: 0; display: flex; align-items: center;">
-                <span style="width: 5px; height: 35px; background: linear-gradient(180deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%); margin-right: 1rem; border-radius: 2px;"></span>
-                Modifier Session de Formation
-            </h1>
+<div class="content-wrapper" style="padding:2rem;">
+
+    {{-- En-tête --}}
+    <div style="margin-bottom:2rem; background:white; padding:1.5rem 2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border-left:4px solid var(--color-gold);">
+        <h1 style="font-size:1.875rem; font-weight:700; color:var(--color-dark); margin:0; display:flex; align-items:center;">
+            <span style="width:5px; height:35px; background:linear-gradient(180deg,var(--color-red) 0%,var(--color-green) 50%,var(--color-gold) 100%); margin-right:1rem; border-radius:2px;"></span>
+            Modifier Session — {{ \Carbon\Carbon::parse($sessionFormation->dateDebut)->format('d/m/Y') }}
+        </h1>
+        <p style="margin:0.5rem 0 0 1.5rem; color:var(--color-gray-500); font-size:0.875rem;">
+            ✎ Vous pouvez modifier les informations et mettre à jour les absences/notes des candidats.
+        </p>
+    </div>
+
+    @if(session('error'))
+        <div style="margin-bottom:1.5rem; padding:1rem 1.5rem; background:rgba(206,17,38,0.1); border-left:4px solid var(--color-red); border-radius:var(--radius-md); color:var(--color-red-dark); font-weight:600;">{{ session('error') }}</div>
+    @endif
+
+    <form method="POST" action="{{ route('session_formations.update', $sessionFormation->id) }}" style="display:contents;">
+        @csrf @method('PUT')
+
+        {{-- INFORMATIONS GÉNÉRALES --}}
+        <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:2rem;">
+            <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1.5rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
+                Informations de la session
+            </h2>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:1.75rem;">
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Date *</label>
+                    <input type="date" name="dateDebut" value="{{ old('dateDebut', $sessionFormation->dateDebut) }}"
+                           style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                           onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'" required>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Type de session *</label>
+                    <select name="typeSession_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;" required>
+                        <option value="">-- Choisir --</option>
+                        @foreach($typesSessions as $t)
+                            <option value="{{ $t->id }}" {{ $sessionFormation->typeSession_id == $t->id ? 'selected' : '' }}>
+                                @switch($t->type) @case('code') 📋 Code @break @case('creneau') 🔧 Créneau @break @case('conduite') 🚗 Conduite @break @default {{ $t->type }} @endswitch
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Moniteur</label>
+                    <select name="moniteur_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;">
+                        <option value="">-- Aucun --</option>
+                        @foreach($moniteurs as $m)
+                            <option value="{{ $m->id }}" {{ $sessionFormation->moniteur_id == $m->id ? 'selected' : '' }}>
+                                👤 {{ $m->nom }} {{ $m->prenom }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Véhicule</label>
+                    <select name="vehicule_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;">
+                        <option value="">-- Aucun --</option>
+                        @foreach($vehicules as $v)
+                            <option value="{{ $v->id }}" {{ $sessionFormation->vehicule_id == $v->id ? 'selected' : '' }}>🚗 {{ $v->nomVehicule }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+            </div>
         </div>
 
-        <!-- Formulaire -->
-        <form method="POST" action="{{ route('session_formations.update', $sessionFormation->id) }}" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
-            @csrf
-            @method('PUT')
-            
-            <!-- Section: Paramètres de la session -->
-            <div style="margin-bottom: 2rem;">
-                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--color-gold); display: flex; align-items: center;">
-                    <span style="width: 4px; height: 20px; background: var(--color-green); margin-right: 0.75rem; border-radius: 2px;"></span>
-                    Édition de la Session
-                </h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    
-                    <!-- Date Début -->
-                    <div class="form-group">
-                        <label for="dateDebut" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Date Début <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="date" 
-                               id="dateDebut"
-                               name="dateDebut" 
-                               value="{{ old('dateDebut', $sessionFormation->dateDebut) }}"
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               required>
-                    </div>
+        {{-- SAISIE ABSENCES + NOTES --}}
+        @if($candidatsSession->isNotEmpty())
+        <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:2rem;">
+            <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:0.5rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
+                📋 Présences / Absences & Notes des candidats
+            </h2>
+            <p style="color:var(--color-gray-500); font-size:0.8rem; margin:0 0 1.25rem 0;">
+                Cochez la case <strong>Absent</strong> si le candidat n'est pas présent. Les candidats présents doivent recevoir une note avant la clôture.
+            </p>
 
-                    <!-- Statut -->
-                    <div class="form-group">
-                        <label for="statutSession" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Statut <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <select id="statutSession"
-                                name="statutSession" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                                required>
-                            <option value="ouvert" {{ old('statutSession', $sessionFormation->statutSession) == 'ouvert' ? 'selected' : '' }}>Ouvert</option>
-                            <option value="ferme" {{ old('statutSession', $sessionFormation->statutSession) == 'ferme' ? 'selected' : '' }}>Fermé</option>
-                            <option value="annule" {{ old('statutSession', $sessionFormation->statutSession) == 'annule' ? 'selected' : '' }}>Annulé</option>
-                        </select>
-                    </div>
-
-                    <!-- Type de Session -->
-                    <div class="form-group">
-                        <label for="typeSession_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Type de Session <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <select id="typeSession_id"
-                                name="typeSession_id" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                                required>
-                            <option value="">-- Choisir un type de session --</option>
-                            @foreach($typesSessions as $type)
-                                <option value="{{ $type->id }}" {{ old('typeSession_id', $sessionFormation->typeSession_id) == $type->id ? 'selected' : '' }}>
-                                    {{ $type->code }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Véhicule -->
-                    <div class="form-group">
-                        <label for="vehicule_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Véhicule
-                        </label>
-                        <select id="vehicule_id"
-                                name="vehicule_id" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'">
-                            <option value="">-- Choisir un véhicule --</option>
-                            @foreach($vehicules as $vehicule)
-                                <option value="{{ $vehicule->id }}" {{ old('vehicule_id', $sessionFormation->vehicule_id) == $vehicule->id ? 'selected' : '' }}>
-                                    {{ $vehicule->nomVehicule }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Groupe -->
-                    <div class="form-group">
-                        <label for="groupe_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Groupe
-                        </label>
-                        <select id="groupe_id"
-                                name="groupe_id" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'">
-                            <option value="">-- Choisir un groupe --</option>
-                            @foreach($groupes as $groupe)
-                                <option value="{{ $groupe->id }}" {{ old('groupe_id', $sessionFormation->groupe_id) == $groupe->id ? 'selected' : '' }}>
-                                    {{ $groupe->nomGroupe }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Évaluation -->
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label for="evaluation_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Évaluation
-                        </label>
-                        <select id="evaluation_id"
-                                name="evaluation_id" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'">
-                            <option value="">-- Choisir une évaluation --</option>
-                            @foreach($evaluations as $evaluation)
-                                <option value="{{ $evaluation->id }}" {{ old('evaluation_id', $sessionFormation->evaluation_id) == $evaluation->id ? 'selected' : '' }}>
-                                    {{ $evaluation->resultat }} - ({{ \Carbon\Carbon::parse($evaluation->dateEvaluation)->format('d/m/Y') }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.875rem;">
+                    <thead>
+                        <tr style="background:rgba(0,122,94,0.08); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                            <th style="padding:0.75rem 1rem; text-align:left; font-weight:700; color:var(--color-dark);">Candidat</th>
+                            <th style="padding:0.75rem 1rem; text-align:center; font-weight:700; color:var(--color-red);">Absent</th>
+                            <th style="padding:0.75rem 1rem; text-align:center; font-weight:700; color:var(--color-green);">Note /30</th>
+                            <th style="padding:0.75rem 1rem; text-align:left; font-weight:700; color:var(--color-dark);">Observation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($candidatsSession as $candidat)
+                        <tr style="border-bottom:1px solid var(--color-gray-100);" id="row-{{ $candidat->id }}">
+                            <td style="padding:0.75rem 1rem; font-weight:600; color:var(--color-dark);">
+                                👤 {{ $candidat->nom }} {{ $candidat->prenom }}
+                            </td>
+                            <td style="padding:0.75rem 1rem; text-align:center;">
+                                <input type="checkbox"
+                                       name="candidats[{{ $candidat->id }}][absent]"
+                                       value="1"
+                                       {{ $candidat->pivot->absent ? 'checked' : '' }}
+                                       onchange="toggleNote(this, {{ $candidat->id }})"
+                                       style="width:18px; height:18px; accent-color:var(--color-red); cursor:pointer;">
+                            </td>
+                            <td style="padding:0.75rem 1rem; text-align:center;">
+                                <input type="number"
+                                       name="candidats[{{ $candidat->id }}][note]"
+                                       id="note-{{ $candidat->id }}"
+                                       value="{{ $candidat->pivot->note }}"
+                                       min="0" max="30" step="0.5"
+                                       placeholder="—"
+                                       {{ $candidat->pivot->absent ? 'disabled' : '' }}
+                                       style="width:80px; padding:0.4rem 0.6rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); text-align:center; font-size:0.875rem; {{ $candidat->pivot->absent ? 'background:#f5f5f5; color:#999;' : '' }}"
+                                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                            </td>
+                            <td style="padding:0.75rem 1rem;">
+                                <input type="text"
+                                       name="candidats[{{ $candidat->id }}][observation]"
+                                       value="{{ $candidat->pivot->observation }}"
+                                       placeholder="Remarque..."
+                                       style="width:100%; padding:0.4rem 0.75rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.8rem;"
+                                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
+        </div>
+        @else
+        <div style="margin-bottom:2rem; padding:1.25rem; background:rgba(252,209,22,0.1); border-left:4px solid var(--color-gold); border-radius:var(--radius-md); color:var(--color-gold-dark);">
+            ⚠️ Aucun candidat n'est encore attaché à cette session. Sélectionnez un groupe pour en ajouter.
+        </div>
+        @endif
 
-            <!-- Boutons d'action -->
-            <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--color-gray-100);">
-                <!-- Mettre à jour -->
-                <button type="submit" 
-                        style="background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-green); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.875rem;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 122, 94, 0.3)'"
-                        onmouseout="this.style.transform='translateY(0)';"
-                >
-                    ✓ Mettre à jour
-                </button>
+        {{-- Boutons --}}
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <button type="submit"
+                    style="background:linear-gradient(135deg,var(--color-green) 0%,var(--color-green-dark) 100%); color:white; padding:0.875rem 2rem; border-radius:var(--radius-md); border:2px solid var(--color-green); font-weight:600; cursor:pointer; font-size:0.875rem; text-transform:uppercase;">
+                ✓ Enregistrer les modifications
+            </button>
+            <a href="{{ route('session_formations.cloture', $sessionFormation->id) }}"
+               style="background:linear-gradient(135deg,var(--color-red) 0%,var(--color-red-dark) 100%); color:white; padding:0.875rem 2rem; border-radius:var(--radius-md); border:2px solid var(--color-red); font-weight:600; text-decoration:none; font-size:0.875rem; text-transform:uppercase; display:inline-flex; align-items:center; gap:0.5rem;">
+                🔒 Aller à la clôture
+            </a>
+            <a href="{{ route('session_formations.index') }}"
+               style="background:var(--color-gray-100); color:var(--color-dark); padding:0.875rem 2rem; border-radius:var(--radius-md); border:2px solid var(--color-gray-200); font-weight:600; text-decoration:none; font-size:0.875rem; text-transform:uppercase; display:inline-flex; align-items:center;">
+                ✕ Retour
+            </a>
+        </div>
+    </form>
+</div>
 
-                <!-- Annuler -->
-                <a href="{{ route('session_formations.index') }}" 
-                   style="background: linear-gradient(135deg, var(--color-gray-200) 0%, var(--color-gray-100) 100%); color: var(--color-dark); padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-gray-200); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); text-decoration: none; font-size: 0.875rem;"
-                   onmouseover="this.style.transform='translateY(-2px)';"
-                   onmouseout="this.style.transform='translateY(0)';"
-                >
-                    ✕ Annuler
-                </a>
-            </div>
-        </form>
-    </div>
+<script>
+function toggleNote(checkbox, candidatId) {
+    const noteInput = document.getElementById('note-' + candidatId);
+    if (checkbox.checked) {
+        noteInput.disabled = true;
+        noteInput.value = '';
+        noteInput.style.background = '#f5f5f5';
+        noteInput.style.color = '#999';
+    } else {
+        noteInput.disabled = false;
+        noteInput.style.background = 'white';
+        noteInput.style.color = 'var(--color-dark)';
+    }
+}
+</script>
 </x-layouts::app.sidebar>

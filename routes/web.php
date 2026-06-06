@@ -134,6 +134,9 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
 
     // ── Sessions de formation ────────────────────────────────
     Route::resource('session_formations', SessionFormationController::class);
+    // Clôture d'une session (GET = formulaire, POST = traitement)
+    Route::get ('session_formations/{sessionFormation}/cloture',  [SessionFormationController::class, 'cloture'])  ->name('session_formations.cloture');
+    Route::post('session_formations/{sessionFormation}/cloturer', [SessionFormationController::class, 'cloturer']) ->name('session_formations.cloturer');
 
     // ── Types de session ─────────────────────────────────────
     Route::resource('type_sessions',      TypeSessionController::class);
