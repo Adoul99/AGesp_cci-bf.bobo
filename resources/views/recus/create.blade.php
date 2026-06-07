@@ -1,257 +1,194 @@
 <x-layouts::app.sidebar title="Nouveau Reçu">
 <style>
-    .form-page {
-        font-family: 'Segoe UI', sans-serif;
-        background: #f0f2f5;
-        min-height: 100vh;
-        padding: 24px;
-    }
-
-    /* Page Header Card */
-    .page-header-card {
-        background: #fff;
-        border-radius: 6px;
-        padding: 20px 28px;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-        border-left: 4px solid #c0392b;
-    }
-
-    .page-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1a1a2e;
-        margin: 0;
-    }
-
-    /* Form Card */
-    .form-card {
-        background: #fff;
-        border-radius: 6px;
-        padding: 28px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-        border: 1px solid #e0e3e8;
-        margin-bottom: 20px;
-    }
-
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #1a1a2e;
-        margin: 0 0 20px 0;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eef0f3;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .section-title::before {
-        content: '';
-        display: inline-block;
-        width: 4px;
-        height: 18px;
-        background: #2e7d6e;
-        border-radius: 2px;
-    }
-
-    /* Form Grid */
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    @media (max-width: 640px) {
-        .form-grid { grid-template-columns: 1fr; }
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .form-label {
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: #4a5568;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .required-star {
-        color: #c0392b;
-        font-size: 0.9rem;
-    }
-
-    .form-input,
-    .form-select {
-        width: 100%;
-        border: 1.5px solid #d1d5db;
-        border-radius: 4px;
-        padding: 9px 12px;
-        font-size: 0.88rem;
-        color: #1a1a2e;
-        background: #fafbfc;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        outline: none;
-        box-sizing: border-box;
-    }
-
-    .form-input:focus,
-    .form-select:focus {
-        border-color: #2e7d6e;
-        box-shadow: 0 0 0 3px rgba(46,125,110,0.12);
-        background: #fff;
-    }
-
-    .form-input::placeholder { color: #9ca3af; font-style: italic; }
-
-    /* Buttons */
-    .form-actions {
-        display: flex;
-        gap: 12px;
-        padding-top: 8px;
-    }
-
-    .btn-save {
-        background: #c0392b;
-        color: #fff;
-        border: none;
-        padding: 10px 28px;
-        border-radius: 4px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: background 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-    }
-    .btn-save:hover { background: #a93226; }
-
-    .btn-cancel {
-        background: #6b7280;
-        color: #fff;
-        border: none;
-        padding: 10px 28px;
-        border-radius: 4px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        text-decoration: none;
-        cursor: pointer;
-        transition: background 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-    }
-    .btn-cancel:hover { background: #4b5563; color: #fff; }
-
-    /* Info Banner */
-    .info-banner {
-        background: #e8f4fd;
-        border: 1px solid #bee3f8;
-        border-radius: 5px;
-        padding: 11px 16px;
-        font-size: 0.82rem;
-        color: #2b6cb0;
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-    /* Error messages */
-    .field-error {
-        color: #c0392b;
-        font-size: 0.76rem;
-        margin-top: 2px;
-    }
+:root {
+    --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
+    --color-red-light: #E85040; --color-red-dark: #A00D20;
+    --color-green-light: #00A572; --color-green-dark: #004D3A;
+    --color-gold-dark: #E5B800; --color-dark: #1A1A1A;
+    --color-gray-100: #E8E8E8; --color-gray-200: #D1D1D1; --color-gray-500: #666666;
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --radius-md: 8px; --radius-lg: 12px;
+}
 </style>
 
-<div class="form-page">
-    <!-- Page Header -->
-    <div class="page-header-card">
-        <h1 class="page-title">| Nouveau Reçu</h1>
+<div class="content-wrapper" style="padding:2rem;">
+
+    {{-- En-tête --}}
+    <div style="margin-bottom:2rem; background:white; padding:1.5rem 2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border-left:4px solid var(--color-red);">
+        <h1 style="font-size:1.875rem; font-weight:700; color:var(--color-dark); margin:0; display:flex; align-items:center;">
+            <span style="width:5px; height:35px; background:linear-gradient(180deg,var(--color-red) 0%,var(--color-green) 50%,var(--color-gold) 100%); margin-right:1rem; border-radius:2px;"></span>
+            Nouveau Reçu
+        </h1>
+        <p style="margin:0.5rem 0 0 1.5rem; color:var(--color-gray-500); font-size:0.875rem;">
+            🔖 Le numéro de reçu sera généré automatiquement.
+        </p>
     </div>
 
-    <!-- Form Card -->
-    <div class="form-card">
-        <h2 class="section-title">Informations Générales</h2>
+    {{-- Erreurs --}}
+    @if($errors->any())
+    <div style="margin-bottom:1.5rem; padding:1rem 1.5rem; background:rgba(206,17,38,0.1); border-left:4px solid var(--color-red); border-radius:var(--radius-md); color:var(--color-red-dark);">
+        <strong>⚠️ Erreurs :</strong>
+        <ul style="margin:0.5rem 0 0 1.5rem;">
+            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+        </ul>
+    </div>
+    @endif
 
-        <form method="POST" action="{{ route('recus.store') }}">
-            @csrf
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">
-                        Montant (FCFA) <span class="required-star">*</span>
-                    </label>
-                    <input type="number"
-                           name="montant"
-                           class="form-input"
-                           placeholder="Ex: 50000"
-                           value="{{ old('montant') }}"
-                           required>
-                    @error('montant')<span class="field-error">{{ $message }}</span>@enderror
+    <form method="POST" action="{{ route('recus.store') }}" enctype="multipart/form-data" style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100);">
+        @csrf
+
+        <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1.5rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
+            Informations du Reçu
+        </h2>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:1.75rem;">
+
+            {{-- Numéro reçu (readonly, généré auto) --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Numéro de Reçu
+                    <span style="background:var(--color-green); color:white; font-size:0.65rem; padding:0.15rem 0.5rem; border-radius:50px; margin-left:0.5rem;">AUTO</span>
+                </label>
+                <div style="padding:0.75rem 1rem; border:2px solid var(--color-green); border-radius:var(--radius-md); background:rgba(0,122,94,0.06); color:var(--color-green-dark); font-weight:700; font-size:0.875rem; display:flex; align-items:center; gap:0.5rem;">
+                    🔖 Généré automatiquement à l'enregistrement
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">
-                        Date Reçu <span class="required-star">*</span>
-                    </label>
-                    <input type="date"
-                           name="dateRecus"
-                           class="form-input"
-                           value="{{ old('dateRecus') }}"
-                           required>
-                    @error('dateRecus')<span class="field-error">{{ $message }}</span>@enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        Paiement <span class="required-star">*</span>
-                    </label>
-                    <select name="paiement_id" class="form-select" required>
-                        <option value="">-- Choisir un paiement --</option>
-                        @foreach($paiements as $paiement)
-                        <option value="{{ $paiement->id }}" {{ old('paiement_id') == $paiement->id ? 'selected' : '' }}>
+            {{-- Paiement --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Paiement <span style="color:var(--color-red);">*</span>
+                </label>
+                <select name="paiement_id" id="paiement_id" required
+                        style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;"
+                        onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'"
+                        onchange="remplirMontant(this)">
+                    <option value="">-- Choisir un paiement --</option>
+                    @foreach($paiements as $paiement)
+                        <option value="{{ $paiement->id }}"
+                                data-montant="{{ $paiement->montant }}"
+                                {{ old('paiement_id') == $paiement->id ? 'selected' : '' }}>
                             {{ $paiement->candidat ? $paiement->candidat->nom.' '.$paiement->candidat->prenom : 'N/A' }}
                             — {{ number_format($paiement->montant, 0, ',', ' ') }} FCFA
                         </option>
-                        @endforeach
-                    </select>
-                    @error('paiement_id')<span class="field-error">{{ $message }}</span>@enderror
+                    @endforeach
+                </select>
+                @error('paiement_id')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
+            </div>
+
+            {{-- Montant --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Montant (FCFA) <span style="color:var(--color-red);">*</span>
+                </label>
+                <input type="number" name="montant" id="montant"
+                       value="{{ old('montant') }}" min="0" step="1" placeholder="Ex: 50000" required
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                @error('montant')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
+            </div>
+
+            {{-- Date --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Date du Reçu <span style="color:var(--color-red);">*</span>
+                </label>
+                <input type="date" name="dateRecus"
+                       value="{{ old('dateRecus', date('Y-m-d')) }}" required
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                @error('dateRecus')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
+            </div>
+
+            {{-- Pièce jointe reçu paiement --}}
+            <div style="grid-column:1/-1;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Reçu de Paiement (Pièce jointe)
+                    <span style="color:var(--color-gray-500); font-size:0.7rem; font-weight:400;">(Facultatif — JPG, PNG, PDF — max 5 Mo)</span>
+                </label>
+                <div id="upload-zone"
+                     style="border:2px dashed var(--color-gray-200); border-radius:var(--radius-md); padding:2rem; text-align:center; cursor:pointer; transition:all 0.3s; background:rgba(0,122,94,0.02);"
+                     onclick="document.getElementById('recus_paiement').click()"
+                     ondragover="event.preventDefault(); this.style.borderColor='var(--color-green)'; this.style.background='rgba(0,122,94,0.06)'"
+                     ondragleave="this.style.borderColor='var(--color-gray-200)'; this.style.background='rgba(0,122,94,0.02)'"
+                     ondrop="handleDrop(event)">
+                    <div id="upload-placeholder">
+                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">📎</div>
+                        <div style="font-weight:600; color:var(--color-dark); margin-bottom:0.25rem;">Glissez-déposez votre fichier ici</div>
+                        <div style="color:var(--color-gray-500); font-size:0.8rem;">ou cliquez pour sélectionner</div>
+                        <div style="margin-top:0.75rem; display:inline-block; padding:0.5rem 1.25rem; background:var(--color-green); color:white; border-radius:var(--radius-md); font-size:0.8rem; font-weight:600;">
+                            📂 Choisir un fichier
+                        </div>
+                    </div>
+                    <div id="upload-preview" style="display:none;">
+                        <div style="font-size:2.5rem; margin-bottom:0.5rem;" id="file-icon">📄</div>
+                        <div id="file-name" style="font-weight:700; color:var(--color-green-dark);"></div>
+                        <div id="file-size" style="color:var(--color-gray-500); font-size:0.8rem; margin-top:0.25rem;"></div>
+                        <button type="button" onclick="supprimerFichier(event)"
+                                style="margin-top:0.75rem; padding:0.4rem 1rem; background:rgba(206,17,38,0.1); color:var(--color-red); border:1.5px solid var(--color-red); border-radius:var(--radius-md); font-size:0.8rem; cursor:pointer;">
+                            ✕ Supprimer
+                        </button>
+                    </div>
                 </div>
+                <input type="file" id="recus_paiement" name="recus_paiement"
+                       accept=".jpg,.jpeg,.png,.pdf"
+                       style="display:none;"
+                       onchange="afficherPreview(this)">
+                @error('recus_paiement')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
             </div>
 
-            <div class="form-actions" style="margin-top: 28px;">
-                <button type="submit" class="btn-save">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                    Enregistrer
-                </button>
-                <a href="{{ route('recus.index') }}" class="btn-cancel">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                    Annuler
-                </a>
-            </div>
-        </form>
-    </div>
+        </div>
 
-    <!-- Info Banner -->
-    <div class="info-banner">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-        </svg>
-        <span><strong>Information :</strong> Les champs marqués avec un <strong>*</strong> sont obligatoires.</span>
-    </div>
+        {{-- Boutons --}}
+        <div style="display:flex; gap:1rem; margin-top:2rem; padding-top:2rem; border-top:1px solid var(--color-gray-100);">
+            <button type="submit"
+                    style="background:linear-gradient(135deg,var(--color-red) 0%,var(--color-red-dark) 100%); color:white; padding:0.875rem 2rem; border-radius:var(--radius-md); border:2px solid var(--color-red); font-weight:600; cursor:pointer; font-size:0.875rem; text-transform:uppercase;"
+                    onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                ✓ Enregistrer
+            </button>
+            <a href="{{ route('recus.index') }}"
+               style="background:var(--color-gray-100); color:var(--color-dark); padding:0.875rem 2rem; border-radius:var(--radius-md); border:2px solid var(--color-gray-200); font-weight:600; text-decoration:none; font-size:0.875rem; text-transform:uppercase; display:inline-flex; align-items:center;">
+                ✕ Annuler
+            </a>
+        </div>
+    </form>
 </div>
+
+<script>
+function afficherPreview(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    document.getElementById('upload-placeholder').style.display = 'none';
+    document.getElementById('upload-preview').style.display = 'block';
+    document.getElementById('file-name').textContent = file.name;
+    document.getElementById('file-size').textContent = (file.size / 1024).toFixed(1) + ' Ko';
+    document.getElementById('file-icon').textContent = file.type === 'application/pdf' ? '📕' : '🖼️';
+    document.getElementById('upload-zone').style.borderColor = 'var(--color-green)';
+    document.getElementById('upload-zone').style.background  = 'rgba(0,122,94,0.06)';
+}
+function supprimerFichier(e) {
+    e.stopPropagation();
+    document.getElementById('recus_paiement').value = '';
+    document.getElementById('upload-placeholder').style.display = 'block';
+    document.getElementById('upload-preview').style.display = 'none';
+    document.getElementById('upload-zone').style.borderColor = 'var(--color-gray-200)';
+    document.getElementById('upload-zone').style.background  = 'rgba(0,122,94,0.02)';
+}
+function handleDrop(e) {
+    e.preventDefault();
+    const dt = e.dataTransfer;
+    if (dt.files && dt.files[0]) {
+        document.getElementById('recus_paiement').files = dt.files;
+        afficherPreview(document.getElementById('recus_paiement'));
+    }
+}
+function remplirMontant(select) {
+    const opt = select.options[select.selectedIndex];
+    if (opt.dataset.montant) document.getElementById('montant').value = opt.dataset.montant;
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('paiement_id');
+    if (sel.value) remplirMontant(sel);
+});
+</script>
 </x-layouts::app.sidebar>

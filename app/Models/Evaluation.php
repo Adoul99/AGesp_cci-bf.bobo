@@ -10,25 +10,27 @@ class Evaluation extends Model
         'candidat_id',
         'typeSession_id',
         'dateEvaluation',
-        'note',          // ← Ajouté
+        'note',
         'resultat',
         'statut',
         'moniteur_id',
+        'observation',
     ];
 
     public function candidat()
     {
-        return $this->belongsTo(Candidat::class);
+        return $this->belongsTo(Candidat::class, 'candidat_id');
     }
 
     public function moniteur()
     {
-        return $this->belongsTo(Moniteur::class);
+        return $this->belongsTo(Moniteur::class, 'moniteur_id');
     }
 
     public function typeSession()
     {
-        return $this->belongsTo(TypeSession::class);
+        // Clé explicite car Laravel chercherait type_session_id par défaut
+        return $this->belongsTo(TypeSession::class, 'typeSession_id');
     }
 
     public function sessionFormation()

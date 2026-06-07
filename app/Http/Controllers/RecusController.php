@@ -8,65 +8,91 @@ use Illuminate\Http\Request;
 
 class RecusController extends Controller
 {
-    /**
-     * Affiche la liste de tous les reçus
-     */
     public function index()
     {
-        $recus = Recus::with('paiement')->get();
+        $recus = Recus::with('paiement.candidat')->latest()->get();
         return view('recus.index', compact('recus'));
     }
 
-    /**
-     * Affiche le formulaire de création d'un nouveau reçu
-     */
     public function create()
     {
         $paiements = Paiement::with('candidat')->get();
         return view('recus.create', compact('paiements'));
     }
 
-    /**
-     * Enregistre un nouveau reçu dans la base de données
-     */
     public function store(Request $request)
     {
-        // Validation des données du formulaire
         $request->validate([
-            'montant' => 'required|numeric',
-            'dateRecus' => 'required|date',
-            'paiement_id' => 'required',
+            'montant'        => 'required|numeric|min:0',
+            'dateRecus'      => 'required|date',
+            'paiement_id'    => 'required|exists:paiements,id',
+            'recus_paiement' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        // Création du reçu
-        Recus::create($request->all());
-        return redirect()->route('recus.index');
+        $cheminFichier = null;
+        if ($request->hasFile('recus_paiement')) {
+            $cheminFichier = $request->file('recus_paiement')
+                ->store('recus_paiements', 'public');
+        }
+
+        Recus::create([
+            'numero_recu'    => Recus::genererNumero(),
+            'montant'        => $request->montant,
+            'dateRecus'      => $request->dateRecus,
+            'paiement_id'    => $request->paiement_id,
+            'recus_paiement' => $cheminFichier,
+        ]);
+
+        return redirect()->route('recus.index')
+            ->with('success', '✅ Reçu créé avec succès.');
     }
 
-    /**
-     * Affiche le formulaire de modification d'un reçu
-     */
+    public function show(Recus $recus)
+    {
+        $recus->load('paiement.candidat');
+        return view('recus.show', compact('recus'));
+    }
+
     public function edit(Recus $recus)
     {
         $paiements = Paiement::with('candidat')->get();
         return view('recus.edit', compact('recus', 'paiements'));
     }
 
-    /**
-     * Met à jour un reçu existant
-     */
     public function update(Request $request, Recus $recus)
     {
-        $recus->update($request->all());
-        return redirect()->route('recus.index');
+        $request->validate([
+            'montant'        => 'required|numeric|min:0',
+            'dateRecus'      => 'required|date',
+            'paiement_id'    => 'required|exists:paiements,id',
+            'recus_paiement' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $cheminFichier = $recus->recus_paiement; // garder l'ancien si pas de nouveau
+        if ($request->hasFile('recus_paiement')) {
+            // Supprimer l'ancien fichier si existant
+            if ($cheminFichier && \Storage::disk('public')->exists($cheminFichier)) {
+                \Storage::disk('public')->delete($cheminFichier);
+            }
+            $cheminFichier = $request->file('recus_paiement')
+                ->store('recus_paiements', 'public');
+        }
+
+        $recus->update([
+            'montant'        => $request->montant,
+            'dateRecus'      => $request->dateRecus,
+            'paiement_id'    => $request->paiement_id,
+            'recus_paiement' => $cheminFichier,
+        ]);
+
+        return redirect()->route('recus.index')
+            ->with('success', '✅ Reçu mis à jour.');
     }
 
-    /**
-     * Supprime un reçu de la base de données
-     */
     public function destroy(Recus $recus)
     {
         $recus->delete();
-        return redirect()->route('recus.index');
+        return redirect()->route('recus.index')
+            ->with('success', '✅ Reçu supprimé.');
     }
 }
