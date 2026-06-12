@@ -128,6 +128,12 @@ class EvaluationController extends Controller
                 $count++;
             }
 
+            // Mettre à jour le statut de chaque candidat évalué
+            foreach ($request->evaluations as $candidatId => $data) {
+                $c = \App\Models\Candidat::find($candidatId);
+                if ($c) $c->mettreAJourStatut();
+            }
+
             return redirect()->route('evaluations.index')
                 ->with('success', "✅ $count évaluation(s) enregistrée(s) avec succès.");
         }
