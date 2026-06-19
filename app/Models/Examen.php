@@ -16,6 +16,16 @@ class Examen extends Model
 
     public function moniteur()
     {
-        return $this->belongsTo(Moniteur::class);
+        return $this->belongsTo(Moniteur::class, 'moniteur_id');
+    }
+
+    /**
+     * Candidats inscrits à cet examen
+     */
+    public function candidats()
+    {
+        return $this->belongsToMany(Candidat::class, 'candidat_examen')
+                    ->withPivot('resultat', 'note', 'observation')
+                    ->withTimestamps();
     }
 }

@@ -1,198 +1,157 @@
 <x-layouts::app.sidebar title="Nouvel Examen">
-    <style>
-        :root {
-            /* Couleurs principales */
-            --color-red: #CE1126;
-            --color-green: #007A5E;
-            --color-gold: #FCD116;
-            
-            /* Nuances */
-            --color-red-light: #E85040;
-            --color-red-dark: #A00D20;
-            --color-green-light: #00A572;
-            --color-green-dark: #004D3A;
-            --color-gold-light: #FFE657;
-            --color-gold-dark: #E5B800;
-            
-            /* Neutres */
-            --color-dark: #1A1A1A;
-            --color-light: #F8F8F8;
-            --color-gray-100: #E8E8E8;
-            --color-gray-200: #D1D1D1;
-            --color-gray-500: #666666;
-            
-            /* Ombres */
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-            
-            /* Transitions */
-            --transition-normal: 300ms ease-in-out;
-            
-            /* Bordures */
-            --radius-md: 8px;
-            --radius-lg: 12px;
-        }
-    </style>
+<style>
+:root {
+    --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
+    --color-red-dark: #A00D20; --color-green-light: #00A572;
+    --color-green-dark: #004D3A; --color-gold-dark: #E5B800;
+    --color-dark: #1A1A1A; --color-gray-100: #E8E8E8;
+    --color-gray-200: #D1D1D1; --color-gray-500: #666666;
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --radius-md: 8px; --radius-lg: 12px; --transition-normal: 300ms ease-in-out;
+}
+</style>
 
-    <div class="content-wrapper" style="padding: 2rem;">
-        <!-- En-tête avec titre -->
-        <div class="header-section" style="margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
-            <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-dark); margin: 0; display: flex; align-items: center;">
-                <span style="width: 5px; height: 35px; background: linear-gradient(180deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%); margin-right: 1rem; border-radius: 2px;"></span>
-                Nouvel Examen
-            </h1>
-        </div>
+<div class="content-wrapper" style="padding:2rem;">
 
-        <!-- Formulaire -->
-        <form method="POST" action="{{ route('examens.store') }}" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
-            @csrf
-            
-            <!-- Section: Informations de l'examen -->
-            <div style="margin-bottom: 2.5rem;">
-                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--color-gold); display: flex; align-items: center;">
-                    <span style="width: 4px; height: 20px; background: var(--color-green); margin-right: 0.75rem; border-radius: 2px;"></span>
-                    Informations Générales
-                </h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    
-                    <!-- Libellé -->
-                    <div class="form-group">
-                        <label for="libelle" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Libellé <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="text" 
-                               id="libelle"
-                               name="libelle" 
-                               value="{{ old('libelle') }}"
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               placeholder="Ex: Examen du Code de la Route"
-                               required>
-                        @error('libelle')
-                            <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; background:white; padding:1.5rem 2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border-left:4px solid var(--color-red);">
+        <h1 style="font-size:1.875rem; font-weight:700; color:var(--color-dark); margin:0; display:flex; align-items:center;">
+            <span style="width:5px; height:35px; background:linear-gradient(180deg,var(--color-red) 0%,var(--color-green) 50%,var(--color-gold) 100%); margin-right:1rem; border-radius:2px;"></span>
+            Nouvel Examen
+        </h1>
+        <a href="{{ route('examens.index') }}" style="color:var(--color-gray-500); text-decoration:none; font-size:.85rem;">← Retour</a>
+    </div>
 
-                    <!-- Statut -->
-                    <div class="form-group">
-                        <label for="statutExamen" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Statut <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <select id="statutExamen"
-                                name="statutExamen" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                                required>
-                            <option value="en_attente" {{ old('statutExamen') == 'en_attente' ? 'selected' : '' }}>⏳ En attente</option>
-                            <option value="admis" {{ old('statutExamen') == 'admis' ? 'selected' : '' }}>🟢 Admis</option>
-                            <option value="ajourne" {{ old('statutExamen') == 'ajourne' ? 'selected' : '' }}>🔴 Ajourné</option>
-                            <option value="abandon" {{ old('statutExamen') == 'abandon' ? 'selected' : '' }}>⚪ Abandon</option>
-                        </select>
-                        @error('statutExamen')
-                            <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
+    @if($errors->any())
+    <div style="margin-bottom:1.5rem; padding:1rem 1.5rem; background:rgba(206,17,38,0.1); border-left:4px solid var(--color-red); border-radius:var(--radius-md); color:var(--color-red-dark);">
+        <strong>⚠️ Erreurs :</strong>
+        <ul style="margin:0.5rem 0 0 1.5rem;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+    </div>
+    @endif
 
-                    <!-- Date Début -->
-                    <div class="form-group">
-                        <label for="dateDebut" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Date Début <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="date" 
-                               id="dateDebut"
-                               name="dateDebut" 
-                               value="{{ old('dateDebut') }}"
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               required>
-                        @error('dateDebut')
-                            <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
+    <form method="POST" action="{{ route('examens.store') }}">
+        @csrf
 
-                    <!-- Date Fin -->
-                    <div class="form-group">
-                        <label for="dateFin" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Date Fin <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="date" 
-                               id="dateFin"
-                               name="dateFin" 
-                               value="{{ old('dateFin') }}"
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               required>
-                        @error('dateFin')
-                            <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
+        {{-- Informations générales --}}
+        <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
+            <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1.5rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
+                📋 Informations Générales
+            </h2>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:1.5rem;">
 
-                    <!-- Moniteur -->
-                    <div class="form-group">
-                        <label for="moniteur_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Moniteur <span style="color: var(--color-gray-500); font-weight: 400; font-size: 0.75rem;">(Facultatif)</span>
-                        </label>
-                        <select id="moniteur_id"
-                                name="moniteur_id" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'">
-                            <option value="">-- Choisir un moniteur --</option>
-                            @foreach($moniteurs as $moniteur)
-                                <option value="{{ $moniteur->id }}" {{ old('moniteur_id') == $moniteur->id ? 'selected' : '' }}>
-                                    {{ $moniteur->nom }} {{ $moniteur->prenom }}
-                                </option>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Libellé *</label>
+                    <input type="text" name="libelle" value="{{ old('libelle') }}" placeholder="Ex: Examen Permis E - Session 2026"
+                           style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                           onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'" required>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Statut *</label>
+                    <select name="statutExamen" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;" required
+                            onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                        <option value="ouvert" selected>🟢 Ouvert</option>
+                        <option value="en_attente">⏳ En attente</option>
+                        <option value="termine">🔴 Terminé</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Date Début *</label>
+                    <input type="date" name="dateDebut" value="{{ old('dateDebut', date('Y-m-d')) }}"
+                           style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                           onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'" required>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Date Fin *</label>
+                    <input type="date" name="dateFin" value="{{ old('dateFin', date('Y-m-d')) }}"
+                           style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                           onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'" required>
+                </div>
+
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                        Moniteur
+                        @if($moniteurConnecte)
+                            <span style="background:var(--color-green); color:white; font-size:0.65rem; padding:0.15rem 0.5rem; border-radius:50px; margin-left:0.5rem; font-weight:700;">AUTO</span>
+                        @endif
+                    </label>
+                    @if($moniteurConnecte)
+                        <div style="padding:0.75rem 1rem; border:2px solid var(--color-green); border-radius:var(--radius-md); background:rgba(0,122,94,0.06); color:var(--color-green-dark); font-weight:700; font-size:0.875rem; display:flex; align-items:center; gap:0.5rem;">
+                            🔒 {{ $moniteurConnecte->nom }} {{ $moniteurConnecte->prenom }}
+                        </div>
+                        <input type="hidden" name="moniteur_id" value="{{ $moniteurConnecte->id }}">
+                    @else
+                        <select name="moniteur_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;"
+                                onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                            <option value="">-- Aucun --</option>
+                            @foreach($moniteurs as $m)
+                                <option value="{{ $m->id }}" {{ old('moniteur_id')==$m->id ? 'selected':'' }}>{{ $m->nom }} {{ $m->prenom }}</option>
                             @endforeach
                         </select>
-                        @error('moniteur_id')
-                            <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
-
+                    @endif
                 </div>
             </div>
+        </div>
 
-            <!-- Messages d'erreur généraux -->
-            @if ($errors->any())
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(206, 17, 38, 0.1); border-left: 4px solid var(--color-red); border-radius: var(--radius-md); color: var(--color-red-dark);">
-                    <strong>⚠️ Erreurs de validation :</strong>
-                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
-                        @foreach ($errors->all() as $error)
-                            <li style="margin: 0.25rem 0;">{{ $error }}</li>
-                        @endforeach
-                    </ul>
+        {{-- Candidats --}}
+        <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
+            <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
+                👥 Candidats à inscrire à cet examen
+            </h2>
+
+            {{-- Candidats admis (prioritaires) --}}
+            @if($candidatsAdmis->isNotEmpty())
+            <div style="margin-bottom:1.5rem; padding:1rem 1.25rem; background:rgba(0,122,94,0.06); border:2px solid var(--color-green); border-radius:var(--radius-md);">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--color-green-dark); margin-bottom:0.75rem;">
+                    🏆 Candidats admis — prêts pour l'examen ({{ $candidatsAdmis->count() }})
                 </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:0.5rem;">
+                    @foreach($candidatsAdmis as $c)
+                    <label style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.875rem; border:2px solid var(--color-green); border-radius:var(--radius-md); cursor:pointer; background:white; font-size:0.875rem; font-weight:600; color:var(--color-dark);">
+                        <input type="checkbox" name="candidat_ids[]" value="{{ $c->id }}"
+                               {{ is_array(old('candidat_ids')) && in_array($c->id, old('candidat_ids')) ? 'checked' : '' }}
+                               style="width:16px; height:16px; accent-color:var(--color-green);">
+                        🏆 {{ $c->nom }} {{ $c->prenom }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
             @endif
 
-            <!-- Boutons d'action -->
-            <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--color-gray-100);">
-                <!-- Bouton Enregistrer (Rouge) -->
-                <button type="submit" 
-                        style="background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-red); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.875rem;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(206, 17, 38, 0.3)'"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ✓ Enregistrer
-                </button>
-
-                <!-- Bouton Annuler (Gris) -->
-                <a href="{{ route('examens.index') }}" 
-                   style="background: linear-gradient(135deg, var(--color-gray-200) 0%, var(--color-gray-100) 100%); color: var(--color-dark); padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-gray-200); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); text-decoration: none; font-size: 0.875rem;"
-                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.1)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ✕ Annuler
-                </a>
+            {{-- Autres candidats --}}
+            @if($autresCandidats->isNotEmpty())
+            <div>
+                <div style="font-size:0.8rem; font-weight:700; color:var(--color-gray-500); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                    Autres candidats ({{ $autresCandidats->count() }})
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:0.5rem; max-height:250px; overflow-y:auto; padding:0.25rem;">
+                    @foreach($autresCandidats as $c)
+                    <label style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.875rem; border:2px solid var(--color-gray-100); border-radius:var(--radius-md); cursor:pointer; background:white; font-size:0.875rem; color:var(--color-dark);"
+                           onmouseover="this.style.borderColor='var(--color-green)'" onmouseout="this.style.borderColor='var(--color-gray-100)'">
+                        <input type="checkbox" name="candidat_ids[]" value="{{ $c->id }}"
+                               {{ is_array(old('candidat_ids')) && in_array($c->id, old('candidat_ids')) ? 'checked' : '' }}
+                               style="width:16px; height:16px; accent-color:var(--color-green);">
+                        {{ $c->nom }} {{ $c->prenom }}
+                        <span style="font-size:0.7rem; color:var(--color-gray-500); margin-left:auto;">{{ $c->statut }}</span>
+                    </label>
+                    @endforeach
+                </div>
             </div>
-        </form>
-
-        <!-- Info contextuelle -->
-        <div style="margin-top: 2rem; padding: 1rem; background: rgba(0, 122, 94, 0.1); border-left: 4px solid var(--color-green); border-radius: var(--radius-md); color: var(--color-green-dark); font-size: 0.875rem;">
-            <strong>ℹ️ Information :</strong> Les champs marqués avec un <span style="color: var(--color-red); font-weight: bold;">*</span> sont obligatoires. Les dates d'examen doivent respecter l'ordre chronologique.
+            @endif
         </div>
-    </div>
+
+        <div style="display:flex; gap:1rem;">
+            <button type="submit"
+                    style="background:linear-gradient(135deg,var(--color-red) 0%,var(--color-red-dark) 100%); color:white; padding:0.875rem 2rem; border-radius:var(--radius-md); border:2px solid var(--color-red); font-weight:700; cursor:pointer; font-size:0.875rem; text-transform:uppercase;"
+                    onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                ✓ Créer l'examen
+            </button>
+            <a href="{{ route('examens.index') }}"
+               style="background:var(--color-gray-100); color:var(--color-dark); padding:0.875rem 2rem; border-radius:var(--radius-md); border:2px solid var(--color-gray-200); font-weight:600; text-decoration:none; font-size:0.875rem; text-transform:uppercase; display:inline-flex; align-items:center;">
+                ✕ Annuler
+            </a>
+        </div>
+    </form>
+</div>
 </x-layouts::app.sidebar>

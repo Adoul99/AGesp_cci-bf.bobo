@@ -51,6 +51,16 @@ class Candidat extends Model
                     ->withTimestamps();
     }
 
+    public function examens()
+    {
+        return $this->belongsToMany(Examen::class, 'candidat_examen')
+                    ->withPivot('resultat', 'note', 'observation')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Libellé lisible du statut
+     */
     public function getStatutLabelAttribute(): string
     {
         return match($this->statut) {
@@ -63,6 +73,9 @@ class Candidat extends Model
         };
     }
 
+    /**
+     * Couleur associée au statut
+     */
     public function getStatutColorAttribute(): string
     {
         return match($this->statut) {
@@ -75,18 +88,21 @@ class Candidat extends Model
         };
     }
 
+    /**
+     * Met à jour automatiquement le statut selon les évaluations
+     */
     public function mettreAJourStatut(): void
     {
-        $evaluations = $this->evaluations()->with('typeSession')->orderBy('dateEvaluation', 'desc')->get();
+        $evaluations = $this->evaluations()->orderBy('dateEvaluation', 'desc')->get();
 
         if ($evaluations->isEmpty()) {
             $this->update(['statut' => 'inscrit']);
             return;
         }
 
-        $aCode     = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'code')->count() > 0;
-        $aConduite = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'conduite')->count() > 0;
-        $aCreneau  = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'creneau')->count() > 0;
+        $aCode    = $evaluations->where('resultat', 'Admis')->whereHas('typeSession', fn($q) => $q->where('type', 'code'))->count() > 0;
+        $aConduite = $evaluations->where('resultat', 'Admis')->whereHas('typeSession', fn($q) => $q->where('type', 'conduite'))->count() > 0;
+        $aCreneau  = $evaluations->where('resultat', 'Admis')->whereHas('typeSession', fn($q) => $q->where('type', 'creneau'))->count() > 0;
 
         if ($aConduite && $aCreneau) {
             $this->update(['statut' => 'admis']);

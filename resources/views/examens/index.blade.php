@@ -96,6 +96,7 @@
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Date Fin</th>
                         <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Statut</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Moniteur</th>
+                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidats inscrits</th>
                         <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Actions</th>
                     </tr>
                 </thead>
@@ -152,9 +153,33 @@
                                 <span style="color: var(--color-gray-500); font-style: italic;">N/A</span>
                             @endif
                         </td>
+
+                        {{-- Candidats inscrits --}}
+                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
+                            @if($examen->candidats->isNotEmpty())
+                                <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
+                                    @foreach($examen->candidats as $c)
+                                    <span style="background:rgba(0,122,94,0.1); color:var(--color-green-dark); padding:0.2rem 0.6rem; border-radius:50px; font-size:0.72rem; font-weight:700; border:1px solid rgba(0,122,94,0.2);">
+                                        🏆 {{ $c->nom }} {{ $c->prenom }}
+                                    </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span style="color:var(--color-gray-500); font-style:italic; font-size:0.8rem;">Aucun candidat</span>
+                            @endif
+                        </td>
                         
                         <td style="padding: 1rem 1.5rem; text-align: center;">
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <!-- Bouton Voir -->
+                                <a href="{{ route('examens.show', $examen->id) }}"
+                                    style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: rgba(252,209,22,0.15); color: var(--color-gold-dark); border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; text-decoration: none; font-size: 1.1rem;"
+                                    onmouseover="this.style.backgroundColor='var(--color-gold)'; this.style.color='var(--color-dark)'; this.style.transform='scale(1.1)'"
+                                    onmouseout="this.style.backgroundColor='rgba(252,209,22,0.15)'; this.style.color='var(--color-gold-dark)'; this.style.transform='scale(1)'"
+                                    title="Voir détail">
+                                    👁️
+                                </a>
+
                                 <!-- Bouton Éditer -->
                                 <a href="{{ route('examens.edit', $examen->id) }}" 
                                     style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: var(--color-green); border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; text-decoration: none; font-size: 1.2rem;"

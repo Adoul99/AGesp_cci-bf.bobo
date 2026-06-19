@@ -104,9 +104,29 @@
                             {{ $dossier->nomDossier }}
                         </td>
 
-                        <!-- Candidat -->
+                        <!-- Candidat avec photo -->
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
-                            {{ $dossier->candidat->nom ?? 'N/A' }} {{ $dossier->candidat->prenom ?? '' }}
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                @if($dossier->photo_identite)
+                                    <img src="{{ asset('storage/' . $dossier->photo_identite) }}"
+                                         alt="Photo"
+                                         style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid var(--color-green); flex-shrink:0;">
+                                @else
+                                    <div style="width:42px; height:42px; border-radius:50%; background:var(--color-gray-100); border:2px solid var(--color-gray-200); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.1rem;">
+                                        👤
+                                    </div>
+                                @endif
+                                <div>
+                                    <div style="font-weight:700; color:var(--color-dark);">
+                                        {{ $dossier->candidat->nom ?? 'N/A' }} {{ $dossier->candidat->prenom ?? '' }}
+                                    </div>
+                                    @if($dossier->candidat)
+                                    <div style="font-size:0.72rem; color:var(--color-gray-500); margin-top:0.1rem;">
+                                        {{ $dossier->candidat->telephone ?? '' }}
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
 
                         <!-- Pièces (Badges) -->

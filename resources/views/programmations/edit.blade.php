@@ -186,13 +186,16 @@
                     </div>
 
                     <div class="field form-full">
-                        <label class="field-label">Candidats</label>
+                        <label class="field-label">Candidats programmables</label>
                         <div class="candidats-box">
-                            @foreach($candidats as $candidat)
+                            @foreach($candidatsProgrammables as $candidat)
                                 <label class="check-label">
                                     <input type="checkbox" name="candidat_ids[]" value="{{ $candidat->id }}"
                                         {{ in_array($candidat->id, old('candidat_ids', $candidatsSelectionnes)) ? 'checked' : '' }}>
                                     {{ $candidat->nom }} {{ $candidat->prenom }}
+                                    @if($candidat->nb_sessions >= 5)
+                                        <span style="background:var(--cci-gold,#FCD116); color:#1A1A1A; font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:50px; font-weight:700; margin-left:4px;">⭐ {{ $candidat->nb_sessions }}×</span>
+                                    @endif
                                 </label>
                             @endforeach
                         </div>
