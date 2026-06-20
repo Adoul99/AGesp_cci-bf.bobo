@@ -68,6 +68,31 @@
             </div>
         @endif
 
+        <!-- Barre de filtres par statut -->
+        <div class="no-print" style="display:flex; flex-wrap:wrap; gap:0.6rem; margin-bottom:1.5rem;">
+            @php
+                $filtres = [
+                    ''             => ['Tous',          $counts['tous'] ?? 0,         '#666',        'rgba(102,102,102,0.1)'],
+                    'inscrit'      => ['Inscrit',       $counts['inscrit'] ?? 0,      '#444',        'rgba(102,102,102,0.08)'],
+                    'en_formation' => ['En Formation',  $counts['en_formation'] ?? 0, 'var(--color-green-dark)', 'rgba(0,122,94,0.1)'],
+                    'code_admis'   => ['Code Admis',    $counts['code_admis'] ?? 0,   'var(--color-gold-dark)',  'rgba(252,209,22,0.15)'],
+                    'admis'        => ['Admis',         $counts['admis'] ?? 0,        'var(--color-green-dark)', 'rgba(0,122,94,0.15)'],
+                    'ajourne'      => ['Ajourné',       $counts['ajourne'] ?? 0,      'var(--color-red-dark)',   'rgba(206,17,38,0.1)'],
+                ];
+                $statutActuel = request('statut', '');
+            @endphp
+            @foreach($filtres as $valeur => $info)
+                <a href="{{ route('candidats.index', $valeur ? ['statut' => $valeur] : []) }}"
+                   style="padding:0.5rem 1rem; border-radius:50px; font-size:0.8rem; font-weight:700; text-decoration:none;
+                          color:{{ $info[2] }}; background:{{ $info[3] }};
+                          border:2px solid {{ $statutActuel === $valeur ? $info[2] : 'transparent' }};
+                          display:inline-flex; align-items:center; gap:0.4rem; transition:all 0.2s;">
+                    {{ $info[0] }}
+                    <span style="background:{{ $info[2] }}; color:white; padding:0.1rem 0.5rem; border-radius:50px; font-size:0.7rem;">{{ $info[1] }}</span>
+                </a>
+            @endforeach
+        </div>
+
         <!-- Table -->
         <div style="background: white; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
             <table style="width: 100%; border-collapse: collapse;">

@@ -76,6 +76,11 @@
     </style>
 
     <div class="content-wrapper" style="padding: 2rem;">
+        @if(session('success'))
+        <div style="margin-bottom: 1.5rem; padding: 1rem 1.5rem; background: rgba(0, 122, 94, 0.1); border-left: 4px solid var(--color-green); border-radius: var(--radius-md); color: var(--color-green-dark); font-weight: 600;">
+            {{ session('success') }}
+        </div>
+        @endif
         <!-- En-tête avec titre et bouton -->
         <div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
             <div>
@@ -148,6 +153,15 @@
                         <!-- Colonne d'actions (sera masquée à l'export PDF) -->
                         <td style="padding: 1rem 1.5rem; text-align: center;">
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <!-- Bouton Voir / Imprimer -->
+                                <a href="{{ route('attestations.show', $attestation->id) }}"
+                                   style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: rgba(252,209,22,0.15); color: var(--color-gold-dark); border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; text-decoration: none; font-size: 1.1rem;"
+                                   onmouseover="this.style.backgroundColor='var(--color-gold)'; this.style.color='var(--color-dark)'; this.style.transform='scale(1.1)'"
+                                   onmouseout="this.style.backgroundColor='rgba(252,209,22,0.15)'; this.style.color='var(--color-gold-dark)'; this.style.transform='scale(1)'"
+                                   title="Voir / Imprimer">
+                                    👁️
+                                </a>
+
                                 <!-- Bouton Éditer -->
                                 <a href="{{ route('attestations.edit', $attestation->id) }}" 
                                    style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: var(--color-green); border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; text-decoration: none; font-size: 1.2rem;"

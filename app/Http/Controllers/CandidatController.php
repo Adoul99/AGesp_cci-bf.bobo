@@ -7,10 +7,27 @@ use Illuminate\Http\Request;
 
 class CandidatController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $candidats = Candidat::all();
-        return view('candidats.index', compact('candidats'));
+        $query = Candidat::query();
+
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        $candidats = $query->orderBy('nom')->get();
+
+        // Compter par statut pour les badges du filtre
+        $counts = [
+            'tous'         => Candidat::count(),
+            'inscrit'      => Candidat::where('statut', 'inscrit')->count(),
+            'en_formation' => Candidat::where('statut', 'en_formation')->count(),
+            'code_admis'   => Candidat::where('statut', 'code_admis')->count(),
+            'admis'        => Candidat::where('statut', 'admis')->count(),
+            'ajourne'      => Candidat::where('statut', 'ajourne')->count(),
+        ];
+
+        return view('candidats.index', compact('candidats', 'counts'));
     }
 
     public function create()

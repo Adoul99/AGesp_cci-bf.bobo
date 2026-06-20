@@ -100,9 +100,9 @@ class Candidat extends Model
             return;
         }
 
-        $aCode    = $evaluations->where('resultat', 'Admis')->whereHas('typeSession', fn($q) => $q->where('type', 'code'))->count() > 0;
-        $aConduite = $evaluations->where('resultat', 'Admis')->whereHas('typeSession', fn($q) => $q->where('type', 'conduite'))->count() > 0;
-        $aCreneau  = $evaluations->where('resultat', 'Admis')->whereHas('typeSession', fn($q) => $q->where('type', 'creneau'))->count() > 0;
+        $aCode     = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'code')->count() > 0;
+        $aConduite = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'conduite')->count() > 0;
+        $aCreneau  = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'creneau')->count() > 0;
 
         if ($aConduite && $aCreneau) {
             $this->update(['statut' => 'admis']);

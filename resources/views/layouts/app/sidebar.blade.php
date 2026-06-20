@@ -404,6 +404,13 @@
             <a href="{{ route('dashboard') }}" class="as-lnk {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="bi bi-speedometer2"></i> Tableau de bord
             </a>
+            @php $nbAlertes = \App\Http\Controllers\AlerteController::compterAlertes(); @endphp
+            <a href="{{ route('alertes.index') }}" class="as-lnk {{ request()->routeIs('alertes.*') ? 'active' : '' }}" style="display:flex; align-items:center; justify-content:space-between;">
+                <span><i class="bi bi-bell-fill"></i> Alertes</span>
+                @if($nbAlertes > 0)
+                    <span style="background:#CE1126; color:white; font-size:0.65rem; font-weight:800; padding:0.1rem 0.5rem; border-radius:50px; min-width:18px; text-align:center;">{{ $nbAlertes }}</span>
+                @endif
+            </a>
         </div>
 
         <div class="as-grp">

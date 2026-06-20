@@ -73,6 +73,9 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
          ->name('dashboard');
 
+    Route::get('alertes', [App\Http\Controllers\AlerteController::class, 'index'])
+         ->name('alertes.index');
+
     // ── Gestion des utilisateurs & rôles ─────────────────────
     Route::get   ('users',             [UserController::class, 'index'])      ->name('users.index');
     Route::get   ('users/create',      [UserController::class, 'create'])     ->name('users.create');
