@@ -154,19 +154,24 @@
                     </div>
 
                     <div class="field">
-                        <label class="field-label" for="groupe_id">Groupe</label>
+                        <label class="field-label" for="typeSession_id">Type de session <span>*</span></label>
                         <div class="select-wrap">
-                            <select id="groupe_id" name="groupe_id" class="field-select">
-                                <option value="">— Choisir un groupe —</option>
-                                @foreach($groupes as $groupe)
-                                    <option value="{{ $groupe->id }}"
-                                        {{ old('groupe_id', $programmation->groupe_id) == $groupe->id ? 'selected' : '' }}>
-                                        {{ $groupe->nomGroupe }}
+                            <select id="typeSession_id" name="typeSession_id" class="field-select" required>
+                                <option value="">— Choisir un type —</option>
+                                @foreach($typeSessions as $ts)
+                                    <option value="{{ $ts->id }}"
+                                        {{ old('typeSession_id', $programmation->typeSession_id) == $ts->id ? 'selected' : '' }}>
+                                        @switch($ts->type)
+                                            @case('code') 📋 Code @break
+                                            @case('creneau') 🔧 Créneau @break
+                                            @case('conduite') 🚗 Conduite @break
+                                            @default {{ $ts->type }}
+                                        @endswitch
                                     </option>
                                 @endforeach
                             </select>
                         </div>
-                        @error('groupe_id')<p class="error-msg">⚠ {{ $message }}</p>@enderror
+                        @error('typeSession_id')<p class="error-msg">⚠ {{ $message }}</p>@enderror
                     </div>
 
                     <div class="field">
@@ -186,19 +191,20 @@
                     </div>
 
                     <div class="field form-full">
-                        <label class="field-label">Candidats programmables</label>
+                        <label class="field-label">Candidats actuellement programmés</label>
                         <div class="candidats-box">
-                            @foreach($candidatsProgrammables as $candidat)
+                            @foreach($candidatsActuels as $candidat)
                                 <label class="check-label">
                                     <input type="checkbox" name="candidat_ids[]" value="{{ $candidat->id }}"
                                         {{ in_array($candidat->id, old('candidat_ids', $candidatsSelectionnes)) ? 'checked' : '' }}>
                                     {{ $candidat->nom }} {{ $candidat->prenom }}
-                                    @if($candidat->nb_sessions >= 5)
-                                        <span style="background:var(--cci-gold,#FCD116); color:#1A1A1A; font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:50px; font-weight:700; margin-left:4px;">⭐ {{ $candidat->nb_sessions }}×</span>
+                                    @if($candidat->moyenne_notes && $candidat->moyenne_notes >= 25)
+                                        <span style="background:var(--cci-gold,#FCD116); color:#1A1A1A; font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:50px; font-weight:700; margin-left:4px;">⭐ moy. {{ round($candidat->moyenne_notes, 2) }}</span>
                                     @endif
                                 </label>
                             @endforeach
                         </div>
+                        <p style="font-size:.78rem;color:var(--cci-muted);margin-top:.5rem;">ℹ️ Pour ajouter de nouveaux candidats éligibles, recréez une programmation depuis "Nouvelle Programmation".</p>
                         @error('candidat_ids')<p class="error-msg">⚠ {{ $message }}</p>@enderror
                     </div>
 

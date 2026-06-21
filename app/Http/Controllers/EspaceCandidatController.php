@@ -33,12 +33,13 @@ class EspaceCandidatController extends Controller
                 } catch (\Exception $e) {
                     // La relation n'existe pas — on continue sans
                 }
+            }
 
-                try {
-                    $dossier = $inscription->dossiers()->latest()->first();
-                } catch (\Exception $e) {
-                    // Pas de relation dossiers
-                }
+            // Le dossier (pièces jointes) est lié au CANDIDAT, pas à l'inscription
+            try {
+                $dossier = $candidat->dossiers()->latest()->first();
+            } catch (\Exception $e) {
+                $dossier = null;
             }
 
             // Examens

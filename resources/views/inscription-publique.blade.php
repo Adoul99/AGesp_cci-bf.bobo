@@ -487,7 +487,7 @@
 
                     <div class="section-title"><i class="bi bi-calendar-check"></i> Inscription</div>
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="lbl">Catégorie de permis <span class="req">*</span></label>
                             <select id="inp-cat" name="categoriePermis_id" class="inp @error('categoriePermis_id') is-invalid @enderror" required>
                                 <option value="">-- Choisir une catégorie --</option>
@@ -500,12 +500,8 @@
                             </select>
                             @error('categoriePermis_id')<span class="invalid-msg">{{ $message }}</span>@enderror
                         </div>
-                        <div class="col-md-6">
-                            <label class="lbl">Date de début formation <span class="req">*</span></label>
-                            <input type="date" id="inp-debut" name="dataDebut_formation" class="inp @error('dataDebut_formation') is-invalid @enderror" value="{{ old('dataDebut_formation') }}" min="{{ date('Y-m-d') }}" required>
-                            @error('dataDebut_formation')<span class="invalid-msg">{{ $message }}</span>@enderror
-                            <span style="font-size:.68rem;color:var(--color-gray-500);margin-top:4px;display:block;"><i class="bi bi-info-circle"></i> À partir d'aujourd'hui ({{ date('d/m/Y') }})</span>
-                        </div>
+                        {{-- Date de début formation gérée automatiquement (date du jour) --}}
+                        <input type="hidden" id="inp-debut" name="dataDebut_formation" value="{{ old('dataDebut_formation', date('Y-m-d')) }}">
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -675,8 +671,9 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="lbl">Numéro de transaction <span class="req">*</span></label>
-                                <input type="text" name="numeroTransaction" id="inp-transaction" class="inp" placeholder="Ex: TXN123456789">
+                                <label class="lbl">Numéro de téléphone / Référence <span class="req">*</span></label>
+                                <input type="text" name="numeroTransaction" id="inp-transaction" class="inp" placeholder="Ex: 70 12 34 56 ou TXN123456789">
+                                <span style="font-size:.65rem;color:var(--color-gray-500);margin-top:4px;display:block;"><i class="bi bi-info-circle"></i> Saisissez le numéro de téléphone utilisé pour le paiement, ou la référence de transaction</span>
                             </div>
                         </div>
                         <div class="tranche-box mt-3">
@@ -746,7 +743,6 @@
                     <div class="section-title"><i class="bi bi-pencil-square"></i> Détails Inscription</div>
                     <div style="margin-bottom:18px;">
                         <div class="recap-row"><span class="recap-label">Catégorie demandée</span><span class="recap-val" id="r-cat">—</span></div>
-                        <div class="recap-row"><span class="recap-label">Date début formation</span><span class="recap-val" id="r-debut">—</span></div>
                         <div class="recap-row"><span class="recap-label">Date de soumission</span><span class="recap-val" id="r-dateinscr">—</span></div>
                     </div>
 
@@ -926,10 +922,7 @@ function goToStep(step) {
     // Validation étape 2
     if (step === 3) {
         const cat = document.getElementById('inp-cat').value;
-        const debut = document.getElementById('inp-debut').value;
-        const today = new Date().toISOString().split('T')[0];
-        if (!cat || !debut) { showError("Choisissez une catégorie et une date de début de formation."); return; }
-        if (debut < today) { showError("La date de début ne peut pas être passée."); return; }
+        if (!cat) { showError("Choisissez une catégorie de permis."); return; }
     }
 
     // Validation étape 3 (fichiers)
@@ -974,7 +967,6 @@ function goToStep(step) {
         document.getElementById('r-email').innerText = document.getElementById('inp-email').value || 'Non renseigné';
         const catSelect = document.getElementById('inp-cat');
         document.getElementById('r-cat').innerText = catSelect.options[catSelect.selectedIndex].text;
-        document.getElementById('r-debut').innerText = formatDate(document.getElementById('inp-debut').value);
         document.getElementById('r-dateinscr').innerText = formatDate(document.getElementById('inp-dateinscr').value);
 
         // Paiement récap

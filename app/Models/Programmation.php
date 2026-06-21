@@ -13,7 +13,7 @@ class Programmation extends Model
         'dateDebut',
         'dateFin',
         'moniteur_id',
-        'groupe_id',
+        'typeSession_id',
     ];
 
     /**
@@ -25,11 +25,11 @@ class Programmation extends Model
     }
 
     /**
-     * Une programmation appartient à un groupe
+     * Une programmation appartient à un type de session (Code, Créneau, Conduite)
      */
-    public function groupe()
+    public function typeSession()
     {
-        return $this->belongsTo(Groupe::class);
+        return $this->belongsTo(TypeSession::class, 'typeSession_id');
     }
 
     /**

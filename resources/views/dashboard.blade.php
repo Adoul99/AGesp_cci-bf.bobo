@@ -206,29 +206,115 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
         </div>
     </div>
 
-    {{-- ── 4 Cartes statistiques ── --}}
-    <div class="db-stats">
-        <div class="db-stat sv">
-            <div class="db-stat-lbl">Total Candidats</div>
-            <div class="db-stat-val">{{ $totalCandidats }}</div>
-            <span class="db-stat-ico">👥</span>
+    {{-- ── Répartition par étape de formation ── --}}
+    <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:0.85rem;color:#1a2520;margin:18px 0 10px;display:flex;align-items:center;gap:7px;">
+        <span style="width:4px;height:16px;background:linear-gradient(180deg,#c0281e,#d4a017 50%,#1a6b3a);border-radius:3px;display:inline-block;flex-shrink:0;"></span>
+        Répartition par étape de formation
+        <span style="font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:0.78rem;color:#6b7a70;margin-left:auto;">Total : {{ $totalCandidats }} candidats</span>
+    </div>
+    <div class="db-stats" style="grid-template-columns:repeat(5, 1fr);">
+        <div class="db-stat" style="background:linear-gradient(135deg,#444,#666);">
+            <div class="db-stat-lbl">Inscrits</div>
+            <div class="db-stat-val">{{ $candidatsInscrits }}</div>
+            <span class="db-stat-ico">📋</span>
         </div>
         <div class="db-stat sr">
-            <div class="db-stat-lbl">Inscriptions actives</div>
-            <div class="db-stat-val">{{ $inscriptionsActives }}</div>
-            <span class="db-stat-ico">📝</span>
+            <div class="db-stat-lbl">Code</div>
+            <div class="db-stat-val">{{ $candidatsCode }}</div>
+            <span class="db-stat-ico">🔴</span>
         </div>
         <div class="db-stat so">
-            <div class="db-stat-lbl">Moyenne des notes</div>
-            <div class="db-stat-val">{{ $moyenneNotes !== null ? number_format($moyenneNotes, 2, ',', ' ') : 'N/A' }}</div>
-            <span class="db-stat-ico">🧠</span>
+            <div class="db-stat-lbl">Créneau</div>
+            <div class="db-stat-val">{{ $candidatsCreneau }}</div>
+            <span class="db-stat-ico">🟡</span>
         </div>
         <div class="db-stat sd">
-            <div class="db-stat-lbl">Formations en cours</div>
-            <div class="db-stat-val">{{ $formationsEnCours }}</div>
+            <div class="db-stat-lbl">Conduite en ville</div>
+            <div class="db-stat-val">{{ $candidatsConduite }}</div>
             <span class="db-stat-ico">🚗</span>
         </div>
+        <div class="db-stat sv">
+            <div class="db-stat-lbl">Admis</div>
+            <div class="db-stat-val">{{ $candidatsAdmis }}</div>
+            <span class="db-stat-ico">🏆</span>
+        </div>
     </div>
+
+    {{-- ── Graphiques circulaires ── --}}
+    <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:0.85rem;color:#1a2520;margin:18px 0 10px;display:flex;align-items:center;gap:7px;">
+        <span style="width:4px;height:16px;background:linear-gradient(180deg,#c0281e,#d4a017 50%,#1a6b3a);border-radius:3px;display:inline-block;flex-shrink:0;"></span>
+        Statistiques visuelles
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div style="background:white;border-radius:10px;padding:18px;box-shadow:0 3px 12px rgba(0,0,0,0.08);">
+            <div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;color:#1a2520;margin-bottom:10px;text-align:center;">Répartition par étape</div>
+            <canvas id="etapeChart" style="max-height:240px;"></canvas>
+        </div>
+        <div style="background:white;border-radius:10px;padding:18px;box-shadow:0 3px 12px rgba(0,0,0,0.08);">
+            <div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;color:#1a2520;margin-bottom:10px;text-align:center;">Répartition par catégorie de permis</div>
+            <canvas id="permisChart" style="max-height:240px;"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+    (function() {
+        // ── Donut : répartition par étape de formation ──
+        const ctxEtape = document.getElementById('etapeChart');
+        if (ctxEtape) {
+            new Chart(ctxEtape, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Inscrits', 'Code', 'Créneau', 'Conduite en ville', 'Admis'],
+                    datasets: [{
+                        data: [
+                            {{ $candidatsInscrits }},
+                            {{ $candidatsCode }},
+                            {{ $candidatsCreneau }},
+                            {{ $candidatsConduite }},
+                            {{ $candidatsAdmis }}
+                        ],
+                        backgroundColor: ['#666666', '#c0281e', '#d4a017', '#3a4a40', '#1a6b3a'],
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } }
+                    }
+                }
+            });
+        }
+
+        // ── Donut : répartition par catégorie de permis ──
+        const ctxPermis = document.getElementById('permisChart');
+        if (ctxPermis) {
+            const labels = @json($repartitionPermis->keys());
+            const data   = @json($repartitionPermis->values());
+
+            new Chart(ctxPermis, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#1a6b3a', '#d4a017', '#c0281e', '#3a4a40', '#22883f'],
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } }
+                    }
+                }
+            });
+        }
+    })();
+    </script>
 
     {{-- ── Modules rapides ── --}}
     <div class="db-modules">

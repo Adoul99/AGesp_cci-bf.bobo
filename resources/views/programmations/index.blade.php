@@ -176,7 +176,7 @@
             <thead>
                 <tr>
                     <th style="width:200px">Dates</th>
-                    <th style="width:130px">Groupe</th>
+                    <th style="width:130px">Type de session</th>
                     <th style="width:160px">Moniteur</th>
                     <th>Candidats</th>
                     <th style="width:100px">Actions</th>
@@ -194,10 +194,18 @@
                     </td>
 
                     <td class="td-middle">
-                        @if($p->groupe)
-                            <span class="groupe-pill">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                                {{ $p->groupe->nomGroupe }}
+                        @if($p->typeSession)
+                            @php
+                                $tsColors = ['code' => '#c0281e', 'creneau' => '#d4a017', 'conduite' => '#1a6b3a'];
+                                $tsColor = $tsColors[$p->typeSession->type] ?? '#666';
+                            @endphp
+                            <span class="groupe-pill" style="background:{{ $tsColor }}1A; color:{{ $tsColor }}; border-color:{{ $tsColor }}40;">
+                                @switch($p->typeSession->type)
+                                    @case('code') 📋 Code @break
+                                    @case('creneau') 🔧 Créneau @break
+                                    @case('conduite') 🚗 Conduite @break
+                                    @default {{ $p->typeSession->type }}
+                                @endswitch
                             </span>
                         @else
                             <span style="color:var(--cci-muted);font-size:.82rem;">—</span>

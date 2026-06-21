@@ -93,7 +93,7 @@ class Candidat extends Model
      */
     public function mettreAJourStatut(): void
     {
-        $evaluations = $this->evaluations()->orderBy('dateEvaluation', 'desc')->get();
+        $evaluations = $this->evaluations()->with('typeSession')->orderBy('dateEvaluation', 'desc')->get();
 
         if ($evaluations->isEmpty()) {
             $this->update(['statut' => 'inscrit']);

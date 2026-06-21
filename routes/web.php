@@ -26,7 +26,20 @@ use App\Http\Controllers\UserController;
 // ══════════════════════════════════════════════════════════════
 // PAGE D'ACCUEIL
 // ══════════════════════════════════════════════════════════════
-Route::view('/', 'welcome')->name('home');
+Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        // Candidat connecté → redirection directe vers son espace
+        if ($user->role === 'candidat') {
+            return redirect()->route('candidat.espace');
+        }
+        // Admin / moniteur connecté → tableau de bord
+        if (in_array($user->role, ['admin', 'moniteur', 'superadmin'])) {
+            return redirect()->route('dashboard');
+        }
+    }
+    return view('welcome');
+})->name('home');
 
 // ══════════════════════════════════════════════════════════════
 // VÉRIFICATION EMAIL (AJAX)
@@ -128,9 +141,9 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     // ── Programmations ───────────────────────────────────────
     Route::resource('programmations',     ProgrammationController::class);
 
-    // ── AJAX : candidats d'un groupe (pour le formulaire de programmation) ──
-    Route::get('groupes/{groupe}/candidats', [ProgrammationController::class, 'candidatsParGroupe'])
-         ->name('groupes.candidats');
+    // ── AJAX : candidats éligibles/non-éligibles pour un type de session ──
+    Route::get('programmations/candidats-par-type/{typeSession}', [ProgrammationController::class, 'candidatsParType'])
+         ->name('programmations.candidats-par-type');
 
     // ── Reçus ────────────────────────────────────────────────
     Route::resource('recus',              RecusController::class);
