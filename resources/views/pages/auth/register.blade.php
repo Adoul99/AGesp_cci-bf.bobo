@@ -2,508 +2,412 @@
 
 @section('title', 'Créer un compte')
 
-@section('panel-badge') Inscription candidat @endsection
-@section('panel-title') Créez votre <em>compte</em> AGesp @endsection
-@section('panel-desc')
-    Créez votre espace personnel pour suivre votre dossier, consulter
-    vos résultats d'examens et télécharger vos attestations en ligne.
-@endsection
-@section('panel-features')
-    <div class="p-feat"><i class="bi bi-folder2-open"></i> Suivi de votre dossier en temps réel</div>
-    <div class="p-feat"><i class="bi bi-calendar-check"></i> Dates de formation et d'examen</div>
-    <div class="p-feat"><i class="bi bi-trophy"></i> Résultats d'examens</div>
-    <div class="p-feat"><i class="bi bi-award"></i> Téléchargement des attestations</div>
-    <div class="p-feat"><i class="bi bi-bell"></i> Notifications sur votre dossier</div>
-@endsection
-
 @section('form')
+<style>
+    /* STEPPER — Indicateur d'étapes */
+    .reg-stepper {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        gap: 1rem;
+    }
+    .reg-step-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        background: #e0e0e0;
+        color: #666;
+        transition: all 0.3s ease;
+    }
+    .reg-step-dot.active {
+        background: linear-gradient(135deg, #1a6b3a, #22883f);
+        color: white;
+        box-shadow: 0 4px 12px rgba(26, 107, 58, 0.3);
+    }
+    .reg-step-dot.completed {
+        background: #4caf50;
+        color: white;
+    }
+    
+    /* FORM CONTAINER */
+    .reg-form-container {
+        animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* HEADER */
+    .reg-header {
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .reg-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+    .reg-header p {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    /* ALERTS */
+    .reg-alert {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-size: 14px;
+        display: none;
+    }
+    .reg-alert.error {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+        display: block;
+    }
+    .reg-alert.success {
+        background: #efe;
+        border: 1px solid #cfc;
+        color: #3c3;
+        display: block;
+    }
+    
+    /* FORM GROUPS */
+    .reg-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .reg-form-row.full {
+        grid-template-columns: 1fr;
+    }
+    .reg-form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .reg-form-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 6px;
+    }
+    .reg-form-group label .req {
+        color: #e74c3c;
+    }
+    .reg-form-group input {
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+    .reg-form-group input:focus {
+        outline: none;
+        border-color: #1a6b3a;
+        box-shadow: 0 0 0 3px rgba(26, 107, 58, 0.1);
+    }
+    .reg-form-group input.error {
+        border-color: #e74c3c;
+    }
+    
+    /* OTP INPUT */
+    .reg-otp-input {
+        font-size: 24px;
+        letter-spacing: 8px;
+        text-align: center;
+        font-weight: 600;
+        padding: 12px !important;
+        tracking: 4px;
+    }
+    
+    /* BUTTONS */
+    .reg-button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    .reg-btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .reg-btn-primary {
+        background: linear-gradient(135deg, #1a6b3a, #22883f);
+        color: white;
+    }
+    .reg-btn-primary:hover {
+        box-shadow: 0 6px 20px rgba(26, 107, 58, 0.3);
+        transform: translateY(-2px);
+    }
+    .reg-btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .reg-btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+    .reg-btn-secondary:hover {
+        background: #e8e8e8;
+    }
+    
+    /* SUCCESS MESSAGE */
+    .reg-success {
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(26, 107, 58, 0.1));
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+    .reg-success-icon {
+        font-size: 48px;
+        margin-bottom: 1rem;
+    }
+    .reg-success h2 {
+        color: #1a6b3a;
+        margin-bottom: 0.5rem;
+    }
+    .reg-success p {
+        color: #666;
+        font-size: 14px;
+    }
+</style>
 
-{{-- ══════════════════════════════════════ --}}
-{{-- ÉTAPE 1 — Informations du compte      --}}
-{{-- ══════════════════════════════════════ --}}
-<div id="reg-step1">
-    <div class="f-eyebrow">Étape 1 sur 2</div>
-    <h1 class="f-title">Créer un compte</h1>
-    <p class="f-sub">Renseignez vos informations pour créer votre espace candidat.</p>
+{{-- STEPPER --}}
+<div class="reg-stepper">
+    <div class="reg-step-dot active" id="dot-1">1</div>
+    <div class="reg-step-dot" id="dot-2">2</div>
+    <div class="reg-step-dot" id="dot-3">3</div>
+</div>
 
-    @if ($errors->any())
-        <div class="alert alert-err">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <div>@foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach</div>
-        </div>
-    @endif
-
-    <div id="js-err" class="alert alert-err" style="display:none;">
-        <i class="bi bi-exclamation-triangle-fill"></i>
+{{-- ÉTAPE 1 — Informations --}}
+<div id="reg-step1" class="reg-form-container">
+    <div class="reg-header">
+        <h1>Créer votre compte</h1>
+        <p>Rejoignez AGesp pour commencer votre formation de conducteur</p>
+    </div>
+    
+    <div id="js-err" class="reg-alert error">
         <span id="js-err-msg"></span>
     </div>
 
-    {{-- ✅ Nom + Prénom pré-remplis si connecté --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="fg" style="margin-bottom:0;">
-            <label>
-                Nom <span class="req">*</span>
-                @auth
-                    <span style="font-weight:400;font-size:.68rem;color:var(--v);text-transform:none;">
-                        <i class="bi bi-lock-fill"></i> Issu de votre compte
-                    </span>
-                @endauth
-            </label>
-            <div class="inp-wrap">
-                <i class="bi bi-person inp-ico"></i>
-                @auth
-                    <input type="text" id="r-nom" class="inp"
-                           placeholder="Nom de famille"
-                           value="{{ auth()->user()->name }}"
-                           readonly
-                           style="background:#f0fdf4;border-color:rgba(0,122,94,.3);color:#374151;cursor:not-allowed;">
-                @else
-                    <input type="text" id="r-nom" class="inp"
-                           placeholder="Nom de famille"
-                           value="{{ old('name','') }}" autocomplete="off">
-                @endauth
-            </div>
+    <div class="reg-form-row">
+        <div class="reg-form-group">
+            <label>Nom de famille <span class="req">*</span></label>
+            <input type="text" id="r-nom" value="{{ old('name','') }}" placeholder="Ex: Dupont">
         </div>
-        <div class="fg" style="margin-bottom:0;">
-            <label>
-                Prénom(s) <span class="req">*</span>
-                @auth
-                    <span style="font-weight:400;font-size:.68rem;color:var(--v);text-transform:none;">
-                        <i class="bi bi-lock-fill"></i> Issu de votre compte
-                    </span>
-                @endauth
-            </label>
-            <div class="inp-wrap">
-                <i class="bi bi-person inp-ico"></i>
-                @auth
-                    <input type="text" id="r-prenom" class="inp"
-                           placeholder="Prénom"
-                           value="{{ auth()->user()->prenom }}"
-                           readonly
-                           style="background:#f0fdf4;border-color:rgba(0,122,94,.3);color:#374151;cursor:not-allowed;">
-                @else
-                    <input type="text" id="r-prenom" class="inp"
-                           placeholder="Prénom"
-                           value="{{ old('prenom','') }}" autocomplete="off">
-                @endauth
-            </div>
-        </div>
-    </div>
-    @auth
-        <span style="font-size:.65rem;color:var(--v);margin-top:5px;display:flex;align-items:center;gap:4px;">
-            <i class="bi bi-check-circle-fill"></i>
-            Nom et prénom enregistrés lors de la création de votre compte
-        </span>
-    @endauth
-
-    {{-- Email --}}
-    <div class="fg" style="margin-top:14px;">
-        <label>
-            <i class="bi bi-envelope" style="color:var(--v);margin-right:4px;"></i>
-            Email <span class="req">*</span>
-            @auth
-                <span style="font-weight:400;font-size:.68rem;color:var(--v);text-transform:none;">
-                    <i class="bi bi-lock-fill"></i> Issu de votre compte
-                </span>
-            @else
-                <span style="font-weight:400;font-size:.68rem;color:var(--sub);text-transform:none;">(identifiant de connexion)</span>
-            @endauth
-        </label>
-        <div class="inp-wrap" style="position:relative;">
-            <i class="bi bi-envelope inp-ico"></i>
-            @auth
-                <input type="email" id="r-email" class="inp"
-                       value="{{ auth()->user()->email }}"
-                       readonly
-                       style="background:#f0fdf4;border-color:rgba(0,122,94,.3);color:#374151;cursor:not-allowed;padding-right:2.5rem;">
-                <span style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);color:var(--v);font-size:.9rem;pointer-events:none;">
-                    <i class="bi bi-shield-lock-fill"></i>
-                </span>
-            @else
-                <input type="email" id="r-email" class="inp"
-                       placeholder="votre@email.com"
-                       value="{{ old('email','') }}">
-            @endauth
+        <div class="reg-form-group">
+            <label>Prénom(s) <span class="req">*</span></label>
+            <input type="text" id="r-prenom" value="{{ old('prenom','') }}" placeholder="Ex: Jean">
         </div>
     </div>
 
-    {{-- Téléphone OBLIGATOIRE --}}
-    <div class="fg">
-        <label>
-            <i class="bi bi-phone" style="color:var(--v);margin-right:4px;"></i>
-            Téléphone <span class="req">*</span>
-            @auth
-                @if(auth()->user()->telephone)
-                    <span style="font-weight:400;font-size:.68rem;color:var(--v);text-transform:none;">
-                        <i class="bi bi-lock-fill"></i> Issu de votre compte
-                    </span>
-                @endif
-            @else
-                <span style="font-weight:400;font-size:.68rem;color:var(--sub);text-transform:none;">
-                    (sera utilisé lors de votre inscription)
-                </span>
-            @endauth
-        </label>
-        <div class="phone-wrap">
-            <div class="phone-prefix"><i class="bi bi-flag"></i> +226</div>
-            @auth
-                @if(auth()->user()->telephone)
-                    <input type="tel" id="r-tel" class="inp"
-                           value="{{ auth()->user()->telephone }}"
-                           readonly
-                           style="background:#f0fdf4;border-color:rgba(0,122,94,.3);color:#374151;cursor:not-allowed;">
-                @else
-                    <input type="tel" id="r-tel" class="inp"
-                           placeholder="XX XX XX XX" maxlength="8"
-                           value="{{ old('telephone','') }}"
-                           oninput="this.value=this.value.replace(/\D/g,'')">
-                @endif
-            @else
-                <input type="tel" id="r-tel" class="inp"
-                       placeholder="XX XX XX XX" maxlength="8"
-                       value="{{ old('telephone','') }}"
-                       oninput="this.value=this.value.replace(/\D/g,'')">
-            @endauth
+    <div class="reg-form-row full">
+        <div class="reg-form-group">
+            <label>Adresse Email <span class="req">*</span></label>
+            <input type="email" id="r-email" value="{{ old('email','') }}" placeholder="votremail@exemple.com">
         </div>
-        <span style="font-size:.68rem;color:#6b7a70;margin-top:4px;display:block;">
-            <i class="bi bi-info-circle"></i> 8 chiffres sans l'indicatif +226
-        </span>
     </div>
 
-    {{-- Mot de passe --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="fg" style="margin-bottom:0;">
+    <div class="reg-form-row">
+        <div class="reg-form-group">
             <label>Mot de passe <span class="req">*</span></label>
-            <div class="inp-wrap">
-                <i class="bi bi-lock inp-ico"></i>
-                <input type="password" id="r-pwd" class="inp"
-                       placeholder="Min. 8 caractères"
-                       oninput="pwdStrength(this.value)">
-                <button type="button" class="inp-eye" onclick="togglePwd('r-pwd','eye1')" tabindex="-1">
-                    <i class="bi bi-eye" id="eye1"></i>
-                </button>
-            </div>
-            <div class="pwd-bar-wrap" id="pwd-bar-wrap" style="display:none;">
-                <div class="pwd-bar"><div class="pwd-fill" id="pwd-fill"></div></div>
-                <span class="pwd-text" id="pwd-text"></span>
-            </div>
+            <input type="password" id="r-pwd" placeholder="Min. 8 caractères">
         </div>
-        <div class="fg" style="margin-bottom:0;">
-            <label>Confirmer <span class="req">*</span></label>
-            <div class="inp-wrap">
-                <i class="bi bi-lock inp-ico"></i>
-                <input type="password" id="r-pwd2" class="inp" placeholder="Répéter">
-                <button type="button" class="inp-eye" onclick="togglePwd('r-pwd2','eye2')" tabindex="-1">
-                    <i class="bi bi-eye" id="eye2"></i>
-                </button>
-            </div>
+        <div class="reg-form-group">
+            <label>Confirmer le mot de passe <span class="req">*</span></label>
+            <input type="password" id="r-pwd2" placeholder="Répéter le mot de passe">
         </div>
     </div>
 
-    <div style="margin-top:20px;">
-        <button type="button" class="btn btn-primary" onclick="toStep2()">
-            Suivant — Vérifier mon email <i class="bi bi-arrow-right"></i>
-        </button>
-    </div>
-
-    <div class="f-link-row">
-        Déjà inscrit ? <a href="{{ route('login') }}">Se connecter</a>
-    </div>
-</div>
-
-{{-- ══════════════════════════════════════ --}}
-{{-- ÉTAPE 2 — Vérification Email          --}}
-{{-- ══════════════════════════════════════ --}}
-<div id="reg-step2" style="display:none;">
-    <div class="f-eyebrow">Étape 2 sur 2</div>
-    <h1 class="f-title">Vérification Email</h1>
-    <p class="f-sub">
-        Un code à 6 chiffres a été envoyé à
-        <strong id="email-addr">votre@email.com</strong>.
-        Saisissez-le ci-dessous.
-    </p>
-
-    <div id="js-err2" class="alert alert-err" style="display:none;">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <span id="js-err2-msg"></span>
-    </div>
-
-    <div class="otp-wrap">
-        <input class="otp-digit" id="d1" maxlength="1" inputmode="numeric" oninput="dInput(this,1)" onkeydown="dBack(event,1)">
-        <input class="otp-digit" id="d2" maxlength="1" inputmode="numeric" oninput="dInput(this,2)" onkeydown="dBack(event,2)">
-        <input class="otp-digit" id="d3" maxlength="1" inputmode="numeric" oninput="dInput(this,3)" onkeydown="dBack(event,3)">
-        <input class="otp-digit" id="d4" maxlength="1" inputmode="numeric" oninput="dInput(this,4)" onkeydown="dBack(event,4)">
-        <input class="otp-digit" id="d5" maxlength="1" inputmode="numeric" oninput="dInput(this,5)" onkeydown="dBack(event,5)">
-        <input class="otp-digit" id="d6" maxlength="1" inputmode="numeric" oninput="dInput(this,6)" onkeydown="dBack(event,6)">
-    </div>
-    <input type="hidden" id="otp-hidden">
-
-    <div style="text-align:center;font-size:.78rem;color:var(--sub);margin-bottom:18px;">
-        <span id="resend-timer">Renvoyer dans <strong id="cdown">03:00</strong></span>
-        <button id="resend-btn" style="display:none;background:none;border:none;color:var(--v);font-weight:700;cursor:pointer;font-size:.78rem;" onclick="resend()">
-            <i class="bi bi-arrow-clockwise"></i> Renvoyer le code
-        </button>
-    </div>
-
-    <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-ghost" style="flex:1;" onclick="toStep1()">
-            <i class="bi bi-arrow-left"></i> Précédent
-        </button>
-        <button type="button" class="btn btn-primary" style="flex:2;" onclick="verifyOtp()">
-            <i class="bi bi-shield-check"></i> Vérifier et créer le compte
+    <div class="reg-button-group">
+        <button type="button" class="reg-btn reg-btn-primary" onclick="toStep2()">
+            Suivant →
         </button>
     </div>
 </div>
 
-{{-- ══════════════════════════════════════ --}}
-{{-- ÉTAPE 3 — Compte créé                 --}}
-{{-- ══════════════════════════════════════ --}}
-<div id="reg-step3" style="display:none;">
-    <div style="text-align:center;padding:10px 0 24px;">
-        <div style="width:68px;height:68px;background:var(--v);border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    margin:0 auto 16px;box-shadow:0 6px 20px rgba(26,107,58,.3);">
-            <i class="bi bi-check-lg" style="font-size:2rem;color:white;"></i>
-        </div>
-        <div class="f-eyebrow" style="justify-content:center;margin-bottom:6px;">Compte vérifié ✓</div>
-        <h1 class="f-title" style="font-size:1.45rem;color:var(--v);">Compte créé avec succès !</h1>
-        <p class="f-sub" style="margin-bottom:4px;">
-            Bienvenue, <strong id="welcome-name">Candidat</strong> !
+{{-- ÉTAPE 2 — Vérification E-mail --}}
+<div id="reg-step2" style="display:none;" class="reg-form-container">
+    <div class="reg-header">
+        <h1>Vérifier votre email</h1>
+        <p>Nous avons envoyé un code de confirmation</p>
+    </div>
+    
+    <div class="reg-form-row full">
+        <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 1.5rem;">
+            Un code à 6 chiffres a été envoyé à <strong id="mail-addr"></strong>
         </p>
-        <p class="f-sub">Email confirmé : <strong id="welcome-email">votre@email.com</strong></p>
+        <div class="reg-form-group">
+            <label>Code de vérification <span class="req">*</span></label>
+            <input type="text" id="otp-input" class="reg-otp-input" placeholder="000000" maxlength="6" inputmode="numeric">
+        </div>
     </div>
 
-    <div class="alert alert-warn" style="font-size:.78rem;">
-        <i class="bi bi-info-circle-fill"></i>
-        <span>
-            Votre compte est prêt. Cliquez ci-dessous pour remplir votre
-            <strong>formulaire d'inscription candidat</strong>.
-        </span>
+    <div class="reg-button-group">
+        <button type="button" class="reg-btn reg-btn-secondary" onclick="backToStep1()">← Retour</button>
+        <button type="button" class="reg-btn reg-btn-primary" onclick="verifyOtp()">Vérifier</button>
+    </div>
+</div>
+
+{{-- ÉTAPE 3 — Succès --}}
+<div id="reg-step3" style="display:none;" class="reg-form-container">
+    <div class="reg-success">
+        <div class="reg-success-icon">✓</div>
+        <h2>Compte créé avec succès !</h2>
+        <p>Bienvenue sur AGesp</p>
     </div>
 
     <form method="POST" action="{{ route('register') }}" id="final-form">
         @csrf
-        <input type="hidden" name="name"                  id="h-name">
-        <input type="hidden" name="prenom"                id="h-prenom">
-        <input type="hidden" name="telephone"             id="h-tel">
-        <input type="hidden" name="email"                 id="h-email">
-        <input type="hidden" name="password"              id="h-pwd">
+        <input type="hidden" name="name" id="h-name">
+        <input type="hidden" name="prenom" id="h-prenom">
+        <input type="hidden" name="email" id="h-email">
+        <input type="hidden" name="password" id="h-pwd">
         <input type="hidden" name="password_confirmation" id="h-pwd2">
-        <input type="hidden" name="email_verified"        value="1">
-
-        <button type="submit" class="btn btn-primary" style="margin-bottom:10px;">
-            <i class="bi bi-pencil-square"></i>
-            Continuer vers l'inscription candidat
-            <i class="bi bi-arrow-right"></i>
-        </button>
+        
+        <div class="reg-button-group">
+            <button type="submit" class="reg-btn reg-btn-primary">
+                Accéder à mon tableau de bord →
+            </button>
+        </div>
     </form>
-
-    <a href="{{ url('/') }}" class="btn btn-ghost" style="text-decoration:none;margin-top:4px;">
-        <i class="bi bi-house"></i> Retour à l'accueil
-    </a>
 </div>
-
 @endsection
 
 @push('scripts')
 <script>
-function togglePwd(id, ico) {
-    const f = document.getElementById(id), i = document.getElementById(ico);
-    f.type = f.type === 'password' ? 'text' : 'password';
-    i.className = f.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
-}
-function showErr(boxId, msgId, msg) {
-    document.getElementById(msgId).textContent = msg;
-    document.getElementById(boxId).style.display = 'flex';
-    window.scrollTo({top:0,behavior:'smooth'});
-}
-function hideErr(boxId) { document.getElementById(boxId).style.display = 'none'; }
-
-function pwdStrength(v) {
-    const wrap = document.getElementById('pwd-bar-wrap');
-    if (!v) { wrap.style.display='none'; return; }
-    wrap.style.display = 'block';
-    let s = 0;
-    if (v.length >= 8)          s++;
-    if (/[A-Z]/.test(v))        s++;
-    if (/[0-9]/.test(v))        s++;
-    if (/[^A-Za-z0-9]/.test(v)) s++;
-    const lvls = [
-        {pct:'25%', col:'#c0281e', txt:'Très faible'},
-        {pct:'50%', col:'#d4a017', txt:'Faible'},
-        {pct:'75%', col:'#00A572', txt:'Moyen'},
-        {pct:'100%',col:'#1a6b3a', txt:'Fort'},
-    ];
-    const l = lvls[s-1] || lvls[0];
-    document.getElementById('pwd-fill').style.cssText = `width:${l.pct};background:${l.col}`;
-    const tx = document.getElementById('pwd-text');
-    tx.textContent = 'Force : ' + l.txt;
-    tx.style.color = l.col;
-}
-
-function show(id) { document.getElementById(id).style.display = 'block'; }
-function hide(id) { document.getElementById(id).style.display = 'none'; }
-function toStep1() { hide('reg-step2'); show('reg-step1'); window.scrollTo({top:0}); }
-
-function toStep2() {
-    hideErr('js-err');
-
-    // Récupérer les valeurs (readonly ou non)
-    const nom   = document.getElementById('r-nom').value.trim();
-    const prn   = document.getElementById('r-prenom').value.trim();
-    const email = document.getElementById('r-email').value.trim();
-    const tel   = document.getElementById('r-tel').value.trim();
-    const pwd   = document.getElementById('r-pwd').value;
-    const pwd2  = document.getElementById('r-pwd2').value;
-
-    if (!nom || !prn)
-        { showErr('js-err','js-err-msg','Veuillez saisir votre nom et prénom.'); return; }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-        { showErr('js-err','js-err-msg','Veuillez saisir une adresse email valide.'); return; }
-    if (!tel || tel.length < 8)
-        { showErr('js-err','js-err-msg','Le numéro de téléphone est obligatoire (8 chiffres).'); return; }
-    if (pwd.length < 8)
-        { showErr('js-err','js-err-msg','Mot de passe trop court (min. 8 caractères).'); return; }
-    if (pwd !== pwd2)
-        { showErr('js-err','js-err-msg','Les mots de passe ne correspondent pas.'); return; }
-
-    document.getElementById('email-addr').textContent = email;
-
-    fetch('/verify-email/send', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ email })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            hide('reg-step1'); show('reg-step2');
-            startCountdown(180);
-            document.getElementById('d1').focus();
-            window.scrollTo({top:0});
-        } else {
-            showErr('js-err','js-err-msg', data.message || 'Erreur lors de l\'envoi du code.');
-        }
-    })
-    .catch(() => showErr('js-err','js-err-msg','Erreur réseau. Veuillez réessayer.'));
-}
-
-function dInput(el, pos) {
-    el.value = el.value.replace(/\D/g, '');
-    el.classList.toggle('filled', el.value.length === 1);
-    if (el.value.length === 1) {
-        const n = document.getElementById('d'+(pos+1));
-        if (n) n.focus();
+    // Fonctions utilitaires
+    function hide(id) { document.getElementById(id).style.display = 'none'; }
+    function show(id) { document.getElementById(id).style.display = 'block'; }
+    function setDot(step, state) {
+        const dot = document.getElementById(`dot-${step}`);
+        dot.classList.remove('active', 'completed');
+        dot.classList.add(state);
     }
-    syncOtp();
-}
-function dBack(e, pos) {
-    if (e.key === 'Backspace') {
-        const el = document.getElementById('d'+pos);
-        if (!el.value) {
-            const p = document.getElementById('d'+(pos-1));
-            if (p) { p.value=''; p.classList.remove('filled'); p.focus(); }
-        }
+    
+    // Afficher erreur
+    function showError(msg) {
+        const errDiv = document.getElementById('js-err');
+        const errMsg = document.getElementById('js-err-msg');
+        errMsg.textContent = msg;
+        errDiv.style.display = 'block';
     }
-    syncOtp();
-}
-function syncOtp() {
-    let c = '';
-    for (let i=1; i<=6; i++) c += document.getElementById('d'+i).value;
-    document.getElementById('otp-hidden').value = c;
-}
-
-function verifyOtp() {
-    hideErr('js-err2');
-    const code  = document.getElementById('otp-hidden').value;
-    const email = document.getElementById('email-addr').textContent;
-    if (code.length < 6) {
-        showErr('js-err2','js-err2-msg','Veuillez entrer le code complet à 6 chiffres.');
-        return;
+    
+    function hideError() {
+        document.getElementById('js-err').style.display = 'none';
     }
-    fetch('/verify-email/verify', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ email, code })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) { toStep3(); }
-        else { showErr('js-err2','js-err2-msg', data.message || 'Code invalide. Réessayez.'); }
-    })
-    .catch(() => showErr('js-err2','js-err2-msg','Erreur réseau. Veuillez réessayer.'));
-}
-
-function toStep3() {
-    const nom   = document.getElementById('r-nom').value.trim();
-    const prn   = document.getElementById('r-prenom').value.trim();
-    const email = document.getElementById('r-email').value.trim();
-    const tel   = document.getElementById('r-tel').value.trim();
-
-    document.getElementById('h-name').value   = nom;
-    document.getElementById('h-prenom').value = prn;
-    document.getElementById('h-tel').value    = tel;
-    document.getElementById('h-email').value  = email;
-    document.getElementById('h-pwd').value    = document.getElementById('r-pwd').value;
-    document.getElementById('h-pwd2').value   = document.getElementById('r-pwd2').value;
-
-    document.getElementById('welcome-name').textContent  = nom + ' ' + prn;
-    document.getElementById('welcome-email').textContent = email;
-
-    hide('reg-step2'); show('reg-step3');
-    window.scrollTo({top:0});
-}
-
-let timer = null;
-function startCountdown(sec) {
-    clearInterval(timer);
-    document.getElementById('resend-btn').style.display   = 'none';
-    document.getElementById('resend-timer').style.display = 'inline';
-    let r = sec;
-    tick(r);
-    timer = setInterval(() => {
-        r--; tick(r);
-        if (r <= 0) {
-            clearInterval(timer);
-            document.getElementById('resend-timer').style.display = 'none';
-            document.getElementById('resend-btn').style.display   = 'inline';
+    
+    // Validation
+    function validateStep1() {
+        hideError();
+        const nom = document.getElementById('r-nom').value.trim();
+        const prenom = document.getElementById('r-prenom').value.trim();
+        const email = document.getElementById('r-email').value.trim();
+        const pwd = document.getElementById('r-pwd').value;
+        const pwd2 = document.getElementById('r-pwd2').value;
+        
+        if (!nom) {
+            showError('Veuillez entrer votre nom de famille');
+            return false;
         }
-    }, 1000);
-}
-function tick(s) {
-    document.getElementById('cdown').textContent =
-        String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
-}
-function resend() {
-    const email = document.getElementById('email-addr').textContent;
-    fetch('/verify-email/send', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ email })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            startCountdown(180);
-            [1,2,3,4,5,6].forEach(i => {
-                const d = document.getElementById('d'+i);
-                d.value = ''; d.classList.remove('filled');
-            });
-            document.getElementById('d1').focus();
-        } else {
-            showErr('js-err2','js-err2-msg', data.message || 'Erreur lors du renvoi.');
+        if (!prenom) {
+            showError('Veuillez entrer votre prénom');
+            return false;
         }
-    })
-    .catch(() => showErr('js-err2','js-err2-msg','Erreur réseau.'));
-}
+        if (!email) {
+            showError('Veuillez entrer une adresse email');
+            return false;
+        }
+        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            showError('Veuillez entrer une adresse email valide');
+            return false;
+        }
+        if (!pwd) {
+            showError('Veuillez entrer un mot de passe');
+            return false;
+        }
+        if (pwd.length < 8) {
+            showError('Le mot de passe doit contenir au moins 8 caractères');
+            return false;
+        }
+        if (pwd !== pwd2) {
+            showError('Les mots de passe ne correspondent pas');
+            return false;
+        }
+        return true;
+    }
+    
+    function toStep2() {
+        if (!validateStep1()) return;
+        
+        const email = document.getElementById('r-email').value;
+        document.getElementById('mail-addr').textContent = email;
+        
+        setDot(1, 'completed');
+        setDot(2, 'active');
+        
+        hide('reg-step1');
+        show('reg-step2');
+        
+        // Auto-focus sur l'input OTP
+        document.getElementById('otp-input').focus();
+    }
+
+    function backToStep1() {
+        setDot(2, 'active');
+        setDot(1, 'active');
+        
+        hide('reg-step2');
+        show('reg-step1');
+    }
+
+    function verifyOtp() {
+        const otp = document.getElementById('otp-input').value.trim();
+        
+        if (!otp) {
+            alert('Veuillez entrer le code de vérification');
+            return;
+        }
+        
+        if (otp.length !== 6) {
+            alert('Le code doit contenir 6 chiffres');
+            return;
+        }
+        
+        // Transfert des données vers le formulaire caché
+        document.getElementById('h-name').value = document.getElementById('r-nom').value;
+        document.getElementById('h-prenom').value = document.getElementById('r-prenom').value;
+        document.getElementById('h-email').value = document.getElementById('r-email').value;
+        document.getElementById('h-pwd').value = document.getElementById('r-pwd').value;
+        document.getElementById('h-pwd2').value = document.getElementById('r-pwd2').value;
+        
+        setDot(2, 'completed');
+        setDot(3, 'active');
+        
+        hide('reg-step2');
+        show('reg-step3');
+    }
+    
+    // Restriction d'entrée numérique pour OTP
+    document.getElementById('otp-input')?.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
 </script>
 @endpush
