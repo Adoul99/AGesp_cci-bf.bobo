@@ -23,36 +23,44 @@ class SessionFormationController extends Controller
                         ->latest()
                         ->get();
 
-        // Dernière session créée (toutes confondues)
         $derniereSession = $sessions->first();
 
-        // Session actuellement ouverte (s'il en existe une)
-        $sessionOuverte = $sessions->where('statutSession', 'ouvert')->first();
+        // Sessions ouvertes
+        $sessionsOuvertes = $sessions->where('statutSession', 'ouvert');
 
-        return view('session_formations.index', compact('sessions', 'derniereSession', 'sessionOuverte'));
+        // Pour compatibilité avec l'ancien code
+        $sessionOuverte = $sessionsOuvertes->first();
+
+        // Types déjà ouverts
+        $typesOuverts = $sessionsOuvertes
+            ->pluck('typeSession.type')
+            ->filter()
+            ->values()
+            ->toArray();
+
+        // Bloquer seulement si les 3 types sont tous ouverts
+        $tousLesTypes    = ['code', 'creneau', 'conduite'];
+        $creationBloquee = count(array_intersect($tousLesTypes, $typesOuverts)) >= count($tousLesTypes);
+
+        return view('session_formations.index', compact(
+            'sessions',
+            'derniereSession',
+            'sessionOuverte',
+            'sessionsOuvertes',
+            'typesOuverts',
+            'creationBloquee'
+        ));
     }
 
     // ── CREATE ───────────────────────────────────────────────────
 
     public function create()
     {
-        // Vérifier s'il existe déjà une session ouverte (tous moniteurs confondus)
-        $sessionOuverte = SessionFormation::ouverte()->with(['moniteur', 'groupe'])->latest()->first();
-
-        if ($sessionOuverte) {
-            return redirect()->route('session_formations.index')
-                ->with('error',
-                    "⛔ Une session est déjà en cours (créée le " .
-                    \Carbon\Carbon::parse($sessionOuverte->dateDebut)->format('d/m/Y') .
-                    "). Vous devez la clôturer avant d'en créer une nouvelle."
-                );
-        }
-
-        $vehicules    = Vehicule::all();
-        $evaluations  = Evaluation::with('candidat')->get();
-        $groupes      = Groupe::with('candidats')->get();
+        $vehicules     = Vehicule::all();
+        $evaluations   = Evaluation::with('candidat')->get();
+        $groupes       = Groupe::with('candidats')->get();
         $typesSessions = TypeSession::all();
-        $moniteurs    = Moniteur::all();
+        $moniteurs     = Moniteur::all();
 
         return view('session_formations.create', compact(
             'vehicules', 'evaluations', 'groupes', 'typesSessions', 'moniteurs'
@@ -63,13 +71,6 @@ class SessionFormationController extends Controller
 
     public function store(Request $request)
     {
-        // Double vérification : session ouverte ?
-        $sessionOuverte = SessionFormation::ouverte()->latest()->first();
-        if ($sessionOuverte) {
-            return redirect()->route('session_formations.index')
-                ->with('error', "⛔ Une session est déjà ouverte. Clôturez-la d'abord.");
-        }
-
         $request->validate([
             'dateDebut'      => 'required|date',
             'statutSession'  => 'required|in:ouvert,ferme,annule',
@@ -79,18 +80,50 @@ class SessionFormationController extends Controller
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
         ]);
 
+        // Vérifier si une session du MÊME type est déjà ouverte
+        $sessionMemeTypeOuverte = SessionFormation::ouverte()
+            ->where('typeSession_id', $request->typeSession_id)
+            ->latest()
+            ->first();
+
+        if ($sessionMemeTypeOuverte) {
+            return redirect()->route('session_formations.index')
+                ->with('error',
+                    "⛔ Une session de ce type est déjà ouverte (créée le " .
+                    \Carbon\Carbon::parse($sessionMemeTypeOuverte->dateDebut)->format('d/m/Y') .
+                    "). Clôturez-la avant d'en créer une nouvelle du même type."
+                );
+        }
+
         $session = SessionFormation::create($request->only(
             'dateDebut', 'statutSession', 'typeSession_id',
             'groupe_id', 'vehicule_id', 'evaluation_id', 'moniteur_id'
         ));
 
-        // Attacher automatiquement les candidats du groupe au pivot
+        // Récupérer le type de session
+        $typeSession = TypeSession::find($request->typeSession_id);
+        $typeNom     = $typeSession ? $typeSession->type : null;
+
+        // Attacher les candidats du groupe + mettre à jour leur statut
         if ($session->groupe_id) {
             $groupe = Groupe::with('candidats')->find($session->groupe_id);
             if ($groupe) {
                 $pivotData = [];
                 foreach ($groupe->candidats as $candidat) {
-                    $pivotData[$candidat->id] = ['absent' => false, 'note' => null, 'observation' => null];
+                    $pivotData[$candidat->id] = [
+                        'absent'      => false,
+                        'note'        => null,
+                        'observation' => null,
+                    ];
+
+                    $nouveauStatut = match($typeNom) {
+                        'code'     => 'code_admis',
+                        'creneau'  => 'creneau',
+                        'conduite' => 'ajourne',
+                        default    => $candidat->statut,
+                    };
+
+                    $candidat->update(['statut' => $nouveauStatut]);
                 }
                 $session->candidats()->sync($pivotData);
             }
@@ -104,19 +137,16 @@ class SessionFormationController extends Controller
 
     public function edit(SessionFormation $sessionFormation)
     {
-        // Si la session est fermée ou annulée, on ne peut plus la modifier
         if (!$sessionFormation->est_ouverte) {
             return redirect()->route('session_formations.index')
                 ->with('error', '⛔ Impossible de modifier une session clôturée ou annulée.');
         }
 
-        $vehicules     = Vehicule::all();
-        $evaluations   = Evaluation::with('candidat')->get();
-        $groupes       = Groupe::all();
-        $typesSessions = TypeSession::all();
-        $moniteurs     = Moniteur::all();
-
-        // Candidats de la session avec leurs données pivot
+        $vehicules        = Vehicule::all();
+        $evaluations      = Evaluation::with('candidat')->get();
+        $groupes          = Groupe::all();
+        $typesSessions    = TypeSession::all();
+        $moniteurs        = Moniteur::all();
         $candidatsSession = $sessionFormation->candidats()->get();
 
         return view('session_formations.edit', compact(
@@ -129,7 +159,6 @@ class SessionFormationController extends Controller
 
     public function update(Request $request, SessionFormation $sessionFormation)
     {
-        // Empêcher toute modification d'une session fermée
         if (!$sessionFormation->est_ouverte) {
             return redirect()->route('session_formations.index')
                 ->with('error', '⛔ Cette session est déjà clôturée.');
@@ -143,11 +172,44 @@ class SessionFormationController extends Controller
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
         ]);
 
+        // Vérifier si une session du MÊME nouveau type est déjà ouverte
+        // en excluant la session actuelle
+        $sessionMemeTypeOuverte = SessionFormation::ouverte()
+            ->where('typeSession_id', $request->typeSession_id)
+            ->where('id', '!=', $sessionFormation->id)
+            ->latest()
+            ->first();
+
+        if ($sessionMemeTypeOuverte) {
+            return redirect()->route('session_formations.index')
+                ->with('error',
+                    "⛔ Une session de ce type est déjà ouverte (créée le " .
+                    \Carbon\Carbon::parse($sessionMemeTypeOuverte->dateDebut)->format('d/m/Y') .
+                    "). Clôturez-la avant de changer le type."
+                );
+        }
+
         $sessionFormation->update($request->only(
             'dateDebut', 'typeSession_id', 'groupe_id', 'vehicule_id', 'evaluation_id', 'moniteur_id'
         ));
 
-        // Mettre à jour les absences et notes des candidats (saisies dans le formulaire)
+        // Mettre à jour le statut des candidats selon le nouveau type
+        $typeSession = TypeSession::find($request->typeSession_id);
+        $typeNom     = $typeSession ? $typeSession->type : null;
+
+        if ($typeNom) {
+            foreach ($sessionFormation->candidats as $candidat) {
+                $nouveauStatut = match($typeNom) {
+                    'code'     => 'code_admis',
+                    'creneau'  => 'creneau',
+                    'conduite' => 'ajourne',
+                    default    => $candidat->statut,
+                };
+                $candidat->update(['statut' => $nouveauStatut]);
+            }
+        }
+
+        // Mettre à jour les notes/absences si saisies
         if ($request->has('candidats')) {
             foreach ($request->candidats as $candidatId => $data) {
                 $sessionFormation->candidats()->updateExistingPivot($candidatId, [
@@ -162,11 +224,8 @@ class SessionFormationController extends Controller
             ->with('success', '✅ Session mise à jour.');
     }
 
-    // ── CLÔTURE ─────────────────────────────────────────────────
+    // ── CLÔTURE ──────────────────────────────────────────────────
 
-    /**
-     * Affiche la page de clôture (saisie des absences + notes obligatoire)
-     */
     public function cloture(SessionFormation $sessionFormation)
     {
         if (!$sessionFormation->est_ouverte) {
@@ -179,9 +238,6 @@ class SessionFormationController extends Controller
         return view('session_formations.cloture', compact('sessionFormation', 'candidatsSession'));
     }
 
-    /**
-     * Traite la clôture : vérifie que tous les candidats ont une note ou sont absents
-     */
     public function cloturer(Request $request, SessionFormation $sessionFormation)
     {
         if (!$sessionFormation->est_ouverte) {
@@ -189,15 +245,13 @@ class SessionFormationController extends Controller
                 ->with('error', '⛔ Cette session est déjà clôturée.');
         }
 
-        $candidatsSession = $sessionFormation->candidats;
+        $typeNom = $sessionFormation->typeSession?->type;
 
-        // Mise à jour des absences et notes depuis le formulaire
         if ($request->has('candidats')) {
             foreach ($request->candidats as $candidatId => $data) {
                 $absent = isset($data['absent']) && $data['absent'] == '1';
                 $note   = $absent ? null : ($data['note'] ?? null);
 
-                // Valider la note si le candidat est présent
                 if (!$absent && (is_null($note) || $note < 0 || $note > 30)) {
                     return back()->withInput()
                         ->with('error', '⚠️ Chaque candidat présent doit avoir une note valide (0–30).');
@@ -208,10 +262,24 @@ class SessionFormationController extends Controller
                     'note'        => $note,
                     'observation' => $data['observation'] ?? null,
                 ]);
+
+                // Mise à jour statut à la clôture selon note
+                $candidat = \App\Models\Candidat::find($candidatId);
+                if ($candidat && !$absent) {
+                    if ($typeNom === 'code') {
+                        $nouveauStatut = ($note >= 14) ? 'code_admis' : 'ajourne';
+                    } elseif ($typeNom === 'creneau') {
+                        $nouveauStatut = ($note >= 14) ? 'creneau' : 'ajourne';
+                    } elseif ($typeNom === 'conduite') {
+                        $nouveauStatut = ($note >= 14) ? 'admis' : 'ajourne';
+                    } else {
+                        $nouveauStatut = $candidat->statut;
+                    }
+                    $candidat->update(['statut' => $nouveauStatut]);
+                }
             }
         }
 
-        // Recharger pour vérifier
         $sessionFormation->load('candidats');
         if (!$sessionFormation->peutEtreCloturee()) {
             $manquants = $sessionFormation->candidatsSansNote();
@@ -220,11 +288,10 @@ class SessionFormationController extends Controller
                 ->with('error', "⚠️ Impossible de clôturer : note manquante pour → $noms");
         }
 
-        // Tout est OK → fermer la session
         $sessionFormation->update(['statutSession' => 'ferme']);
 
         return redirect()->route('session_formations.index')
-            ->with('success', '✅ Session clôturée avec succès. Toutes les notes ont été enregistrées.');
+            ->with('success', '✅ Session clôturée avec succès.');
     }
 
     // ── DESTROY ──────────────────────────────────────────────────

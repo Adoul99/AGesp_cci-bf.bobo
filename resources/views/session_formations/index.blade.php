@@ -10,6 +10,7 @@
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
     --transition-normal: 300ms ease-in-out; --radius-md: 8px; --radius-lg: 12px;
 }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
 @media print {
     .no-print, nav, .sidebar { display: none !important; }
     body { background: white !important; }
@@ -36,18 +37,22 @@
             <span style="width:5px; height:35px; background:linear-gradient(180deg,var(--color-red) 0%,var(--color-green) 50%,var(--color-gold) 100%); margin-right:1rem; border-radius:2px;"></span>
             Sessions de Formation
         </h1>
-        <div style="display:flex; gap:1rem;" class="no-print">
-            @if(!$sessionOuverte)
+        <div style="display:flex; gap:1rem; align-items:center;" class="no-print">
+
+            {{-- Bouton création : bloqué seulement si les 3 types sont ouverts --}}
+            @if(!$creationBloquee)
                 <a href="{{ route('session_formations.create') }}"
-                   style="background:linear-gradient(135deg,var(--color-red) 0%,var(--color-red-dark) 100%); color:white; padding:0.75rem 1.5rem; border-radius:var(--radius-md); text-decoration:none; font-weight:600; border:2px solid var(--color-red); transition:all var(--transition-normal); display:inline-flex; align-items:center; gap:0.5rem; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px;"
+                   style="background:linear-gradient(135deg,var(--color-red) 0%,var(--color-red-dark) 100%); color:white; padding:0.75rem 1.5rem; border-radius:var(--radius-md); text-decoration:none; font-weight:600; border:2px solid var(--color-red); display:inline-flex; align-items:center; gap:0.5rem; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px;"
                    onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                     + Nouvelle Session
                 </a>
             @else
-                <span style="background:rgba(206,17,38,0.08); color:var(--color-red-dark); padding:0.75rem 1.5rem; border-radius:var(--radius-md); font-weight:600; border:2px solid var(--color-red-light); font-size:0.8rem; display:inline-flex; align-items:center; gap:0.5rem;" title="Clôturez la session en cours d'abord">
-                    🔒 Session en cours — création bloquée
+                <span style="background:rgba(206,17,38,0.08); color:var(--color-red-dark); padding:0.75rem 1.5rem; border-radius:var(--radius-md); font-weight:600; border:2px solid var(--color-red-light); font-size:0.8rem; display:inline-flex; align-items:center; gap:0.5rem;"
+                      title="Tous les types de sessions sont ouverts. Clôturez-en une d'abord.">
+                    🔒 Tous types ouverts — création bloquée
                 </span>
             @endif
+
             <button onclick="window.print()"
                 style="background:linear-gradient(135deg,var(--color-gold) 0%,var(--color-gold-dark) 100%); color:var(--color-dark); padding:0.75rem 1.5rem; border-radius:var(--radius-md); border:2px solid var(--color-gold); font-weight:600; cursor:pointer; font-size:0.8rem; text-transform:uppercase;">
                 ⬇️ Exporter PDF
@@ -55,66 +60,56 @@
         </div>
     </div>
 
-    {{-- BANDEAU SESSION EN COURS --}}
-    @if($sessionOuverte)
-    <div style="margin-bottom:2rem; background:white; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:2px solid var(--color-green); overflow:hidden;">
+    {{-- BANDEAUX SESSIONS EN COURS (une par session ouverte) --}}
+    @foreach($sessionsOuvertes as $sessionEnCours)
+    <div style="margin-bottom:1.5rem; background:white; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:2px solid var(--color-green); overflow:hidden;">
         <div style="background:linear-gradient(135deg,var(--color-green) 0%,var(--color-green-dark) 100%); padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between;">
             <div style="color:white; font-weight:700; font-size:1rem; display:flex; align-items:center; gap:0.75rem;">
                 <span style="width:12px; height:12px; background:var(--color-gold); border-radius:50%; display:inline-block; animation:pulse 1.5s infinite;"></span>
-                🟢 SESSION EN COURS
+                🟢 SESSION EN COURS —
+                @switch($sessionEnCours->typeSession?->type)
+                    @case('code')     📋 CODE @break
+                    @case('creneau')  🔧 CRÉNEAU @break
+                    @case('conduite') 🚗 CONDUITE @break
+                    @default {{ strtoupper($sessionEnCours->typeSession?->type ?? '—') }}
+                @endswitch
             </div>
             <div style="color:rgba(255,255,255,0.85); font-size:0.8rem;">
-                Depuis le {{ \Carbon\Carbon::parse($sessionOuverte->dateDebut)->format('d/m/Y') }}
+                Depuis le {{ \Carbon\Carbon::parse($sessionEnCours->dateDebut)->format('d/m/Y') }}
             </div>
         </div>
         <div style="padding:1.25rem 1.5rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:1rem; align-items:center;">
             <div>
-                <div style="font-size:0.7rem; text-transform:uppercase; color:var(--color-gray-500); font-weight:700; letter-spacing:0.5px;">Type</div>
-                <div style="font-weight:600; color:var(--color-dark); margin-top:0.25rem;">
-                    @if($sessionOuverte->typeSession)
-                        @switch($sessionOuverte->typeSession->type)
-                            @case('code')     📋 Code @break
-                            @case('creneau')  🔧 Créneau @break
-                            @case('conduite') 🚗 Conduite @break
-                            @default {{ $sessionOuverte->typeSession->type }}
-                        @endswitch
-                    @else — @endif
-                </div>
-            </div>
-            <div>
                 <div style="font-size:0.7rem; text-transform:uppercase; color:var(--color-gray-500); font-weight:700; letter-spacing:0.5px;">Groupe</div>
                 <div style="font-weight:600; color:var(--color-dark); margin-top:0.25rem;">
-                    {{ $sessionOuverte->groupe->nomGroupe ?? '—' }}
+                    {{ $sessionEnCours->groupe->nomGroupe ?? '—' }}
                 </div>
             </div>
             <div>
                 <div style="font-size:0.7rem; text-transform:uppercase; color:var(--color-gray-500); font-weight:700; letter-spacing:0.5px;">Moniteur</div>
                 <div style="font-weight:600; color:var(--color-dark); margin-top:0.25rem;">
-                    {{ $sessionOuverte->moniteur ? $sessionOuverte->moniteur->nom.' '.$sessionOuverte->moniteur->prenom : '—' }}
+                    {{ $sessionEnCours->moniteur ? $sessionEnCours->moniteur->nom.' '.$sessionEnCours->moniteur->prenom : '—' }}
                 </div>
             </div>
             <div>
                 <div style="font-size:0.7rem; text-transform:uppercase; color:var(--color-gray-500); font-weight:700; letter-spacing:0.5px;">Candidats</div>
                 <div style="font-weight:600; color:var(--color-dark); margin-top:0.25rem;">
-                    {{ $sessionOuverte->candidats->count() }} inscrit(s)
+                    {{ $sessionEnCours->candidats->count() }} inscrit(s)
                 </div>
             </div>
             <div style="display:flex; gap:0.75rem; justify-content:flex-end;" class="no-print">
-                <a href="{{ route('session_formations.edit', $sessionOuverte->id) }}"
+                <a href="{{ route('session_formations.edit', $sessionEnCours->id) }}"
                    style="padding:0.6rem 1.25rem; background:rgba(0,122,94,0.1); color:var(--color-green-dark); border:2px solid var(--color-green); border-radius:var(--radius-md); font-weight:600; text-decoration:none; font-size:0.8rem;">
                     ✎ Modifier
                 </a>
-                <a href="{{ route('session_formations.cloture', $sessionOuverte->id) }}"
+                <a href="{{ route('session_formations.cloture', $sessionEnCours->id) }}"
                    style="padding:0.6rem 1.25rem; background:linear-gradient(135deg,var(--color-red) 0%,var(--color-red-dark) 100%); color:white; border:2px solid var(--color-red); border-radius:var(--radius-md); font-weight:600; text-decoration:none; font-size:0.8rem;">
-                    🔒 Clôturer la session
+                    🔒 Clôturer
                 </a>
             </div>
         </div>
     </div>
-    <style>
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
-    </style>
-    @endif
+    @endforeach
 
     {{-- TABLEAU HISTORIQUE --}}
     <div style="background:white; border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100);">
@@ -138,11 +133,9 @@
                 <tr style="border-bottom:1px solid var(--color-gray-100); {{ $session->est_ouverte ? 'background:rgba(0,122,94,0.03);' : '' }}"
                     onmouseover="this.style.backgroundColor='rgba(0,122,94,0.06)'"
                     onmouseout="this.style.backgroundColor='{{ $session->est_ouverte ? 'rgba(0,122,94,0.03)' : 'transparent' }}'">
-
                     <td style="padding:0.875rem 1.25rem; font-weight:600; font-size:0.875rem; color:var(--color-dark);">
                         📅 {{ \Carbon\Carbon::parse($session->dateDebut)->format('d/m/Y') }}
                     </td>
-
                     <td style="padding:0.875rem 1.25rem; font-size:0.875rem; color:var(--color-dark);">
                         @if($session->typeSession)
                             @switch($session->typeSession->type)
@@ -153,7 +146,6 @@
                             @endswitch
                         @else <span style="color:var(--color-gray-500); font-style:italic;">—</span> @endif
                     </td>
-
                     <td style="padding:0.875rem 1.25rem; text-align:center;">
                         @if($session->statutSession == 'ouvert')
                             <span style="background:rgba(0,122,94,0.15); color:var(--color-green); padding:0.3rem 0.75rem; border-radius:50px; font-size:0.72rem; font-weight:700; text-transform:uppercase; border:1px solid var(--color-green-light);">🟢 Ouvert</span>
@@ -163,19 +155,15 @@
                             <span style="background:var(--color-gray-100); color:var(--color-gray-500); padding:0.3rem 0.75rem; border-radius:50px; font-size:0.72rem; font-weight:700; text-transform:uppercase;">⚪ Annulé</span>
                         @endif
                     </td>
-
                     <td style="padding:0.875rem 1.25rem; font-size:0.875rem; color:var(--color-dark);">
                         {{ $session->groupe->nomGroupe ?? '—' }}
                     </td>
-
                     <td style="padding:0.875rem 1.25rem; font-size:0.875rem; color:var(--color-dark);">
                         {{ $session->moniteur ? $session->moniteur->nom.' '.$session->moniteur->prenom : '—' }}
                     </td>
-
                     <td style="padding:0.875rem 1.25rem; text-align:center; font-size:0.875rem; font-weight:600; color:var(--color-dark);">
                         {{ $session->candidats->count() }}
                     </td>
-
                     <td style="padding:0.875rem 1.25rem; text-align:center;" class="no-print">
                         <div style="display:flex; gap:0.4rem; justify-content:center;">
                             @if($session->est_ouverte)
@@ -211,5 +199,6 @@
         {{ $sessions->where('statutSession','ferme')->count() }} clôturée(s)
     </div>
     @endif
+
 </div>
 </x-layouts::app.sidebar>

@@ -3,10 +3,10 @@
 <style>
 .db-wrap { padding:14px 18px; font-family:'Source Sans 3',sans-serif; }
 
-/* Stats grid — 4 colonnes forcées */
+/* Stats grid — 5 colonnes alignées */
 .db-stats {
     display              : grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap                  : 10px;
     margin-bottom        : 14px;
 }
@@ -212,8 +212,8 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
         Répartition par étape de formation
         <span style="font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:0.78rem;color:#6b7a70;margin-left:auto;">Total : {{ $totalCandidats }} candidats</span>
     </div>
-    <div class="db-stats" style="grid-template-columns:repeat(5, 1fr);">
-        <div class="db-stat" style="background:linear-gradient(135deg,#444,#666);">
+    <div class="db-stats">
+        <div class="db-stat" style="background:linear-gradient(135deg,#4b5563,#6b7280);">
             <div class="db-stat-lbl">Inscrits</div>
             <div class="db-stat-val">{{ $candidatsInscrits }}</div>
             <span class="db-stat-ico">📋</span>
@@ -248,11 +248,15 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div style="background:white;border-radius:10px;padding:18px;box-shadow:0 3px 12px rgba(0,0,0,0.08);">
             <div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;color:#1a2520;margin-bottom:10px;text-align:center;">Répartition par étape</div>
-            <canvas id="etapeChart" style="max-height:240px;"></canvas>
+            <div style="position: relative; height:240px;">
+                <canvas id="etapeChart"></canvas>
+            </div>
         </div>
         <div style="background:white;border-radius:10px;padding:18px;box-shadow:0 3px 12px rgba(0,0,0,0.08);">
             <div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;color:#1a2520;margin-bottom:10px;text-align:center;">Répartition par catégorie de permis</div>
-            <canvas id="permisChart" style="max-height:240px;"></canvas>
+            <div style="position: relative; height:240px;">
+                <canvas id="permisChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -268,19 +272,21 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
                     labels: ['Inscrits', 'Code', 'Créneau', 'Conduite en ville', 'Admis'],
                     datasets: [{
                         data: [
-                            {{ $candidatsInscrits }},
-                            {{ $candidatsCode }},
-                            {{ $candidatsCreneau }},
-                            {{ $candidatsConduite }},
-                            {{ $candidatsAdmis }}
+                            {{ (int)$candidatsInscrits }},
+                            {{ (int)$candidatsCode }},
+                            {{ (int)$candidatsCreneau }},
+                            {{ (int)$candidatsConduite }},
+                            {{ (int)$candidatsAdmis }}
                         ],
-                        backgroundColor: ['#666666', '#c0281e', '#d4a017', '#3a4a40', '#1a6b3a'],
+                        // Couleurs calées sur la charte des blocs du haut
+                        backgroundColor: ['#4b5563', '#c0281e', '#d4a017', '#1a2520', '#1a6b3a'],
                         borderWidth: 2,
                         borderColor: '#fff',
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } }
                     }
@@ -307,6 +313,7 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } }
                     }
