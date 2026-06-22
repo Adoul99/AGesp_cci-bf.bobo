@@ -20,107 +20,88 @@ class ProgrammationController extends Controller
     public function create()
     {
         $moniteurs    = Moniteur::all();
-        $groupes      = Groupe::all();
         $typeSessions = TypeSession::orderBy('type')->get();
 
-        // Par défaut (avant sélection d'un type), aucun candidat affiché
-        // Le chargement se fait en AJAX via candidatsParType()
-        return view('programmations.create', compact('moniteurs', 'groupes', 'typeSessions'));
+        return view('programmations.create', compact('moniteurs', 'typeSessions'));
     }
 
     /**
-     * AJAX : retourne les candidats éligibles ET non éligibles pour un type de session donné
+     * AJAX : retourne les candidats classés par mérite (note décroissante)
+     * pour un type de session donné.
      *
-     * Règles d'éligibilité (basées sur le statut du candidat) :
-     * - Code     → éligibles : inscrit, en_formation, ajourne (pas encore code_admis/admis)
-     * - Créneau  → éligibles : code_admis uniquement (a déjà réussi le code)
-     * - Conduite → éligibles : code_admis (créneau en cours) — en pratique ceux ayant
-     *              déjà une évaluation Créneau "Admis" mais pas encore "admis" global
+     * Règle d'éligibilité UNIQUE : avoir une évaluation "Admis" (note ≥ 25)
+     * pour ce type de session précis (Code / Créneau / Conduite).
      */
-    public function candidatsParType(TypeSession $typeSession)
+    public function candidatsParType(Request $request, TypeSession $typeSession)
     {
         $type = strtolower($typeSession->type);
 
         $tousCandidats = Candidat::with('evaluations.typeSession')
             ->orderBy('nom')
-            ->get()
-            ->map(function ($c) {
-                $c->nb_sessions   = $c->sessions()->count();
-                $c->moyenne_notes = $c->evaluations->whereNotNull('note')->avg('note');
-                return $c;
-            });
+            ->get();
 
         $eligibles    = collect();
         $nonEligibles = collect();
+        $autres       = collect();
 
         foreach ($tousCandidats as $c) {
-            $estEligible = match ($type) {
-                'code'     => in_array($c->statut, ['inscrit', 'en_formation', 'ajourne']),
-                'creneau'  => in_array($c->statut, ['code_admis']),
-                'conduite' => $c->evaluations
-                                ->where('resultat', 'Admis')
-                                ->filter(fn($e) => $e->typeSession?->type === 'creneau')
-                                ->isNotEmpty()
-                                && $c->statut !== 'admis',
-                default    => true,
-            };
-
-            $motif = match ($type) {
-                'code'     => $estEligible ? 'Code non encore validé' : "Statut actuel : {$c->statut_label}",
-                'creneau'  => $estEligible ? 'Code validé, prêt pour le créneau' : 'Le code doit être validé en premier',
-                'conduite' => $estEligible ? 'Créneau validé, prêt pour la conduite' : 'Le créneau doit être validé en premier',
-                default    => '',
-            };
+            $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
+            $meilleureNote = $evalsType->whereNotNull('note')->max('note');
 
             $item = [
-                'id'             => $c->id,
-                'nom'            => $c->nom,
-                'prenom'         => $c->prenom,
-                'statut'         => $c->statut,
-                'statut_label'   => $c->statut_label,
-                'nb_sessions'    => $c->nb_sessions,
-                'moyenne_notes'  => $c->moyenne_notes ? round($c->moyenne_notes, 2) : null,
-                'priorite'       => $c->moyenne_notes && $c->moyenne_notes >= 25,
-                'motif'          => $motif,
+                'id'           => $c->id,
+                'nom'          => $c->nom,
+                'prenom'       => $c->prenom,
+                'note'         => $meilleureNote,
+                'statut_label' => $c->statut_label,
             ];
 
-            if ($estEligible) {
+            if (!is_null($meilleureNote) && $meilleureNote >= 25) {
                 $eligibles->push($item);
-            } else {
+            } elseif (!is_null($meilleureNote)) {
+                $item['motif'] = "Note insuffisante : {$meilleureNote}/30 (seuil 25)";
                 $nonEligibles->push($item);
+            } else {
+                $item['motif'] = "Pas encore évalué en " . $typeSession->type;
+                $autres->push($item);
             }
         }
 
-        // Tri : priorité (moyenne ≥ 25) en premier, puis par nombre de sessions décroissant
-        $eligibles = $eligibles->sortByDesc(fn($c) => [$c['priorite'] ? 1 : 0, $c['nb_sessions']])->values();
+        $eligibles    = $eligibles->sortByDesc('note')->values();
+        $autres       = $autres->sortBy('nom')->values();
+        $nonEligibles = $nonEligibles->sortByDesc('note')->values();
 
         return response()->json([
             'eligibles'    => $eligibles,
-            'nonEligibles' => $nonEligibles->values(),
+            'nonEligibles' => $nonEligibles,
+            'autres'       => $autres,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'dateDebut'      => 'required|date',
-            'dateFin'        => 'required|date|after_or_equal:dateDebut',
             'typeSession_id' => 'required|exists:type_sessions,id',
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
             'candidat_ids'   => 'required|array|min:1',
             'candidat_ids.*' => 'exists:candidats,id',
         ], [
-            'candidat_ids.required' => 'Sélectionnez au moins un candidat éligible.',
+            'candidat_ids.required' => 'Sélectionnez au moins un candidat à programmer.',
         ]);
 
-        $programmation = Programmation::create(
-            $request->only('dateDebut', 'dateFin', 'moniteur_id', 'typeSession_id')
-        );
+        // Date automatique (date du jour de création de la programmation)
+        $aujourdhui = now()->toDateString();
+
+        $programmation = Programmation::create([
+            'dateDebut'      => $aujourdhui,
+            'dateFin'        => $aujourdhui,
+            'moniteur_id'    => $request->moniteur_id,
+            'typeSession_id' => $request->typeSession_id,
+        ]);
 
         $candidatIds = $request->candidat_ids;
         $programmation->candidats()->sync($candidatIds);
 
-        // Auto-inscrire les candidats admis au prochain examen ouvert
         $candidatsAdmis = Candidat::whereIn('id', $candidatIds)
             ->where('statut', 'admis')
             ->get();
@@ -140,23 +121,43 @@ class ProgrammationController extends Controller
             }
         }
 
-        return redirect()->route('programmations.index')
+        return redirect()->route('programmations.show', $programmation->id)
             ->with('success', '✅ Programmation créée avec succès.');
+    }
+
+    /**
+     * Affiche la liste DGTTM imprimable des candidats programmés
+     */
+    public function show(Programmation $programmation)
+    {
+        $programmation->load(['candidats', 'moniteur', 'typeSession']);
+
+        $type = strtolower($programmation->typeSession->type ?? '');
+        $candidats = $programmation->candidats->map(function ($c) use ($type) {
+            $c->load('evaluations.typeSession');
+            $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
+            $c->meilleure_note = $evalsType->whereNotNull('note')->max('note');
+            return $c;
+        })->sortByDesc('meilleure_note')->values();
+
+        return view('programmations.show', compact('programmation', 'candidats'));
     }
 
     public function edit(Programmation $programmation)
     {
+        $programmation->load(['candidats', 'moniteur', 'typeSession']);
         $moniteurs    = Moniteur::all();
         $typeSessions = TypeSession::orderBy('type')->get();
 
         $candidatsSelectionnes = $programmation->candidats->pluck('id')->toArray();
 
-        // Pour l'édition, on affiche directement les candidats déjà liés
-        $candidatsActuels = $programmation->candidats->map(function ($c) {
-            $c->nb_sessions   = $c->sessions()->count();
-            $c->moyenne_notes = $c->evaluations()->whereNotNull('note')->avg('note');
+        $type = strtolower($programmation->typeSession->type ?? '');
+        $candidatsActuels = $programmation->candidats->map(function ($c) use ($type) {
+            $c->load('evaluations.typeSession');
+            $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
+            $c->note = $evalsType->whereNotNull('note')->max('note');
             return $c;
-        });
+        })->sortByDesc('note')->values();
 
         return view('programmations.edit', compact(
             'programmation', 'moniteurs', 'typeSessions',
@@ -167,21 +168,20 @@ class ProgrammationController extends Controller
     public function update(Request $request, Programmation $programmation)
     {
         $request->validate([
-            'dateDebut'      => 'required|date',
-            'dateFin'        => 'required|date|after_or_equal:dateDebut',
             'typeSession_id' => 'required|exists:type_sessions,id',
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
             'candidat_ids'   => 'nullable|array',
         ]);
 
-        $programmation->update(
-            $request->only('dateDebut', 'dateFin', 'moniteur_id', 'typeSession_id')
-        );
+        $programmation->update([
+            'typeSession_id' => $request->typeSession_id,
+            'moniteur_id'    => $request->moniteur_id,
+        ]);
 
         $candidatIds = $request->candidat_ids ?? [];
         $programmation->candidats()->sync($candidatIds);
 
-        return redirect()->route('programmations.index')
+        return redirect()->route('programmations.show', $programmation->id)
             ->with('success', '✅ Programmation mise à jour.');
     }
 
@@ -191,5 +191,19 @@ class ProgrammationController extends Controller
         $programmation->delete();
         return redirect()->route('programmations.index')
             ->with('success', '✅ Programmation supprimée.');
+    }
+
+    /**
+     * AJAX : recherche d'un candidat par nom (pour l'ajout manuel)
+     */
+    public function rechercherCandidat(Request $request)
+    {
+        $q = $request->get('q', '');
+        $candidats = Candidat::where('nom', 'LIKE', "%{$q}%")
+            ->orWhere('prenom', 'LIKE', "%{$q}%")
+            ->limit(10)
+            ->get(['id', 'nom', 'prenom', 'statut']);
+
+        return response()->json($candidats);
     }
 }

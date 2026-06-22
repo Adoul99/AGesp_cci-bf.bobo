@@ -29,11 +29,9 @@ use App\Http\Controllers\UserController;
 Route::get('/', function () {
     if (auth()->check()) {
         $user = auth()->user();
-        // Candidat connecté → redirection directe vers son espace
         if ($user->role === 'candidat') {
             return redirect()->route('candidat.espace');
         }
-        // Admin / moniteur connecté → tableau de bord
         if (in_array($user->role, ['admin', 'moniteur', 'superadmin'])) {
             return redirect()->route('dashboard');
         }
@@ -49,10 +47,6 @@ Route::post('/verify-email/send',   [VerificationCodeController::class, 'send'])
 
 Route::post('/verify-email/verify', [VerificationCodeController::class, 'verify'])
      ->name('verify-email.verify');
-
-// ══════════════════════════════════════════════════════════════
-// PAGES PUBLIQUES
-// ══════════════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════════════
 // INSCRIPTION PUBLIQUE
@@ -139,18 +133,21 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::resource('lieu_formations',    LieuFormationController::class);
 
     // ── Programmations ───────────────────────────────────────
-    Route::resource('programmations',     ProgrammationController::class);
-
-    // ── AJAX : candidats éligibles/non-éligibles pour un type de session ──
+    // IMPORTANT : routes spécifiques déclarées AVANT le resource()
+    // pour éviter que 'rechercher-candidat' soit interprété comme un {programmation} id
     Route::get('programmations/candidats-par-type/{typeSession}', [ProgrammationController::class, 'candidatsParType'])
          ->name('programmations.candidats-par-type');
+
+    Route::get('programmations/rechercher-candidat', [ProgrammationController::class, 'rechercherCandidat'])
+         ->name('programmations.rechercher-candidat');
+
+    Route::resource('programmations',     ProgrammationController::class);
 
     // ── Reçus ────────────────────────────────────────────────
     Route::resource('recus',              RecusController::class);
 
     // ── Sessions de formation ────────────────────────────────
     Route::resource('session_formations', SessionFormationController::class);
-    // Clôture d'une session (GET = formulaire, POST = traitement)
     Route::get ('session_formations/{sessionFormation}/cloture',  [SessionFormationController::class, 'cloture'])  ->name('session_formations.cloture');
     Route::post('session_formations/{sessionFormation}/cloturer', [SessionFormationController::class, 'cloturer']) ->name('session_formations.cloturer');
 
