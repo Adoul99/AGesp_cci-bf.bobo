@@ -226,6 +226,12 @@ class SessionFormationController extends Controller
 
     // ── CLÔTURE ──────────────────────────────────────────────────
 
+    /**
+     * Le clic sur "Clôturer" envoie désormais vers le module Évaluation :
+     * le moniteur y saisit les notes des candidats de CETTE session, et la
+     * session se clôture automatiquement une fois tous les candidats notés
+     * (ou marqués absents). Voir EvaluationController::create()/store().
+     */
     public function cloture(SessionFormation $sessionFormation)
     {
         if (!$sessionFormation->est_ouverte) {
@@ -233,9 +239,14 @@ class SessionFormationController extends Controller
                 ->with('error', '⛔ Cette session est déjà clôturée.');
         }
 
-        $candidatsSession = $sessionFormation->candidats()->get();
+        if ($sessionFormation->candidats()->count() === 0) {
+            return redirect()->route('session_formations.edit', $sessionFormation->id)
+                ->with('error', "⛔ Impossible de clôturer : aucun candidat n'est attaché à cette session.");
+        }
 
-        return view('session_formations.cloture', compact('sessionFormation', 'candidatsSession'));
+        return redirect()->route('evaluations.create', [
+            'session_formation_id' => $sessionFormation->id,
+        ]);
     }
 
     public function cloturer(Request $request, SessionFormation $sessionFormation)
@@ -245,50 +256,35 @@ class SessionFormationController extends Controller
                 ->with('error', '⛔ Cette session est déjà clôturée.');
         }
 
-        $typeNom = $sessionFormation->typeSession?->type;
+        $resultats = [];
 
         if ($request->has('candidats')) {
             foreach ($request->candidats as $candidatId => $data) {
                 $absent = isset($data['absent']) && $data['absent'] == '1';
                 $note   = $absent ? null : ($data['note'] ?? null);
 
-                if (!$absent && (is_null($note) || $note < 0 || $note > 30)) {
+                if (!$absent && ($note === null || $note === '' || $note < 0 || $note > 30)) {
                     return back()->withInput()
                         ->with('error', '⚠️ Chaque candidat présent doit avoir une note valide (0–30).');
                 }
 
-                $sessionFormation->candidats()->updateExistingPivot($candidatId, [
-                    'absent'      => $absent ? 1 : 0,
-                    'note'        => $note,
+                $resultats[$candidatId] = [
+                    'absent'      => $absent,
+                    'note'        => $absent ? null : (float) $note,
                     'observation' => $data['observation'] ?? null,
-                ]);
-
-                // Mise à jour statut à la clôture selon note
-                $candidat = \App\Models\Candidat::find($candidatId);
-                if ($candidat && !$absent) {
-                    if ($typeNom === 'code') {
-                        $nouveauStatut = ($note >= 14) ? 'code_admis' : 'ajourne';
-                    } elseif ($typeNom === 'creneau') {
-                        $nouveauStatut = ($note >= 14) ? 'creneau' : 'ajourne';
-                    } elseif ($typeNom === 'conduite') {
-                        $nouveauStatut = ($note >= 14) ? 'admis' : 'ajourne';
-                    } else {
-                        $nouveauStatut = $candidat->statut;
-                    }
-                    $candidat->update(['statut' => $nouveauStatut]);
-                }
+                ];
             }
         }
 
-        $sessionFormation->load('candidats');
-        if (!$sessionFormation->peutEtreCloturee()) {
+        $cloturee = $sessionFormation->appliquerResultats($resultats);
+
+        if (!$cloturee) {
+            $sessionFormation->load('candidats');
             $manquants = $sessionFormation->candidatsSansNote();
             $noms = $manquants->map(fn($c) => $c->nom . ' ' . $c->prenom)->implode(', ');
             return back()->withInput()
                 ->with('error', "⚠️ Impossible de clôturer : note manquante pour → $noms");
         }
-
-        $sessionFormation->update(['statutSession' => 'ferme']);
 
         return redirect()->route('session_formations.index')
             ->with('success', '✅ Session clôturée avec succès.');

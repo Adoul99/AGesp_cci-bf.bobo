@@ -22,7 +22,7 @@ class EvaluationController extends Controller
 
     // ── CREATE ───────────────────────────────────────────────────
 
-    public function create()
+    public function create(Request $request)
     {
         // Identifier le moniteur connecté par son email
         $user = Auth::user();
@@ -30,7 +30,27 @@ class EvaluationController extends Controller
         $sessionDuMoniteur = null;
         $candidatsDuGroupe = collect();
 
-        if ($moniteurConnecte) {
+        // Cas prioritaire : on arrive depuis le bouton "Clôturer" d'une session précise
+        // → on charge CETTE session (peu importe qui est connecté), pour évaluer
+        //   exactement les candidats qui doivent permettre de la clôturer.
+        $sessionFormationId = $request->query('session_formation_id');
+        if ($sessionFormationId) {
+            $sessionCiblee = SessionFormation::with(['typeSession', 'moniteur'])
+                ->where('id', $sessionFormationId)
+                ->where('statutSession', 'ouvert')
+                ->first();
+
+            if ($sessionCiblee) {
+                $sessionDuMoniteur = $sessionCiblee;
+                $candidatsDuGroupe = $sessionCiblee->candidats()->orderBy('nom')->get();
+                if ($sessionCiblee->moniteur) {
+                    $moniteurConnecte = $sessionCiblee->moniteur;
+                }
+            }
+        }
+
+        // Sinon, comportement habituel : la session ouverte du moniteur connecté
+        if (!$sessionDuMoniteur && $moniteurConnecte) {
             $sessionDuMoniteur = $moniteurConnecte->sessionOuverte();
             if ($sessionDuMoniteur) {
                 $candidatsDuGroupe = $sessionDuMoniteur->candidats()->orderBy('nom')->get();
@@ -75,24 +95,33 @@ class EvaluationController extends Controller
 
             $count = 0;
 
-            // Chercher la session ouverte du moniteur pour synchroniser les notes
+            // La session liée est déterminée en priorité par le champ caché
+            // session_formation_id (venant du bouton "Clôturer"), sinon par
+            // la session ouverte du moniteur sélectionné.
             $sessionDuMoniteur = null;
-            if ($moniteurId) {
+            if ($request->filled('session_formation_id')) {
+                $sessionDuMoniteur = SessionFormation::ouverte()
+                    ->find($request->session_formation_id);
+            }
+            if (!$sessionDuMoniteur && $moniteurId) {
                 $sessionDuMoniteur = SessionFormation::ouverte()
                     ->where('moniteur_id', $moniteurId)
                     ->latest()->first();
             }
 
+            $resultatsPourSession = [];
+
             foreach ($request->evaluations as $candidatId => $data) {
+                $absent  = isset($data['absent']) && $data['absent'] == '1';
                 $noteRaw = isset($data['note']) ? trim($data['note']) : '';
                 $obs     = trim($data['observation'] ?? '');
 
-                // Ignorer si note vide ET pas d'observation
-                if ($noteRaw === '' && $obs === '') continue;
+                // Ignorer si rien n'a été saisi (ni absence, ni note, ni observation)
+                if (!$absent && $noteRaw === '' && $obs === '') continue;
 
-                $note     = $noteRaw !== '' ? (float) $noteRaw : null;
-                $resultat = is_null($note) ? 'En attente' : ($note >= 25 ? 'Admis' : 'Ajourné');
-                $statut   = is_null($note) ? 'en_attente' : ($note >= 25 ? 'reussi' : 'echoue');
+                $note     = ($absent || $noteRaw === '') ? null : (float) $noteRaw;
+                $resultat = $absent ? 'Absent' : (is_null($note) ? 'En attente' : ($note >= 25 ? 'Admis' : 'Ajourné'));
+                $statut   = $absent ? 'absent' : (is_null($note) ? 'en_attente' : ($note >= 25 ? 'reussi' : 'echoue'));
 
                 // 1. Enregistrer dans la table evaluations
                 Evaluation::updateOrCreate(
@@ -110,32 +139,34 @@ class EvaluationController extends Controller
                     ]
                 );
 
-                // 2. Synchroniser dans le pivot session_candidat si session ouverte trouvée
-                if ($sessionDuMoniteur) {
-                    // Vérifier que ce candidat est bien dans la session
-                    $estDansSession = $sessionDuMoniteur->candidats()
-                        ->wherePivot('candidat_id', $candidatId)
-                        ->exists();
-
-                    if ($estDansSession) {
-                        $sessionDuMoniteur->candidats()->updateExistingPivot($candidatId, [
-                            'note'        => $note,
-                            'observation' => $obs ?: null,
-                        ]);
-                    }
-                }
+                // 2. On mémorise ce résultat pour le répercuter sur la session liée
+                $resultatsPourSession[$candidatId] = [
+                    'absent'      => $absent,
+                    'note'        => $note,
+                    'observation' => $obs ?: null,
+                ];
 
                 $count++;
             }
 
-            // Mettre à jour le statut de chaque candidat évalué
-            foreach ($request->evaluations as $candidatId => $data) {
+            // Mettre à jour le statut de chaque candidat évalué (agrégation globale)
+            foreach ($resultatsPourSession as $candidatId => $r) {
                 $c = \App\Models\Candidat::find($candidatId);
                 if ($c) $c->mettreAJourStatut();
             }
 
+            // 3. Répercuter automatiquement sur la SessionFormation liée, et la
+            //    clôturer si tous ses candidats sont désormais notés/absents.
+            $messageCloture = '';
+            if ($sessionDuMoniteur && !empty($resultatsPourSession)) {
+                $cloturee = $sessionDuMoniteur->appliquerResultats($resultatsPourSession);
+                $messageCloture = $cloturee
+                    ? ' 🔒 La session de formation a été clôturée automatiquement.'
+                    : ' ⏳ Il reste des candidats sans note dans la session — clôturez-la une fois complète.';
+            }
+
             return redirect()->route('evaluations.index')
-                ->with('success', "✅ $count évaluation(s) enregistrée(s) avec succès.");
+                ->with('success', "✅ $count évaluation(s) enregistrée(s) avec succès.$messageCloture");
         }
 
         // Cas 2 : formulaire individuel (fallback)

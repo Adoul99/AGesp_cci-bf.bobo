@@ -22,8 +22,8 @@ class GroupeController extends Controller
      */
     public function create()
     {
-        // Charger les candidats avec leurs groupes
-        $candidats = Candidat::with('groupes')->get();
+        // Ne charger que les candidats qui n'ont encore aucun groupe affecté
+        $candidats = Candidat::doesntHave('groupes')->get();
         return view('groupes.create', compact('candidats'));
     }
 
@@ -54,8 +54,14 @@ class GroupeController extends Controller
      */
     public function edit(Groupe $groupe)
     {
-        // Charger les candidats avec leurs groupes
-        $candidats = Candidat::with('groupes')->get();
+        // Ne charger que les candidats sans groupe, plus ceux déjà dans CE groupe
+        // (pour pouvoir les conserver ou les retirer)
+        $candidats = Candidat::where(function ($query) use ($groupe) {
+            $query->doesntHave('groupes')
+                  ->orWhereHas('groupes', function ($q) use ($groupe) {
+                      $q->where('groupes.id', $groupe->id);
+                  });
+        })->get();
         $candidatsSelectionnes = $groupe->candidats->pluck('id')->toArray();
         return view('groupes.edit', compact('groupe', 'candidats', 'candidatsSelectionnes'));
     }

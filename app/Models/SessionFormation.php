@@ -92,6 +92,63 @@ class SessionFormation extends Model
         });
     }
 
+    /**
+     * Point d'entrée UNIQUE pour appliquer des résultats (notes/absences/observations)
+     * à cette session, qu'ils viennent du formulaire de clôture classique OU du
+     * module Évaluation. Met à jour le pivot, le statut de chaque candidat, et
+     * clôture automatiquement la session si tous les candidats sont traités.
+     *
+     * @param array $resultats [$candidatId => ['absent' => bool, 'note' => float|null, 'observation' => string|null]]
+     * @return bool true si la session a été clôturée à l'issue de cet appel
+     */
+    public function appliquerResultats(array $resultats): bool
+    {
+        if (!$this->est_ouverte || empty($resultats)) {
+            return false;
+        }
+
+        $typeNom        = $this->typeSession?->type;
+        $idsDeLaSession = $this->candidats()->pluck('candidats.id')->all();
+
+        foreach ($resultats as $candidatId => $data) {
+            // On ignore tout candidat qui n'appartient pas à cette session
+            if (!in_array((int) $candidatId, $idsDeLaSession)) {
+                continue;
+            }
+
+            $absent = (bool) ($data['absent'] ?? false);
+            $note   = $absent ? null : ($data['note'] ?? null);
+
+            $this->candidats()->updateExistingPivot($candidatId, [
+                'absent'      => $absent,
+                'note'        => $note,
+                'observation' => $data['observation'] ?? null,
+            ]);
+
+            if (!$absent && !is_null($note)) {
+                $candidat = Candidat::find($candidatId);
+                if ($candidat) {
+                    $nouveauStatut = match ($typeNom) {
+                        'code'     => ($note >= 14) ? 'code_admis' : 'ajourne',
+                        'creneau'  => ($note >= 14) ? 'creneau'    : 'ajourne',
+                        'conduite' => ($note >= 14) ? 'admis'      : 'ajourne',
+                        default    => $candidat->statut,
+                    };
+                    $candidat->update(['statut' => $nouveauStatut]);
+                }
+            }
+        }
+
+        $this->load('candidats');
+
+        if ($this->peutEtreCloturee()) {
+            $this->update(['statutSession' => 'ferme']);
+            return true;
+        }
+
+        return false;
+    }
+
     // ── Scopes ───────────────────────────────────────────────────
 
     public function scopeOuverte($query)

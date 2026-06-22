@@ -29,8 +29,20 @@
     </div>
     @endif
 
+    {{-- Bandeau : évaluation liée à une session de formation --}}
+    @if($sessionDuMoniteur)
+    <div style="margin-bottom:1.5rem; padding:1rem 1.5rem; background:rgba(0,122,94,0.08); border-left:4px solid var(--color-green); border-radius:var(--radius-md); color:var(--color-green-dark); font-size:0.875rem;">
+        🔗 <strong>Évaluation liée à la session du {{ \Carbon\Carbon::parse($sessionDuMoniteur->dateDebut)->format('d/m/Y') }}</strong>
+        ({{ $sessionDuMoniteur->typeSession?->label ?? $sessionDuMoniteur->typeSession?->type }}).
+        Une fois tous les candidats notés ou marqués absents, <strong>cette session sera clôturée automatiquement</strong>.
+    </div>
+    @endif
+
     <form method="POST" action="{{ route('evaluations.store') }}">
         @csrf
+        @if($sessionDuMoniteur)
+            <input type="hidden" name="session_formation_id" value="{{ $sessionDuMoniteur->id }}">
+        @endif
 
         {{-- ── ENTÊTE FORMULAIRE : Moniteur / Date / Type ── --}}
         <div style="background:white; padding:1.75rem 2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
@@ -129,6 +141,7 @@
                             <th style="padding:0.875rem 1.25rem; text-align:left; border-bottom:3px solid var(--color-gold);">#</th>
                             <th style="padding:0.875rem 1.25rem; text-align:left; border-bottom:3px solid var(--color-gold);">Candidat</th>
                             <th style="padding:0.875rem 1.25rem; text-align:left; border-bottom:3px solid var(--color-gold);">Moniteur</th>
+                            <th style="padding:0.875rem 1.25rem; text-align:center; border-bottom:3px solid var(--color-gold); color:var(--color-red);">Absent</th>
                             <th style="padding:0.875rem 1.25rem; text-align:center; border-bottom:3px solid var(--color-gold);">Note /30</th>
                             <th style="padding:0.875rem 1.25rem; text-align:center; border-bottom:3px solid var(--color-gold);">Résultat</th>
                             <th style="padding:0.875rem 1.25rem; text-align:left; border-bottom:3px solid var(--color-gold);">Observation</th>
@@ -149,6 +162,15 @@
                                 @else
                                     <span style="color:var(--color-gray-500); font-style:italic;">—</span>
                                 @endif
+                            </td>
+
+                            <td style="padding:0.875rem 1.25rem; text-align:center;">
+                                <input type="checkbox"
+                                       name="evaluations[{{ $candidat->id }}][absent]"
+                                       value="1"
+                                       id="abs-{{ $candidat->id }}"
+                                       onchange="toggleAbsent(this, {{ $candidat->id }})"
+                                       style="width:18px; height:18px; accent-color:var(--color-red); cursor:pointer;">
                             </td>
 
                             <td style="padding:0.875rem 1.25rem; text-align:center;">
@@ -216,6 +238,28 @@
 <script>
 const total = {{ $candidats->count() }};
 
+function toggleAbsent(checkbox, id) {
+    const note = document.getElementById('note-' + id);
+    const res  = document.getElementById('res-' + id);
+    if (checkbox.checked) {
+        note.disabled = true;
+        note.value = '';
+        note.style.background = '#f5f5f5';
+        note.style.color = '#999';
+        res.style.background = 'rgba(206,17,38,0.1)';
+        res.style.color      = 'var(--color-red-dark)';
+        res.textContent      = 'ABSENT';
+    } else {
+        note.disabled = false;
+        note.style.background = 'white';
+        note.style.color = 'var(--color-dark)';
+        res.style.background = 'var(--color-gray-100)';
+        res.style.color      = 'var(--color-gray-500)';
+        res.textContent      = '— en attente';
+    }
+    updateProgress();
+}
+
 function updateResultat(input, id) {
     const res = document.getElementById('res-' + id);
     const val = input.value;
@@ -242,6 +286,9 @@ function updateProgress() {
     let count = 0;
     document.querySelectorAll('input[type=number][id^="note-"]').forEach(inp => {
         if (inp.value !== '' && !isNaN(parseFloat(inp.value))) count++;
+    });
+    document.querySelectorAll('input[type=checkbox][id^="abs-"]').forEach(chk => {
+        if (chk.checked) count++;
     });
     const pct = total ? Math.round(count / total * 100) : 0;
     document.getElementById('progress-label').textContent = `${count} / ${total} notés`;

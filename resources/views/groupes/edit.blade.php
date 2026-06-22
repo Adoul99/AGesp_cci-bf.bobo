@@ -89,17 +89,26 @@
 
                     <!-- Sélection des candidats -->
                     <div class="form-group" style="grid-column: span 2;">
-                        <label style="display: block; margin-bottom: 0.75rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Candidats <span style="color: var(--color-gray-500); font-size: 0.75rem; font-weight: normal;">(Gérer les affectations)</span>
-                        </label>
-                        <div style="border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); padding: 1.25rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; max-height: 250px; overflow-y: auto; background-color: var(--color-light);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+                            <label style="display: block; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">
+                                Candidats <span style="color: var(--color-gray-500); font-size: 0.75rem; font-weight: normal;">(Gérer les affectations)</span>
+                            </label>
+
+                            <!-- Filtre : afficher uniquement les candidats sans groupe -->
+                            <label for="filtreSansGroupe" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: var(--color-green-dark); background-color: rgba(0, 122, 94, 0.08); padding: 0.5rem 0.875rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 122, 94, 0.25);">
+                                <input type="checkbox" id="filtreSansGroupe" onchange="filtrerCandidatsSansGroupe()" style="width: 1.1rem; height: 1.1rem; accent-color: var(--color-green); cursor: pointer;">
+                                🔍 Afficher uniquement les candidats sans groupe
+                            </label>
+                        </div>
+
+                        <div id="listeCandidats" style="border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); padding: 1.25rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; max-height: 250px; overflow-y: auto; background-color: var(--color-light);">
                             @foreach($candidats as $candidat)
                                 @php
                                     $groupeExistant = $candidat->groupes->first();
                                     $dejaDansAutreGroupe = $groupeExistant && $groupeExistant->id != $groupe->id;
                                 @endphp
                                 @if($dejaDansAutreGroupe)
-                                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: not-allowed; opacity: 0.6; font-size: 0.875rem; color: var(--color-gray-500); background-color: white; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); border: 1px dashed var(--color-gray-200);">
+                                    <label class="candidat-item" data-assigned="1" style="display: flex; align-items: center; gap: 0.75rem; cursor: not-allowed; opacity: 0.6; font-size: 0.875rem; color: var(--color-gray-500); background-color: white; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); border: 1px dashed var(--color-gray-200);">
                                         <input type="checkbox" disabled style="width: 1.1rem; height: 1.1rem; accent-color: var(--color-green);">
                                         <span>
                                             <strong>{{ $candidat->nom }} {{ $candidat->prenom }}</strong>
@@ -108,7 +117,7 @@
                                         </span>
                                     </label>
                                 @else
-                                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-size: 0.875rem; background-color: white; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--color-gray-100); transition: all var(--transition-normal);"
+                                    <label class="candidat-item" data-assigned="0" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-size: 0.875rem; background-color: white; padding: 0.5rem 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--color-gray-100); transition: all var(--transition-normal);"
                                            onmouseover="this.style.borderColor='var(--color-green)'; this.style.boxShadow='var(--shadow-sm)'"
                                            onmouseout="this.style.borderColor='var(--color-gray-100)'; this.style.boxShadow='none'">
                                         <input type="checkbox" name="candidat_ids[]" value="{{ $candidat->id }}" 
@@ -118,6 +127,9 @@
                                     </label>
                                 @endif
                             @endforeach
+                        </div>
+                        <div id="aucunCandidatDisponible" style="display: none; text-align: center; padding: 1rem; color: var(--color-gray-500); font-size: 0.875rem; font-style: italic;">
+                            Aucun candidat sans groupe pour le moment.
                         </div>
                     </div>
 
@@ -144,4 +156,24 @@
             </div>
         </form>
     </div>
+
+    <script>
+        function filtrerCandidatsSansGroupe() {
+            const filtreActif = document.getElementById('filtreSansGroupe').checked;
+            const items = document.querySelectorAll('#listeCandidats .candidat-item');
+            let nbVisibles = 0;
+
+            items.forEach(function (item) {
+                const estDejaAffecte = item.dataset.assigned === '1';
+                if (filtreActif && estDejaAffecte) {
+                    item.style.display = 'none';
+                } else {
+                    item.style.display = 'flex';
+                    nbVisibles++;
+                }
+            });
+
+            document.getElementById('aucunCandidatDisponible').style.display = (nbVisibles === 0) ? 'block' : 'none';
+        }
+    </script>
 </x-layouts::app.sidebar>
