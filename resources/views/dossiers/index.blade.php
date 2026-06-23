@@ -102,6 +102,19 @@
                         <!-- Nom Dossier -->
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem; font-weight: 600;">
                             {{ $dossier->nomDossier }}
+                            @php
+                                $statutBadge = [
+                                    'en_attente' => ['label' => '⏳ En attente', 'bg' => 'rgba(252,209,22,0.2)',  'color' => 'var(--color-gold-dark)'],
+                                    'valide'     => ['label' => '✅ Validé',     'bg' => 'rgba(0,122,94,0.15)',   'color' => 'var(--color-green-dark)'],
+                                    'rejete'     => ['label' => '❌ Rejeté',     'bg' => 'rgba(206,17,38,0.1)',   'color' => 'var(--color-red-dark)'],
+                                ];
+                                $sbInfo = $statutBadge[$dossier->statutDossier] ?? $statutBadge['en_attente'];
+                            @endphp
+                            <div style="margin-top:0.35rem;">
+                                <span style="font-size:0.68rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:50px; background:{{ $sbInfo['bg'] }}; color:{{ $sbInfo['color'] }};">
+                                    {{ $sbInfo['label'] }}
+                                </span>
+                            </div>
                         </td>
 
                         <!-- Candidat avec photo -->

@@ -15,9 +15,19 @@
 <div class="content-wrapper" style="padding:2rem;">
 
     {{-- En-tête --}}
+    @php $dossierPrincipal = $candidat->dossiers->first(); @endphp
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; background:white; padding:1.5rem 2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border-left:4px solid var(--color-red);">
         <h1 style="font-size:1.875rem; font-weight:700; color:var(--color-dark); margin:0; display:flex; align-items:center;">
             <span style="width:5px; height:35px; background:linear-gradient(180deg,var(--color-red) 0%,var(--color-green) 50%,var(--color-gold) 100%); margin-right:1rem; border-radius:2px;"></span>
+            @if($dossierPrincipal && $dossierPrincipal->photo_identite)
+                <img src="{{ asset('storage/' . $dossierPrincipal->photo_identite) }}"
+                     alt="Photo"
+                     style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:3px solid var(--color-green); margin-right:0.85rem; flex-shrink:0;">
+            @else
+                <div style="width:48px; height:48px; border-radius:50%; background:var(--color-gray-100); border:3px solid var(--color-gray-200); display:flex; align-items:center; justify-content:center; margin-right:0.85rem; flex-shrink:0; font-size:1.4rem;">
+                    👤
+                </div>
+            @endif
             Fiche — {{ $candidat->nom }} {{ $candidat->prenom }}
         </h1>
         <div style="display:flex; gap:0.75rem;" class="no-print">
@@ -128,17 +138,81 @@
                     <span style="color:var(--color-dark); font-weight:600;">{{ $val }}</span>
                 </div>
                 @endforeach
-
-                {{-- Sessions --}}
-                <div style="margin-top:1rem; padding-top:0.75rem; border-top:2px solid var(--color-gray-100);">
-                    <div style="font-size:0.75rem; text-transform:uppercase; color:var(--color-gray-500); font-weight:700; margin-bottom:0.5rem;">Sessions participées</div>
-                    <div style="font-size:1.5rem; font-weight:800; color:var(--color-dark);">
-                        {{ $candidat->sessions->count() }}
-                        <span style="font-size:0.8rem; font-weight:400; color:var(--color-gray-500);">session(s)</span>
-                    </div>
-                </div>
             </div>
         </div>
+    </div>
+
+    {{-- DOSSIER & PIÈCES JOINTES (identique au module Dossiers) --}}
+    <div style="background:white; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); overflow:hidden; margin-bottom:1.5rem;">
+        <div style="padding:1rem 1.5rem; border-bottom:2px solid var(--color-gold); background:rgba(252,209,22,0.05); display:flex; align-items:center; justify-content:space-between;">
+            <h2 style="margin:0; font-size:0.9rem; font-weight:700; color:var(--color-dark);">📁 Dossier & Pièces Jointes</h2>
+            @if($dossierPrincipal)
+                <a href="{{ route('dossiers.edit', $dossierPrincipal->id) }}" class="no-print"
+                   style="padding:0.4rem 0.9rem; background:rgba(0,122,94,0.1); color:var(--color-green-dark); border:1.5px solid var(--color-green); border-radius:var(--radius-md); font-size:0.75rem; font-weight:700; text-decoration:none;">
+                    ✎ Gérer le dossier
+                </a>
+            @endif
+        </div>
+
+        @if(!$dossierPrincipal)
+        <div style="padding:2rem; text-align:center; color:var(--color-gray-500);">
+            📭 Aucun dossier n'a encore été créé pour ce candidat.
+            <div style="margin-top:0.75rem;">
+                <a href="{{ route('dossiers.create') }}" class="no-print"
+                   style="padding:0.5rem 1.1rem; background:var(--color-red); color:white; border-radius:var(--radius-md); font-size:0.8rem; font-weight:700; text-decoration:none;">
+                    + Créer un dossier
+                </a>
+            </div>
+        </div>
+        @else
+        <div style="padding:1.25rem 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                <div style="font-weight:700; color:var(--color-dark); font-size:0.875rem;">{{ $dossierPrincipal->nomDossier }}</div>
+                @php
+                    $statutDossierConfig = [
+                        'en_attente' => ['label' => 'En attente', 'bg' => 'rgba(229,184,0,0.15)', 'color' => 'var(--color-gold-dark)'],
+                        'valide'     => ['label' => 'Validé',     'bg' => 'rgba(0,122,94,0.15)',   'color' => 'var(--color-green-dark)'],
+                        'rejete'     => ['label' => 'Rejeté',     'bg' => 'rgba(206,17,38,0.1)',   'color' => 'var(--color-red-dark)'],
+                    ];
+                    $sd = $statutDossierConfig[$dossierPrincipal->statutDossier] ?? $statutDossierConfig['en_attente'];
+                @endphp
+                <span style="background:{{ $sd['bg'] }}; color:{{ $sd['color'] }}; padding:0.3rem 0.75rem; border-radius:50px; font-size:0.72rem; font-weight:700;">{{ $sd['label'] }}</span>
+            </div>
+
+            @if($dossierPrincipal->commentaireAdmin)
+            <div style="margin-bottom:1rem; padding:0.75rem 1rem; background:{{ $sd['bg'] }}; border-left:3px solid {{ $sd['color'] }}; border-radius:var(--radius-md); font-size:0.8rem; color:var(--color-dark);">
+                💬 <strong>Message au candidat :</strong> {{ $dossierPrincipal->commentaireAdmin }}
+            </div>
+            @endif
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                @php
+                    $piecesJointes = [
+                        'cnib'               => 'CNIB',
+                        'photo_identite'     => 'Photo',
+                        'certificat_medical' => 'Médical',
+                        'acte_naissance'     => 'Naissance',
+                        'permis_c'           => 'Permis C',
+                    ];
+                @endphp
+                @foreach($piecesJointes as $key => $label)
+                    @if($dossierPrincipal->$key)
+                        <a href="{{ asset('storage/' . $dossierPrincipal->$key) }}" target="_blank"
+                           style="font-size: 0.75rem; background: rgba(0, 122, 94, 0.1); color: var(--color-green-dark); padding: 5px 12px; border-radius: 50px; text-decoration: none; font-weight: 700; border: 1px solid var(--color-green-light); transition: 200ms;"
+                           onmouseover="this.style.background='var(--color-green)'; this.style.color='white';"
+                           onmouseout="this.style.background='rgba(0, 122, 94, 0.1)'; this.style.color='var(--color-green-dark)';"
+                        >
+                            ✓ {{ $label }}
+                        </a>
+                    @else
+                        <span style="font-size:0.75rem; background:var(--color-gray-100); color:var(--color-gray-500); padding:5px 12px; border-radius:50px; font-weight:600;">
+                            ✗ {{ $label }}
+                        </span>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- HISTORIQUE ÉVALUATIONS --}}

@@ -11,6 +11,14 @@ class Attestation extends Model
         'numeroAttestation',
         'candidat_id',
         'examen_id',
+        'civilite',
+        'categorieObtenue',
+        'formationDateDebut',
+        'formationDateFin',
+        'dateAdmissionCode',
+        'dateAdmissionConduite',
+        'directeurCivilite',
+        'directeurNom',
     ];
 
     public function candidat()
@@ -24,13 +32,14 @@ class Attestation extends Model
     }
 
     /**
-     * Génère un numéro d'attestation unique : ATT-YYYY-NNNNN
+     * Génère un numéro d'attestation au format officiel CFTRA :
+     * {année}/{séquence}/DRB-SFP/CFTRA — ex : 2026/102/DRB-SFP/CFTRA
      */
     public static function genererNumero(): string
     {
         $annee   = date('Y');
         $dernier = self::whereYear('created_at', $annee)->count();
-        $seq     = str_pad($dernier + 1, 5, '0', STR_PAD_LEFT);
-        return "ATT-{$annee}-{$seq}";
+        $seq     = $dernier + 1;
+        return "{$annee}/{$seq}/DRB-SFP/CFTRA";
     }
 }

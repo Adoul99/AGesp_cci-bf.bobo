@@ -41,6 +41,33 @@
     </div>
     @endif
 
+    {{-- 0) Nouvelles inscriptions de candidats --}}
+    <div class="alert-section">
+        <div class="alert-head" style="background:rgba(0,77,58,0.06); border-bottom:2px solid var(--color-green-dark);">
+            <h2 style="margin:0; font-size:1rem; font-weight:700; color:var(--color-green-dark);">
+                🆕 Nouvelles inscriptions (depuis -{{ \App\Http\Controllers\AlerteController::JOURS_NOUVELLE_INSCRIPTION }} jours)
+            </h2>
+            <span class="badge-pill" style="background:rgba(0,77,58,0.15); color:var(--color-green-dark);">{{ $nouveauxCandidats->count() }}</span>
+        </div>
+        @if($nouveauxCandidats->isEmpty())
+            <div class="alert-empty">✅ Aucune nouvelle inscription récente.</div>
+        @else
+        <table class="alert-table">
+            <thead><tr><th>Candidat</th><th>Téléphone</th><th>Inscrit</th><th>Action</th></tr></thead>
+            <tbody>
+                @foreach($nouveauxCandidats as $c)
+                <tr>
+                    <td style="font-weight:700; color:var(--color-dark);">🆕 {{ $c->nom }} {{ $c->prenom }}</td>
+                    <td style="color:var(--color-gray-500);">{{ $c->telephone ?? '—' }}</td>
+                    <td style="color:var(--color-gray-500);">{{ \Carbon\Carbon::parse($c->created_at)->diffForHumans() }}</td>
+                    <td><a href="{{ route('candidats.show', $c->id) }}" class="action-btn" style="background:rgba(0,77,58,0.1); color:var(--color-green-dark); border:1.5px solid var(--color-green-dark);">👁️ Voir fiche</a></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
+    </div>
+
     {{-- 1) Candidats sans évaluation depuis longtemps --}}
     <div class="alert-section">
         <div class="alert-head" style="background:rgba(206,17,38,0.06); border-bottom:2px solid var(--color-red-light);">

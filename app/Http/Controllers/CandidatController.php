@@ -11,16 +11,17 @@ class CandidatController extends Controller
     {
         $query = Candidat::query();
 
-        if ($request->filled('statut')) {
+        // Le filtre "inscrit" affiche TOUS les candidats
+        if ($request->filled('statut') && $request->statut !== 'inscrit') {
             $query->where('statut', $request->statut);
         }
 
-        $candidats = $query->orderBy('nom')->get();
+        $candidats = $query->with('dossiers')->orderBy('nom')->get();
 
         // Compter par statut pour les badges du filtre
         $counts = [
             'tous'         => Candidat::count(),
-            'inscrit'      => Candidat::where('statut', 'inscrit')->count(),
+            'inscrit'      => Candidat::count(), // Inscrit = TOUS les candidats
             'en_formation' => Candidat::where('statut', 'en_formation')->count(),
             'code_admis'   => Candidat::where('statut', 'code_admis')->count(),
             'admis'        => Candidat::where('statut', 'admis')->count(),
@@ -76,11 +77,12 @@ class CandidatController extends Controller
         ];
 
         $dossierData = [
-            'candidat_id'  => $candidat->id,
-            'nomDossier'   => 'Dossier de ' . $candidat->nom . ' ' . $candidat->prenom,
-            'dateDepot'    => now()->toDateString(),
-            'statutDossier'=> 'en_attente',
+            'candidat_id'   => $candidat->id,
+            'nomDossier'    => 'Dossier de ' . $candidat->nom . ' ' . $candidat->prenom,
+            'dateDepot'     => now()->toDateString(),
+            'statutDossier' => 'en_attente',
         ];
+
         foreach ($pieces as $field => $col) {
             if ($request->hasFile($field)) {
                 $dossierData[$col] = $request->file($field)->store("dossiers/{$candidat->id}", 'public');

@@ -58,9 +58,11 @@ class DossierController extends Controller
     public function update(Request $request, Dossier $dossier)
     {
         $request->validate([
-            'nomDossier' => 'required',
-            'dateDepot' => 'required|date',
-            'candidat_id' => 'required',
+            'nomDossier'        => 'required',
+            'dateDepot'         => 'required|date',
+            'candidat_id'       => 'required',
+            'statutDossier'     => 'nullable|in:en_attente,valide,rejete',
+            'commentaireAdmin'  => 'nullable|string|max:1000',
         ]);
 
         $data = $request->except($this->fileFields);

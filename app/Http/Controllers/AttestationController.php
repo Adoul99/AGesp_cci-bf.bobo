@@ -23,6 +23,7 @@ class AttestationController extends Controller
 
         $candidats = Candidat::where('statut', 'admis')
             ->whereNotIn('id', $candidatsAvecAttestation)
+            ->with(['evaluations.typeSession', 'sessions'])
             ->orderBy('nom')
             ->get();
 
@@ -31,20 +32,33 @@ class AttestationController extends Controller
         // Numéro pré-généré automatiquement
         $numeroAuto = Attestation::genererNumero();
 
-        return view('attestations.create', compact('candidats', 'examens', 'numeroAuto'));
+        // Suggestions de dates par candidat (auto-remplissage JS, modifiable)
+        $suggestions = $candidats->mapWithKeys(fn($c) => [$c->id => $this->calculerSuggestions($c)]);
+
+        return view('attestations.create', compact('candidats', 'examens', 'numeroAuto', 'suggestions'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'dateDelivrance'    => 'required|date',
-            'numeroAttestation' => 'required|unique:attestations,numeroAttestation',
-            'candidat_id'       => 'required|exists:candidats,id',
-            'examen_id'         => 'nullable|exists:examens,id',
+            'dateDelivrance'        => 'required|date',
+            'numeroAttestation'     => 'required|unique:attestations,numeroAttestation',
+            'candidat_id'           => 'required|exists:candidats,id',
+            'examen_id'             => 'nullable|exists:examens,id',
+            'civilite'              => 'required|in:Monsieur,Madame,Mademoiselle',
+            'categorieObtenue'      => 'required|in:E,D',
+            'formationDateDebut'    => 'nullable|date',
+            'formationDateFin'      => 'nullable|date',
+            'dateAdmissionCode'     => 'nullable|date',
+            'dateAdmissionConduite' => 'nullable|date',
+            'directeurCivilite'     => 'required|in:Monsieur,Madame',
+            'directeurNom'          => 'required|string|max:150',
         ]);
 
         Attestation::create($request->only(
-            'dateDelivrance', 'numeroAttestation', 'candidat_id', 'examen_id'
+            'dateDelivrance', 'numeroAttestation', 'candidat_id', 'examen_id',
+            'civilite', 'categorieObtenue', 'formationDateDebut', 'formationDateFin',
+            'dateAdmissionCode', 'dateAdmissionConduite', 'directeurCivilite', 'directeurNom'
         ));
 
         return redirect()->route('attestations.index')
@@ -69,24 +83,37 @@ class AttestationController extends Controller
             $q->where('statut', 'admis')
               ->whereNotIn('id', $candidatsAvecAttestation);
         })->orWhere('id', $attestation->candidat_id)
+          ->with(['evaluations.typeSession', 'sessions'])
           ->orderBy('nom')->get();
 
         $examens = Examen::orderBy('dateDebut', 'desc')->get();
 
-        return view('attestations.edit', compact('attestation', 'candidats', 'examens'));
+        $suggestions = $candidats->mapWithKeys(fn($c) => [$c->id => $this->calculerSuggestions($c)]);
+
+        return view('attestations.edit', compact('attestation', 'candidats', 'examens', 'suggestions'));
     }
 
     public function update(Request $request, Attestation $attestation)
     {
         $request->validate([
-            'dateDelivrance'    => 'required|date',
-            'numeroAttestation' => 'required|unique:attestations,numeroAttestation,' . $attestation->id,
-            'candidat_id'       => 'required|exists:candidats,id',
-            'examen_id'         => 'nullable|exists:examens,id',
+            'dateDelivrance'        => 'required|date',
+            'numeroAttestation'     => 'required|unique:attestations,numeroAttestation,' . $attestation->id,
+            'candidat_id'           => 'required|exists:candidats,id',
+            'examen_id'             => 'nullable|exists:examens,id',
+            'civilite'              => 'required|in:Monsieur,Madame,Mademoiselle',
+            'categorieObtenue'      => 'required|in:E,D',
+            'formationDateDebut'    => 'nullable|date',
+            'formationDateFin'      => 'nullable|date',
+            'dateAdmissionCode'     => 'nullable|date',
+            'dateAdmissionConduite' => 'nullable|date',
+            'directeurCivilite'     => 'required|in:Monsieur,Madame',
+            'directeurNom'          => 'required|string|max:150',
         ]);
 
         $attestation->update($request->only(
-            'dateDelivrance', 'numeroAttestation', 'candidat_id', 'examen_id'
+            'dateDelivrance', 'numeroAttestation', 'candidat_id', 'examen_id',
+            'civilite', 'categorieObtenue', 'formationDateDebut', 'formationDateFin',
+            'dateAdmissionCode', 'dateAdmissionConduite', 'directeurCivilite', 'directeurNom'
         ));
 
         return redirect()->route('attestations.index')
@@ -98,5 +125,30 @@ class AttestationController extends Controller
         $attestation->delete();
         return redirect()->route('attestations.index')
             ->with('success', '✅ Attestation supprimée.');
+    }
+
+    /**
+     * Calcule des suggestions de dates pour un candidat (formation + admissions),
+     * utilisées pour pré-remplir automatiquement le formulaire (reste modifiable).
+     */
+    private function calculerSuggestions(Candidat $candidat): array
+    {
+        $dateAdmissionCode = $candidat->evaluations
+            ->filter(fn($e) => $e->typeSession?->type === 'code' && $e->resultat === 'Admis')
+            ->max('dateEvaluation');
+
+        $dateAdmissionConduite = $candidat->evaluations
+            ->filter(fn($e) => $e->typeSession?->type === 'conduite' && $e->resultat === 'Admis')
+            ->max('dateEvaluation');
+
+        $formationDateDebut = $candidat->sessions->min('dateDebut');
+        $formationDateFin   = $dateAdmissionConduite ?: $candidat->sessions->max('dateDebut');
+
+        return [
+            'dateAdmissionCode'     => $dateAdmissionCode,
+            'dateAdmissionConduite' => $dateAdmissionConduite,
+            'formationDateDebut'    => $formationDateDebut,
+            'formationDateFin'      => $formationDateFin,
+        ];
     }
 }

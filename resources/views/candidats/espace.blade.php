@@ -609,6 +609,39 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Décision administrative sur le dossier (pièces jointes) --}}
+            @php
+                $statutDossierActuel = $dossier->statutDossier ?? 'en_attente';
+                $cssDossier = match($statutDossierActuel) {
+                    'valide' => 'accepte',
+                    'rejete' => 'refuse',
+                    default  => 'attente',
+                };
+                $iconDossier = match($cssDossier) {
+                    'accepte' => 'bi-check-circle-fill',
+                    'refuse'  => 'bi-x-circle-fill',
+                    default   => 'bi-hourglass-split',
+                };
+                $titreDossier = match($cssDossier) {
+                    'accepte' => 'Votre dossier (pièces jointes) a été validé !',
+                    'refuse'  => 'Votre dossier (pièces jointes) a été rejeté.',
+                    default   => 'Votre dossier est en cours de vérification.',
+                };
+            @endphp
+            <div class="statut-card {{ $cssDossier }}">
+                <i class="bi {{ $iconDossier }} statut-icon"></i>
+                <div>
+                    <div class="statut-title">{{ $titreDossier }}</div>
+                    @if($dossier && $dossier->commentaireAdmin)
+                        <div class="statut-desc">💬 {{ $dossier->commentaireAdmin }}</div>
+                    @else
+                        <div class="statut-desc">
+                            {{ $cssDossier === 'attente' ? 'L\'administration vérifie actuellement vos pièces. Vous serez notifié dès qu\'une décision sera prise.' : ($cssDossier === 'accepte' ? 'Toutes vos pièces ont été validées par l\'administration.' : 'Veuillez contacter l\'administration pour connaître le motif et corriger votre dossier.') }}
+                        </div>
+                    @endif
+                </div>
+            </div>
         @else
             <div class="card"><div class="card-body">
                 <div class="empty-state">

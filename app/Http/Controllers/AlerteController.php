@@ -12,11 +12,19 @@ class AlerteController extends Controller
     /**
      * Seuils configurables
      */
-    const JOURS_SANS_EVALUATION = 14;   // candidats sans note depuis X jours
-    const JOURS_SESSION_OUVERTE = 7;    // sessions ouvertes depuis X jours
+    const JOURS_SANS_EVALUATION       = 14;  // candidats sans note depuis X jours
+    const JOURS_SESSION_OUVERTE       = 7;   // sessions ouvertes depuis X jours
+    const JOURS_NOUVELLE_INSCRIPTION  = 3;   // nouveaux candidats inscrits depuis X jours
 
     public function index()
     {
+        // 0) Nouvelles inscriptions de candidats (depuis X jours)
+        $seuilInscription = Carbon::now()->subDays(self::JOURS_NOUVELLE_INSCRIPTION);
+
+        $nouveauxCandidats = Candidat::where('created_at', '>=', $seuilInscription)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         // 1) Candidats inscrits/en formation sans aucune évaluation depuis X jours
         $seuilEval = Carbon::now()->subDays(self::JOURS_SANS_EVALUATION);
 
@@ -58,13 +66,15 @@ class AlerteController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        $totalAlertes = $candidatsSansEvaluation->count()
+        $totalAlertes = $nouveauxCandidats->count()
+            + $candidatsSansEvaluation->count()
             + $candidatsEvaluationAncienne->count()
             + $sessionsAOuvertesLongtemps->count()
             + $candidatsAdmisSansAttestation->count()
             + $candidatsAjournes->count();
 
         return view('alertes.index', compact(
+            'nouveauxCandidats',
             'candidatsSansEvaluation',
             'candidatsEvaluationAncienne',
             'sessionsAOuvertesLongtemps',
@@ -79,8 +89,11 @@ class AlerteController extends Controller
      */
     public static function compterAlertes(): int
     {
-        $seuilEval    = Carbon::now()->subDays(self::JOURS_SANS_EVALUATION);
-        $seuilSession = Carbon::now()->subDays(self::JOURS_SESSION_OUVERTE);
+        $seuilEval        = Carbon::now()->subDays(self::JOURS_SANS_EVALUATION);
+        $seuilSession     = Carbon::now()->subDays(self::JOURS_SESSION_OUVERTE);
+        $seuilInscription = Carbon::now()->subDays(self::JOURS_NOUVELLE_INSCRIPTION);
+
+        $nouveaux = Candidat::where('created_at', '>=', $seuilInscription)->count();
 
         $sansEval = Candidat::whereIn('statut', ['inscrit', 'en_formation'])
             ->where('created_at', '<=', $seuilEval)
@@ -98,6 +111,6 @@ class AlerteController extends Controller
 
         $ajournes = Candidat::where('statut', 'ajourne')->count();
 
-        return $sansEval + $sessionsLongues + $admisSansAttestation + $ajournes;
+        return $nouveaux + $sansEval + $sessionsLongues + $admisSansAttestation + $ajournes;
     }
 }

@@ -60,17 +60,46 @@
                     Candidat <span style="color:var(--color-red);">*</span>
                     <span style="background:rgba(0,122,94,0.15); color:var(--color-green-dark); font-size:0.65rem; padding:0.15rem 0.5rem; border-radius:50px; margin-left:0.5rem;">ADMIS UNIQUEMENT</span>
                 </label>
-                <select name="candidat_id" required
+                <select name="candidat_id" id="candidat_id" required onchange="appliquerSuggestions(this)"
                         style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;"
                         onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
                     <option value="">-- Choisir un candidat admis --</option>
                     @foreach($candidats as $c)
-                        <option value="{{ $c->id }}" {{ old('candidat_id') == $c->id ? 'selected' : '' }}>
+                        @php $sug = $suggestions[$c->id] ?? []; @endphp
+                        <option value="{{ $c->id }}" {{ old('candidat_id') == $c->id ? 'selected' : '' }}
+                                data-formation-debut="{{ $sug['formationDateDebut'] ? \Carbon\Carbon::parse($sug['formationDateDebut'])->format('Y-m-d') : '' }}"
+                                data-formation-fin="{{ $sug['formationDateFin'] ? \Carbon\Carbon::parse($sug['formationDateFin'])->format('Y-m-d') : '' }}"
+                                data-admission-code="{{ $sug['dateAdmissionCode'] ? \Carbon\Carbon::parse($sug['dateAdmissionCode'])->format('Y-m-d') : '' }}"
+                                data-admission-conduite="{{ $sug['dateAdmissionConduite'] ? \Carbon\Carbon::parse($sug['dateAdmissionConduite'])->format('Y-m-d') : '' }}">
                             🏆 {{ $c->nom }} {{ $c->prenom }}
                         </option>
                     @endforeach
                 </select>
                 @error('candidat_id')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
+                <div style="font-size:0.7rem; color:var(--color-gray-500); margin-top:0.3rem;">💡 Les dates ci-dessous se remplissent automatiquement — vérifiez et corrigez si besoin.</div>
+            </div>
+
+            {{-- Civilité --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Civilité <span style="color:var(--color-red);">*</span>
+                </label>
+                <select name="civilite" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+                    <option value="Monsieur"   {{ old('civilite','Monsieur') == 'Monsieur'   ? 'selected' : '' }}>Monsieur</option>
+                    <option value="Madame"     {{ old('civilite') == 'Madame'     ? 'selected' : '' }}>Madame</option>
+                    <option value="Mademoiselle" {{ old('civilite') == 'Mademoiselle' ? 'selected' : '' }}>Mademoiselle</option>
+                </select>
+            </div>
+
+            {{-- Catégorie obtenue --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Catégorie de Permis Obtenue <span style="color:var(--color-red);">*</span>
+                </label>
+                <select name="categorieObtenue" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; font-weight:700;">
+                    <option value="E" {{ old('categorieObtenue','E') == 'E' ? 'selected' : '' }}>Catégorie E</option>
+                    <option value="D" {{ old('categorieObtenue') == 'D' ? 'selected' : '' }}>Catégorie D</option>
+                </select>
             </div>
 
             {{-- Examen --}}
@@ -101,6 +130,61 @@
                 @error('dateDelivrance')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
             </div>
 
+            {{-- Formation : du --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Formation — Du <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
+                </label>
+                <input type="date" name="formationDateDebut" id="formationDateDebut" value="{{ old('formationDateDebut') }}"
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+            </div>
+
+            {{-- Formation : au --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Formation — Au <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
+                </label>
+                <input type="date" name="formationDateFin" id="formationDateFin" value="{{ old('formationDateFin') }}"
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+            </div>
+
+            {{-- Date d'admission Code --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Date d'admission — Code <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
+                </label>
+                <input type="date" name="dateAdmissionCode" id="dateAdmissionCode" value="{{ old('dateAdmissionCode') }}"
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+            </div>
+
+            {{-- Date d'admission Conduite --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Date d'admission — Conduite <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
+                </label>
+                <input type="date" name="dateAdmissionConduite" id="dateAdmissionConduite" value="{{ old('dateAdmissionConduite') }}"
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+            </div>
+
+            {{-- Directeur (signataire) --}}
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Civilité du Directeur Régional
+                </label>
+                <select name="directeurCivilite" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+                    <option value="Monsieur" {{ old('directeurCivilite','Monsieur') == 'Monsieur' ? 'selected' : '' }}>Monsieur</option>
+                    <option value="Madame"   {{ old('directeurCivilite') == 'Madame'   ? 'selected' : '' }}>Madame</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Nom du Directeur Régional <span style="color:var(--color-red);">*</span>
+                </label>
+                <input type="text" name="directeurNom" value="{{ old('directeurNom', 'François DRABO') }}" required
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+            </div>
+
         </div>
 
         {{-- Boutons --}}
@@ -118,4 +202,20 @@
     </form>
     @endif
 </div>
+
+<script>
+function appliquerSuggestions(select) {
+    const opt = select.options[select.selectedIndex];
+    if (!opt) return;
+    const map = {
+        'formationDateDebut':    opt.dataset.formationDebut,
+        'formationDateFin':      opt.dataset.formationFin,
+        'dateAdmissionCode':     opt.dataset.admissionCode,
+        'dateAdmissionConduite': opt.dataset.admissionConduite,
+    };
+    for (const [id, val] of Object.entries(map)) {
+        if (val) document.getElementById(id).value = val;
+    }
+}
+</script>
 </x-layouts::app.sidebar>

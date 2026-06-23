@@ -98,10 +98,10 @@
             <table style="width: 100%; border-collapse: collapse;">
                 <thead style="background: linear-gradient(90deg, var(--color-green) 0%, var(--color-green-light) 100%); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.5px;">
                     <tr>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Nom</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Prénom</th>
+                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidat</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Téléphone</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Email</th>
+                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Pièces Jointes</th>
                         <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Actions</th>
                     </tr>
                 </thead>
@@ -110,10 +110,57 @@
                     <tr style="border-bottom: 1px solid var(--color-gray-100); transition: all var(--transition-normal);"
                         onmouseover="this.style.backgroundColor='rgba(0, 122, 94, 0.04)'"
                         onmouseout="this.style.backgroundColor='transparent'">
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">{{ $candidat->nom }}</td>
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">{{ $candidat->prenom }}</td>
+                        @php
+                            $dossier = $candidat->dossiers->first();
+                            $piecesJointes = [
+                                'cnib'               => 'CNIB',
+                                'photo_identite'     => 'Photo',
+                                'certificat_medical' => 'Médical',
+                                'acte_naissance'     => 'Naissance',
+                                'permis_c'           => 'Permis C',
+                            ];
+                        @endphp
+
+                        <!-- Candidat avec photo (identique au module Dossiers) -->
+                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                @if($dossier && $dossier->photo_identite)
+                                    <img src="{{ asset('storage/' . $dossier->photo_identite) }}"
+                                         alt="Photo"
+                                         style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:2px solid var(--color-green); flex-shrink:0;">
+                                @else
+                                    <div style="width:42px; height:42px; border-radius:50%; background:var(--color-gray-100); border:2px solid var(--color-gray-200); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.1rem;">
+                                        👤
+                                    </div>
+                                @endif
+                                <div style="font-weight:700; color:var(--color-dark);">
+                                    {{ $candidat->nom }} {{ $candidat->prenom }}
+                                </div>
+                            </div>
+                        </td>
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">{{ $candidat->telephone }}</td>
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">{{ $candidat->email }}</td>
+
+                        <!-- Pièces Jointes (badges, identique au module Dossiers) -->
+                        <td style="padding: 1rem 1.5rem;">
+                            @if($dossier)
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                @foreach($piecesJointes as $key => $label)
+                                    @if($dossier->$key)
+                                        <a href="{{ asset('storage/' . $dossier->$key) }}" target="_blank"
+                                           style="font-size: 0.7rem; background: rgba(0, 122, 94, 0.1); color: var(--color-green-dark); padding: 4px 10px; border-radius: 50px; text-decoration: none; font-weight: 700; border: 1px solid var(--color-green-light); transition: 200ms;"
+                                           onmouseover="this.style.background='var(--color-green)'; this.style.color='white';"
+                                           onmouseout="this.style.background='rgba(0, 122, 94, 0.1)'; this.style.color='var(--color-green-dark)';"
+                                        >
+                                            {{ $label }}
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+                            @else
+                                <span style="font-size:0.75rem; color:var(--color-gray-500); font-style:italic;">Aucun dossier</span>
+                            @endif
+                        </td>
                         <td style="padding: 1rem 1.5rem; text-align: center;">
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
 

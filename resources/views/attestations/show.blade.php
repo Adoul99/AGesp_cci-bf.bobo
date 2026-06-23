@@ -21,70 +21,49 @@
     .wrap { max-width:850px; margin:30px auto; padding:0 20px; }
     .card { background:white; border-radius:14px; box-shadow:0 4px 20px rgba(26,107,58,0.12); padding:30px 32px; margin-bottom:20px; }
 
-    /* DOCUMENT OFFICIEL avec filigrane */
+    /* ===== DOCUMENT OFFICIEL — Format CFTRA ===== */
     .attestation-officielle {
-        background:#fff; border:2px solid #000; padding:40px; margin:0; text-align:left;
-        color:#000; position:relative; z-index:1; overflow:hidden;
+        background:#fff; border:1.5px solid #000; padding:55px 65px 40px;
+        color:#000; font-family:Georgia,'Times New Roman',serif; position:relative;
     }
-    .attestation-officielle::before {
-        content:""; position:absolute; top:53%; left:50%; transform:translate(-50%,-50%);
-        width:420px; height:420px;
-        background-image: url("{{ file_exists(public_path('images/logo.jpeg')) ? asset('images/logo.jpeg') : (file_exists(public_path('images/logo.png')) ? asset('images/logo.png') : '') }}");
-        background-size:contain; background-repeat:no-repeat; background-position:center;
-        opacity:0.07; z-index:-1;
+
+    .att-letterhead { text-align:left; margin-bottom:35px; }
+    .att-letterhead .lh-line {
+        font-weight:700; font-size:0.95rem; line-height:1.45; display:inline-block;
+        border-bottom:1px solid #000; padding-bottom:4px; margin-bottom:14px;
     }
-    .att-header {
-        display:flex; justify-content:space-between; align-items:flex-start;
-        font-size:0.82rem; font-weight:bold; line-height:1.4;
-        border-bottom:2px double #000; padding-bottom:15px; margin-bottom:25px;
+
+    .att-title-box {
+        display:block; width:fit-content; margin:0 auto 38px; padding:14px 34px;
+        background:#e9e6f5; border:1px solid #6b6690; border-radius:10px;
+        text-align:center; font-weight:700; font-size:1.05rem; letter-spacing:0.3px;
+        color:#1a1a1a;
     }
-    .att-header-left { text-transform:uppercase; width:35%; }
-    .att-header-center { width:25%; text-align:center; }
-    .att-header-center img { max-height:65px; object-fit:contain; }
-    .att-header-right { text-align:right; width:35%; }
-    .att-meta-box {
-        border:1px solid #000; padding:6px 10px; font-size:0.82rem;
-        display:inline-block; text-align:left; margin-top:8px; line-height:1.4; background:#fafafa;
-    }
-    .att-title-box { text-align:center; margin-bottom:30px; }
-    .att-title {
-        font-family:'Nunito',sans-serif; font-size:1.75rem; font-weight:900;
-        text-decoration:underline; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;
-        color: var(--v);
-    }
-    .att-subtitle { font-size:1rem; font-style:italic; color:#111; }
 
     .att-body {
-        font-size:1.05rem; line-height:1.9; text-align:justify; margin-bottom:30px;
-        padding: 0 10px;
+        font-size:1.02rem; line-height:2; text-align:justify; margin-bottom:28px;
     }
-    .att-body .highlight {
-        font-weight:900; text-transform:uppercase; text-decoration:underline;
+    .att-body strong { font-weight:700; }
+
+    .att-table-intro { font-size:1.02rem; margin-bottom:14px; }
+    .att-table {
+        width:100%; border-collapse:collapse; margin-bottom:32px;
     }
-    .att-body .highlight-cat {
-        font-weight:900; color:var(--v);
+    .att-table th, .att-table td {
+        border:1px solid #000; padding:11px 16px; text-align:center;
+        font-size:0.92rem; font-weight:700;
+    }
+    .att-table th { background:#f3f3f3; }
+
+    .att-closing { font-size:1.02rem; line-height:1.8; margin-bottom:55px; }
+
+    .att-signature-block {
+        margin-left:auto; width:fit-content; text-align:center; font-size:0.98rem; line-height:2.1;
     }
 
-    .att-result-box {
-        background: rgba(26,107,58,0.08);
-        border: 2px solid var(--v);
-        border-radius: 8px;
-        padding: 16px 20px;
-        margin-bottom: 30px;
-        text-align: center;
+    .att-doc-ref {
+        position:absolute; bottom:14px; left:65px; font-size:0.68rem; color:#888; font-family:Georgia,serif;
     }
-    .att-result-label { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:#444; font-weight:700; margin-bottom:6px; }
-    .att-result-value { font-family:'Nunito',sans-serif; font-size:1.4rem; font-weight:900; color:var(--v); }
-
-    .att-nb {
-        font-size:0.82rem; border-top:1px dashed #000; padding-top:10px;
-        margin-bottom:45px; line-height:1.5; color:#111;
-    }
-    .att-signatures {
-        display:flex; justify-content:space-between; font-size:0.95rem; font-weight:bold; padding-bottom:10px;
-    }
-    .att-signatures div { text-align:center; width:45%; }
-    .att-signature-line { margin-top:50px; border-top:1px solid #000; padding-top:6px; font-size:0.8rem; font-weight:400; }
 
     .btn-group { display:flex; justify-content:center; gap:10px; margin-top: 10px;}
     .btn-print { background:var(--dk); color:white; border:none; border-radius:8px; padding:11px 24px; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.88rem; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
@@ -101,10 +80,9 @@
         .wrap { margin:0; padding:0; max-width:100%; width:100%; }
         .card { box-shadow:none; padding:0; margin:0; background:transparent; }
         .attestation-officielle {
-            border:2px solid #000; margin:0; padding:25px; width:100%; box-sizing:border-box;
+            border:1.5px solid #000; margin:0; padding:45px 55px 35px; width:100%; box-sizing:border-box;
             page-break-inside: avoid;
         }
-        .attestation-officielle::before { opacity:0.06; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     }
     </style>
 </head>
@@ -134,83 +112,59 @@
     <div class="card">
 
         <div class="attestation-officielle">
-            <div class="att-header">
-                <div class="att-header-left">
-                    CHAMBRE DE COMMERCE<br>
-                    ET D'INDUSTRIE<br>
-                    DU BURKINA FASO (CCI-BF)<br>
-                    <span style="font-size:0.75rem; font-weight:normal; text-transform:none; color:#333;">Auto-École : GESP — Bobo-Dioulasso</span>
-                </div>
-
-                <div class="att-header-center">
-                    @if(file_exists(public_path('images/logo.jpeg')))
-                        <img src="{{ asset('images/logo.jpeg') }}" alt="CCI-BF">
-                    @elseif(file_exists(public_path('images/logo.png')))
-                        <img src="{{ asset('images/logo.png') }}" alt="CCI-BF">
-                    @endif
-                </div>
-
-                <div class="att-header-right">
-                    BURKINA FASO<br>
-                    <span style="font-size:0.7rem; font-weight:normal; font-style:italic;">La Patrie ou la Mort, nous vaincrons</span>
-                    <br>
-                    <div class="att-meta-box">
-                        <strong>N° Attestation :</strong> {{ $attestation->numeroAttestation }}<br>
-                        <strong>Date de délivrance :</strong> {{ \Carbon\Carbon::parse($attestation->dateDelivrance)->format('d/m/Y') }}
-                    </div>
-                </div>
+            <div class="att-letterhead">
+                <span class="lh-line">Direction Régionale de Bobo-Dioulasso</span><br>
+                <span class="lh-line">Service de la Formation Professionnelle</span><br>
+                <span class="lh-line">Centre de Formation en Transport Routier<br>Et Activités Auxiliaires (CFTRA)</span>
             </div>
 
             <div class="att-title-box">
-                <div class="att-title">Attestation de Réussite</div>
-                <div class="att-subtitle">Formation théorique et pratique au permis de conduire</div>
+                ATTESTATION N°{{ $attestation->numeroAttestation }}
             </div>
 
             <div class="att-body">
-                Le Chef de Centre de l'Auto-École <strong>GESP</strong>, agréée par la Chambre de Commerce
-                et d'Industrie du Burkina Faso (CCI-BF), atteste par la présente que :
-                <br><br>
-                <span class="highlight">{{ $attestation->candidat->nom ?? '—' }} {{ $attestation->candidat->prenom ?? '' }}</span>,
+                Je soussigné {{ $attestation->directeurCivilite ?? 'Monsieur' }} {{ $attestation->directeurNom ?? 'François DRABO' }}, Directeur Régional de Bobo-Dioulasso de
+                la Chambre de Commerce et d'Industrie du Burkina Faso, atteste que {{ $attestation->civilite ?? 'Monsieur' }}
+                <strong>{{ strtoupper($attestation->candidat->nom ?? '—') }} {{ $attestation->candidat->prenom ?? '' }}</strong>
                 né(e) le <strong>{{ $attestation->candidat->dateNaissance ? \Carbon\Carbon::parse($attestation->candidat->dateNaissance)->format('d/m/Y') : '—' }}</strong>
-                à <strong>{{ $attestation->candidat->lieuNaissance ?? '—' }}</strong>,
-                titulaire du permis de conduire catégorie C n°
-                <strong>{{ $attestation->candidat->numeroPermisC ?? '—' }}</strong>,
-                a suivi avec assiduité l'ensemble de la formation théorique (Code de la route)
-                et pratique (Créneaux et Conduite) au sein de notre établissement, et a satisfait
-                avec succès à l'ensemble des évaluations requises pour l'obtention du
-                <span class="highlight-cat">Permis E (catégorie poids lourd / transport professionnel)</span>.
+                à <strong>{{ $attestation->candidat->lieuNaissance ?? '—' }}</strong>, titulaire du permis de conduire
+                catégorie « C » N° <strong>{{ $attestation->candidat->numeroPermisC ?? '—' }}</strong>, délivré le
+                <strong>{{ $attestation->candidat->dateDelivrancePermisC ? \Carbon\Carbon::parse($attestation->candidat->dateDelivrancePermisC)->format('d/m/Y') : '—' }}</strong>
+                à <strong>{{ $attestation->candidat->lieuDelivrancePermisC ?? '—' }}</strong>, a suivi la formation relative
+                au permis de conduire catégorie « {{ $attestation->categorieObtenue ?? 'E' }} » au Centre de
+                Formation en Transport Routier et Activités Auxiliaires (CFTRA) du
+                <strong>{{ $attestation->formationDateDebut ? \Carbon\Carbon::parse($attestation->formationDateDebut)->format('d/m/Y') : '—' }}</strong>
+                au <strong>{{ $attestation->formationDateFin ? \Carbon\Carbon::parse($attestation->formationDateFin)->format('d/m/Y') : '—' }}</strong>
+                et passé avec succès les examens y afférents, organisés par la Direction Régionale des Transports
+                de la Mobilité Urbaine et de la Sécurité Routière des Hauts-Bassins.
             </div>
 
-            <div class="att-result-box">
-                <div class="att-result-label">Résultat Final</div>
-                <div class="att-result-value">✅ ADMIS — Code, Créneau & Conduite validés</div>
+            <div class="att-table-intro">Les résultats des examens sont consignés dans le tableau ci-dessous :</div>
+
+            <table class="att-table">
+                <tr>
+                    <th style="text-align:left;">EXAMENS DU PC/D</th>
+                    <th>CODE</th>
+                    <th>CONDUITE</th>
+                </tr>
+                <tr>
+                    <td style="text-align:left;">DATES D'ADMISSION</td>
+                    <td>{{ $attestation->dateAdmissionCode ? \Carbon\Carbon::parse($attestation->dateAdmissionCode)->format('d/m/Y') : '—' }}</td>
+                    <td>{{ $attestation->dateAdmissionConduite ? \Carbon\Carbon::parse($attestation->dateAdmissionConduite)->format('d/m/Y') : '—' }}</td>
+                </tr>
+            </table>
+
+            <div class="att-closing">
+                La présente Attestation lui a été délivrée pour servir et valoir ce que de droit.
             </div>
 
-            @if($attestation->examen)
-            <div style="margin-bottom:25px; font-size:0.9rem; color:#333;">
-                <strong>Examen de référence :</strong> {{ $attestation->examen->libelle }}
-                ({{ \Carbon\Carbon::parse($attestation->examen->dateDebut)->format('d/m/Y') }})
-            </div>
-            @endif
-
-            <div class="att-nb">
-                <strong>NB :</strong><br>
-                - La présente attestation est délivrée à titre de justificatif de formation et ne saurait
-                se substituer au permis de conduire officiel délivré par les services compétents de l'État.<br>
-                - Toute falsification ou altération de ce document expose son auteur à des poursuites réglementaires.<br>
-                - Ce document est valable sur présentation conjointe avec une pièce d'identité.
+            <div class="att-signature-block">
+                Fait à Bobo-Dioulasso, {{ \Carbon\Carbon::parse($attestation->dateDelivrance)->format('d/m/Y') }}<br>
+                Le Directeur Régional<br><br>
+                <strong>{{ $attestation->directeurNom ?? 'François DRABO' }}</strong>
             </div>
 
-            <div class="att-signatures">
-                <div>
-                    Fait à Bobo-Dioulasso, le {{ \Carbon\Carbon::parse($attestation->dateDelivrance)->format('d/m/Y') }}
-                    <div class="att-signature-line">Le Candidat</div>
-                </div>
-                <div>
-                    &nbsp;
-                    <div class="att-signature-line">Le Chef de Centre GESP (CCI-BF)</div>
-                </div>
-            </div>
+            <div class="att-doc-ref">FOR/FR_02/NQ_02/V03</div>
         </div>
 
         <div class="btn-group no-print">

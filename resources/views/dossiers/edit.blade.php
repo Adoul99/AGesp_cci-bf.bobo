@@ -68,6 +68,40 @@
                 </div>
             </div>
 
+            <!-- Décision Administrative -->
+            <div style="margin-bottom: 2.5rem;">
+                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--color-gold); display: flex; align-items: center;">
+                    <span style="width: 4px; height: 20px; background: var(--color-gold-dark); margin-right: 0.75rem; border-radius: 2px;"></span>
+                    Décision Administrative
+                </h2>
+
+                <div style="background: rgba(252,209,22,0.06); border: 1px solid rgba(252,209,22,0.4); border-radius: var(--radius-md); padding: 1.25rem 1.5rem;">
+                    <p style="font-size: 0.8rem; color: var(--color-dark); margin: 0 0 1.25rem 0;">
+                        💬 Le statut et le message ci-dessous sont visibles par le candidat dans son espace personnel.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div class="form-group">
+                            <label for="statutDossier" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; text-transform: uppercase;">Statut du dossier</label>
+                            <select name="statutDossier" id="statutDossier" style="width: 100%; padding: 0.75rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-weight: 600;">
+                                <option value="en_attente" {{ old('statutDossier', $dossier->statutDossier) == 'en_attente' ? 'selected' : '' }}>⏳ En attente</option>
+                                <option value="valide"     {{ old('statutDossier', $dossier->statutDossier) == 'valide'     ? 'selected' : '' }}>✅ Validé</option>
+                                <option value="rejete"     {{ old('statutDossier', $dossier->statutDossier) == 'rejete'     ? 'selected' : '' }}>❌ Rejeté</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label for="commentaireAdmin" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; text-transform: uppercase;">
+                            Message pour le candidat <span style="font-weight: normal; text-transform: none; color: var(--color-gray-500);">(motif du rejet, ou observation)</span>
+                        </label>
+                        <textarea name="commentaireAdmin" id="commentaireAdmin" rows="3" maxlength="1000"
+                                  placeholder="Ex : Votre certificat médical est illisible, merci de le renvoyer."
+                                  style="width: 100%; padding: 0.75rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-family: inherit; resize: vertical;">{{ old('commentaireAdmin', $dossier->commentaireAdmin) }}</textarea>
+                    </div>
+                </div>
+            </div>
+
             <!-- Boutons -->
             <div style="display: flex; gap: 1rem; border-top: 1px solid var(--color-gray-100); padding-top: 2rem;">
                 <button type="submit" style="background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: none; font-weight: 600; cursor: pointer;">
