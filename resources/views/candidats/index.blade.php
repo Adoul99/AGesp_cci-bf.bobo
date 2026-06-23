@@ -164,6 +164,15 @@
                         <td style="padding: 1rem 1.5rem; text-align: center;">
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
 
+                                <!-- Bouton Voir son espace -->
+                                <a href="{{ route('candidats.espace.admin', $candidat->id) }}" target="_blank"
+                                   style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: rgba(206,17,38,0.08); color: var(--color-red-dark); border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; text-decoration: none; font-size: 1.1rem;"
+                                   onmouseover="this.style.backgroundColor='var(--color-red)'; this.style.color='white'; this.style.transform='scale(1.1)'"
+                                   onmouseout="this.style.backgroundColor='rgba(206,17,38,0.08)'; this.style.color='var(--color-red-dark)'; this.style.transform='scale(1)'"
+                                   title="Voir son espace">
+                                    👁️
+                                </a>
+
                                 <!-- Bouton Fiche statut -->
                                 <a href="{{ route('candidats.show', $candidat->id) }}"
                                    style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: rgba(252,209,22,0.15); color: var(--color-gold-dark); border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; text-decoration: none; font-size: 1.1rem;"

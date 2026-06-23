@@ -106,18 +106,31 @@
             {{-- Moniteur --}}
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--color-dark);">
-                    Moniteur <span style="color:var(--color-gray-500); font-size:0.7rem; font-weight:400;">(facultatif)</span>
+                    Moniteur
+                    @if(!$moniteurConnecte)
+                        <span style="color:var(--color-gray-500); font-size:0.7rem; font-weight:400;">(facultatif)</span>
+                    @endif
                 </label>
-                <select name="moniteur_id"
-                        style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;"
-                        onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
-                    <option value="">-- Aucun --</option>
-                    @foreach($moniteurs as $m)
-                        <option value="{{ $m->id }}" {{ old('moniteur_id') == $m->id ? 'selected' : '' }}>
-                            👤 {{ $m->nom }} {{ $m->prenom }}
-                        </option>
-                    @endforeach
-                </select>
+
+                @if($moniteurConnecte)
+                    {{-- Connecté en tant que moniteur : champ automatique, non modifiable --}}
+                    <div style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-green); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-green-dark); background:rgba(0,122,94,0.06); font-weight:700; display:flex; align-items:center; justify-content:space-between;">
+                        <span>👤 {{ $moniteurConnecte->nom }} {{ $moniteurConnecte->prenom }}</span>
+                        <span style="background:var(--color-green); color:white; font-size:0.65rem; padding:0.15rem 0.5rem; border-radius:50px;">VOUS</span>
+                    </div>
+                    <input type="hidden" name="moniteur_id" value="{{ $moniteurConnecte->id }}">
+                @else
+                    <select name="moniteur_id"
+                            style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;"
+                            onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                        <option value="">-- Aucun --</option>
+                        @foreach($moniteurs as $m)
+                            <option value="{{ $m->id }}" {{ old('moniteur_id') == $m->id ? 'selected' : '' }}>
+                                👤 {{ $m->nom }} {{ $m->prenom }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
             </div>
 
             {{-- Véhicule --}}

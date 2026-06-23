@@ -10,6 +10,7 @@ use App\Models\TypeSession;
 use App\Models\Moniteur;
 use App\Traits\ExportableTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SessionFormationController extends Controller
 {
@@ -62,8 +63,12 @@ class SessionFormationController extends Controller
         $typesSessions = TypeSession::all();
         $moniteurs     = Moniteur::all();
 
+        // Si l'utilisateur connecté est lui-même un moniteur (email correspondant),
+        // on pré-remplit automatiquement le champ Moniteur avec son propre nom.
+        $moniteurConnecte = Moniteur::pourUtilisateur(Auth::user());
+
         return view('session_formations.create', compact(
-            'vehicules', 'evaluations', 'groupes', 'typesSessions', 'moniteurs'
+            'vehicules', 'evaluations', 'groupes', 'typesSessions', 'moniteurs', 'moniteurConnecte'
         ));
     }
 

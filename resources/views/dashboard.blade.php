@@ -3,7 +3,6 @@
 <style>
 .db-wrap { padding:14px 18px; font-family:'Source Sans 3',sans-serif; }
 
-/* Stats grid — 5 colonnes alignées */
 .db-stats {
     display              : grid;
     grid-template-columns: repeat(5, 1fr);
@@ -59,7 +58,6 @@
 .so { background:linear-gradient(135deg,#a07810,#d4a017); }
 .sd { background:linear-gradient(135deg,#1a2520,#3a4a40); }
 
-/* Tables grid — 2 colonnes */
 .db-tables {
     display              : grid;
     grid-template-columns: 1fr 1fr;
@@ -159,20 +157,9 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
     color        : inherit;
 }
 
-.db-module-info {
-    display: grid;
-    gap: 4px;
-}
-
-.db-module-title {
-    font-weight: 700;
-    color: #1a2520;
-}
-
-.db-module-sub {
-    font-size: 0.78rem;
-    color: #6b7a70;
-}
+.db-module-info { display: grid; gap: 4px; }
+.db-module-title { font-weight: 700; color: #1a2520; }
+.db-module-sub { font-size: 0.78rem; color: #6b7a70; }
 
 .db-module-link {
     background   : #1a6b3a;
@@ -185,9 +172,7 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
     text-decoration: none;
 }
 
-.db-module-link:hover {
-    background: #19612e;
-}
+.db-module-link:hover { background: #19612e; }
 </style>
 
 <div class="db-wrap">
@@ -263,7 +248,6 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
     (function() {
-        // ── Donut : répartition par étape de formation ──
         const ctxEtape = document.getElementById('etapeChart');
         if (ctxEtape) {
             new Chart(ctxEtape, {
@@ -278,7 +262,6 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
                             {{ (int)$candidatsConduite }},
                             {{ (int)$candidatsAdmis }}
                         ],
-                        // Couleurs calées sur la charte des blocs du haut
                         backgroundColor: ['#4b5563', '#c0281e', '#d4a017', '#1a2520', '#1a6b3a'],
                         borderWidth: 2,
                         borderColor: '#fff',
@@ -294,12 +277,10 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
             });
         }
 
-        // ── Donut : répartition par catégorie de permis ──
         const ctxPermis = document.getElementById('permisChart');
         if (ctxPermis) {
             const labels = @json($repartitionPermis->keys());
             const data   = @json($repartitionPermis->values());
-
             new Chart(ctxPermis, {
                 type: 'doughnut',
                 data: {
@@ -408,7 +389,8 @@ table.db-table tbody td { padding:6px 10px; font-size:0.78rem; color:#1a2520; ve
                             {{ $inscription->candidat->nom ?? '' }}
                             {{ $inscription->candidat->prenom ?? '' }}
                         </td>
-                        <td>Permis E</td>
+                        {{-- ── CORRECTION : affiche la vraie catégorie ── --}}
+                        <td>{{ $inscription->categoriePermis->nomCategorie ?? 'Non renseigné' }}</td>
                         <td>{{ \Carbon\Carbon::parse($inscription->dateInscription)->format('d/m/Y') }}</td>
                         <td>
                             @if($inscription->statutInscription == 'actif')

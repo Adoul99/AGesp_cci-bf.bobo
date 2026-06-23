@@ -31,6 +31,10 @@
             Fiche — {{ $candidat->nom }} {{ $candidat->prenom }}
         </h1>
         <div style="display:flex; gap:0.75rem;" class="no-print">
+            <a href="{{ route('candidats.espace.admin', $candidat->id) }}" target="_blank"
+               style="padding:0.6rem 1.25rem; background:rgba(206,17,38,0.08); color:var(--color-red-dark); border:2px solid var(--color-red); border-radius:var(--radius-md); font-weight:600; text-decoration:none; font-size:0.8rem;">
+                👁️ Voir son espace
+            </a>
             <a href="{{ route('candidats.edit', $candidat->id) }}"
                style="padding:0.6rem 1.25rem; background:rgba(0,122,94,0.1); color:var(--color-green-dark); border:2px solid var(--color-green); border-radius:var(--radius-md); font-weight:600; text-decoration:none; font-size:0.8rem;">
                 ✎ Modifier

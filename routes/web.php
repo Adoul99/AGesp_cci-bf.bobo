@@ -92,6 +92,8 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
 
     // ── Gestion des candidats ────────────────────────────────
     Route::resource('candidats',          CandidatController::class);
+    Route::get('candidats/{candidat}/espace', [EspaceCandidatController::class, 'voirCommeAdmin'])
+         ->name('candidats.espace.admin');
 
     // ── Dossiers ─────────────────────────────────────────────
     Route::resource('dossiers',           DossierController::class);

@@ -306,14 +306,26 @@
             <i class="bi bi-person-circle"></i>
             {{ $user->name }}
         </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="btn-logout">
-                <i class="bi bi-box-arrow-right"></i> Déconnexion
-            </button>
-        </form>
+        @if($modePreviewAdmin ?? false)
+            <a href="{{ route('candidats.show', $candidat->id) }}" class="btn-logout" style="text-decoration:none;">
+                <i class="bi bi-arrow-left"></i> Retour à la fiche
+            </a>
+        @else
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn-logout">
+                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                </button>
+            </form>
+        @endif
     </div>
 </div>
+
+@if($modePreviewAdmin ?? false)
+<div style="background:#FFF3CD; border-bottom:2px solid #E5B800; padding:0.75rem 1.5rem; text-align:center; font-size:0.85rem; font-weight:600; color:#7A5C00;">
+    👁️ Vous consultez l'espace de <strong>{{ $candidat->nom ?? '' }} {{ $candidat->prenom ?? '' }}</strong> en tant qu'administrateur — lecture seule.
+</div>
+@endif
 
 {{-- ── NAVIGATION TABS ── --}}
 <div class="nav-tabs-wrap">
