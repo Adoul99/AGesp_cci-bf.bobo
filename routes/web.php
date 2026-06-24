@@ -69,6 +69,8 @@ Route::get('/inscription-confirmee',
 Route::middleware(['auth', 'candidat.only'])->group(function () {
     Route::get('/mon-espace', [EspaceCandidatController::class, 'index'])
          ->name('candidat.espace');
+    Route::get('/mon-espace/attestations/{attestation}', [EspaceCandidatController::class, 'voirMonAttestation'])
+         ->name('candidat.attestation.show');
 });
 
 // ══════════════════════════════════════════════════════════════

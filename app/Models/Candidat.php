@@ -59,6 +59,22 @@ class Candidat extends Model
     }
 
     /**
+     * Attestations délivrées à ce candidat
+     */
+    public function attestations()
+    {
+        return $this->hasMany(Attestation::class, 'candidat_id');
+    }
+
+    /**
+     * Paiements effectués par ce candidat
+     */
+    public function paiements()
+    {
+        return $this->hasMany(Paiement::class, 'candidat_id');
+    }
+
+    /**
      * Libellé lisible du statut
      */
     public function getStatutLabelAttribute(): string

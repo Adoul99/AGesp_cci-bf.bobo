@@ -50,6 +50,31 @@ class EspaceCandidatController extends Controller
     }
 
     /**
+     * Affiche une attestation appartenant au candidat connecté
+     * (réutilise le document officiel imprimable du module admin).
+     * Vérifie que l'attestation lui appartient réellement avant de l'afficher.
+     */
+    public function voirMonAttestation(\App\Models\Attestation $attestation)
+    {
+        $user = Auth::user();
+
+        $candidat = Candidat::where('email', $user->email)
+            ->orWhere('telephone', $user->telephone)
+            ->first();
+
+        // Sécurité : un candidat ne peut consulter QUE sa propre attestation
+        if (!$candidat || $attestation->candidat_id !== $candidat->id) {
+            abort(403, "Vous n'êtes pas autorisé à consulter cette attestation.");
+        }
+
+        $attestation->load(['candidat', 'examen']);
+
+        $modeCandidat = true;
+
+        return view('attestations.show', compact('attestation', 'modeCandidat'));
+    }
+
+    /**
      * Construit les données et retourne la vue de l'espace candidat,
      * que ce soit pour le candidat lui-même ou pour un admin en consultation.
      */

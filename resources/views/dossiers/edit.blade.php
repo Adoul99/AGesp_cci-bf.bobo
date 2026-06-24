@@ -16,10 +16,25 @@
             </h1>
         </div>
 
+        @if($errors->any())
+            <div style="background:#fbeaea; border:1px solid #c0281e; border-radius:8px; padding:1rem 1.5rem; margin-bottom:1.5rem; color:#c0281e;">
+                <strong>⚠️ Erreurs de validation :</strong>
+                <ul style="margin: 0.5rem 0 0 1.2rem;">
+                    @foreach($errors->all() as $error)
+                        <li style="font-size:0.85rem;">{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('dossiers.update', $dossier->id) }}" enctype="multipart/form-data" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
             @csrf
             @method('PUT')
-            
+
+            {{-- ── Champs requis par la validation mais non visibles ── --}}
+            <input type="hidden" name="dateDepot"    value="{{ $dossier->dateDepot }}">
+            <input type="hidden" name="description"  value="{{ $dossier->description }}">
+
             <!-- Informations Générales -->
             <div style="margin-bottom: 2.5rem;">
                 <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--color-gold); display: flex; align-items: center;">
@@ -52,7 +67,7 @@
                     <span style="width: 4px; height: 20px; background: var(--color-red); margin-right: 0.75rem; border-radius: 2px;"></span>
                     Gestion des Pièces Jointes
                 </h2>
-                
+
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
                     @foreach(['cnib' => 'CNIB', 'photo_identite' => 'Photo Identité', 'certificat_medical' => 'Certificat Médical', 'acte_naissance' => 'Acte de Naissance', 'recu_paiement' => 'Reçu de Paiement', 'permis_c' => 'Copie Permis C'] as $field => $label)
                         <div class="form-group">
@@ -71,7 +86,7 @@
             <!-- Décision Administrative -->
             <div style="margin-bottom: 2.5rem;">
                 <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--color-gold); display: flex; align-items: center;">
-                    <span style="width: 4px; height: 20px; background: var(--color-gold-dark); margin-right: 0.75rem; border-radius: 2px;"></span>
+                    <span style="width: 4px; height: 20px; background: var(--color-gold); margin-right: 0.75rem; border-radius: 2px;"></span>
                     Décision Administrative
                 </h2>
 
@@ -93,7 +108,8 @@
 
                     <div class="form-group" style="margin-top: 1.5rem;">
                         <label for="commentaireAdmin" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; text-transform: uppercase;">
-                            Message pour le candidat <span style="font-weight: normal; text-transform: none; color: var(--color-gray-500);">(motif du rejet, ou observation)</span>
+                            Message pour le candidat
+                            <span style="font-weight: normal; text-transform: none; color: #888;">(motif du rejet, ou observation)</span>
                         </label>
                         <textarea name="commentaireAdmin" id="commentaireAdmin" rows="3" maxlength="1000"
                                   placeholder="Ex : Votre certificat médical est illisible, merci de le renvoyer."
@@ -104,7 +120,7 @@
 
             <!-- Boutons -->
             <div style="display: flex; gap: 1rem; border-top: 1px solid var(--color-gray-100); padding-top: 2rem;">
-                <button type="submit" style="background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: none; font-weight: 600; cursor: pointer;">
+                <button type="submit" style="background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: none; font-weight: 600; cursor: pointer; font-size: 1rem;">
                     ✓ Mettre à jour
                 </button>
                 <a href="{{ route('dossiers.index') }}" style="background: var(--color-gray-100); color: var(--color-dark); padding: 0.875rem 2rem; border-radius: var(--radius-md); text-decoration: none; font-weight: 600;">

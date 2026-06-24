@@ -43,8 +43,9 @@ class InscriptionController extends Controller
     // ── ADMIN : modifier ───────────────────────────────────────
     public function edit(Inscription $inscription)
     {
-        $candidats = Candidat::all();
-        return view('inscriptions.edit', compact('inscription', 'candidats'));
+        $candidats  = Candidat::all();
+        $categories = CategoriePermis::orderBy('nomCategorie')->get();
+        return view('inscriptions.edit', compact('inscription', 'candidats', 'categories'));
     }
 
     // ── ADMIN : mettre à jour ──────────────────────────────────
@@ -94,7 +95,6 @@ class InscriptionController extends Controller
             'categoriePermis_id'    => 'required|exists:categorie_permis,id',
             'dataDebut_formation'   => 'required|date',
             'dateInscription'       => 'nullable|date',
-            'statutInscription'     => 'nullable|string|max:50',
 
             // Pièces jointes — SANS recu_paiement
             'cnib'                  => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
@@ -172,11 +172,11 @@ class InscriptionController extends Controller
                 'candidat_id'       => $candidat->id,
             ]);
 
-            // 5. Statut inscription
+            // 5. Statut inscription — TOUJOURS "en attente" lors d'une inscription publique.
+            // Seule l'administration peut faire passer une inscription à "actif",
+            // après vérification du dossier (pièces jointes). Le candidat ne doit
+            // jamais pouvoir choisir lui-même ce statut.
             $statutFormate = 'en_attente';
-            if ($request->statutInscription && strtolower($request->statutInscription) === 'actif') {
-                $statutFormate = 'actif';
-            }
 
             // 6. Créer l'inscription
             Inscription::create([

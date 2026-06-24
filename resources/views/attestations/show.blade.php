@@ -73,55 +73,15 @@
     .footer { background:var(--dk); color:rgba(255,255,255,0.5); text-align:center; padding:15px; font-size:0.7rem; margin-top:20px; }
     .footer span { color:var(--o); }
 
-    .print-hint {
-        font-size:0.72rem; color:var(--color-gray-500, #888); text-align:center; margin-top:8px;
-    }
-
-    /* ===================================================== */
-    /* IMPRESSION — recalibré pour tenir sur UNE seule page  */
-    /* ===================================================== */
     @media print {
-        @page { size: A4; margin: 8mm 12mm; }
-        .header, .btn-group, .footer, .print-hint, .no-print { display:none !important; }
+        @page { size: A4; margin: 10mm 15mm; }
+        .header, .btn-group, .footer, .no-print { display:none !important; }
         body { background:white; padding:0; margin:0; }
         .wrap { margin:0; padding:0; max-width:100%; width:100%; }
         .card { box-shadow:none; padding:0; margin:0; background:transparent; }
-
         .attestation-officielle {
-            border:1.5px solid #000; margin:0; padding:22px 30px 16px; width:100%; box-sizing:border-box;
-            /* IMPORTANT : pas de page-break-inside:avoid ici —
-               c'est ce qui forçait le bloc entier à sauter de page
-               et créait la page 1 vide + débordement sur la page 3 */
-        }
-
-        .att-letterhead { margin-bottom:16px; }
-        .att-letterhead .lh-line {
-            font-size:0.82rem; line-height:1.3; padding-bottom:2px; margin-bottom:8px;
-        }
-
-        .att-title-box {
-            margin:0 auto 16px; padding:8px 24px; font-size:0.92rem;
-        }
-
-        .att-body {
-            font-size:0.86rem; line-height:1.55; margin-bottom:14px;
-        }
-
-        .att-table-intro { font-size:0.86rem; margin-bottom:8px; }
-
-        .att-table { margin-bottom:16px; }
-        .att-table th, .att-table td {
-            padding:6px 10px; font-size:0.78rem;
-        }
-
-        .att-closing { font-size:0.86rem; line-height:1.4; margin-bottom:22px; }
-
-        .att-signature-block {
-            font-size:0.84rem; line-height:1.6;
-        }
-
-        .att-doc-ref {
-            position:absolute; bottom:6px; left:30px; font-size:0.62rem;
+            border:1.5px solid #000; margin:0; padding:45px 55px 35px; width:100%; box-sizing:border-box;
+            page-break-inside: avoid;
         }
     }
     </style>
@@ -145,7 +105,7 @@
             <div style="font-size:0.68rem;color:rgba(255,255,255,0.6);">Système de Gestion Auto-École · CCI-BF</div>
         </div>
     </div>
-    <a href="{{ route('attestations.index') }}" class="header-link"><i class="bi bi-arrow-left"></i> Retour à la liste</a>
+    <a href="{{ (isset($modeCandidat) && $modeCandidat) ? route('candidat.espace') : route('attestations.index') }}" class="header-link"><i class="bi bi-arrow-left"></i> Retour</a>
 </div>
 
 <div class="wrap">
@@ -211,15 +171,14 @@
             <button onclick="window.print();" class="btn-print">
                 <i class="bi bi-printer"></i> Imprimer l'attestation
             </button>
+            @if(!isset($modeCandidat) || !$modeCandidat)
             <a href="{{ route('attestations.edit', $attestation->id) }}" class="btn-edit">
                 <i class="bi bi-pencil"></i> Modifier
             </a>
-            <a href="{{ route('attestations.index') }}" class="btn-back">
-                <i class="bi bi-list"></i> Retour à la liste
+            @endif
+            <a href="{{ (isset($modeCandidat) && $modeCandidat) ? route('candidat.espace') : route('attestations.index') }}" class="btn-back">
+                <i class="bi bi-list"></i> Retour {{ (isset($modeCandidat) && $modeCandidat) ? 'à mon espace' : 'à la liste' }}
             </a>
-        </div>
-        <div class="print-hint no-print">
-            💡 Astuce : dans la fenêtre d'impression, clique sur « Plus de paramètres » et décoche « En-têtes et pieds de page » pour un rendu propre sans date/URL en haut de page.
         </div>
 
     </div>

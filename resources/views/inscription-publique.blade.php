@@ -493,7 +493,7 @@
                                 <option value="">-- Choisir une catégorie --</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ old('categoriePermis_id')==$cat->id?'selected':'' }}>
-                                        {{ $cat->pareCategorie ?? $cat->nom ?? 'Catégorie '.$cat->id }}
+                                        {{ $cat->nomCategorie ?? 'Catégorie '.$cat->id }}
                                         @if($cat->description ?? false) — {{ $cat->description }} @endif
                                     </option>
                                 @endforeach
@@ -507,13 +507,6 @@
                         <div class="col-md-6">
                             <label class="lbl">Date d'inscription</label>
                             <input type="date" id="inp-dateinscr" name="dateInscription" class="inp" value="{{ old('dateInscription', date('Y-m-d')) }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="lbl">Statut</label>
-                            <select name="statutInscription" class="inp">
-                                <option value="en_attente">En attente</option>
-                                <option value="actif">Actif</option>
-                            </select>
                         </div>
                     </div>
 

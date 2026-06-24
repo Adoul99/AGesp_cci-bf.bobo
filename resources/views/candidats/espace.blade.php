@@ -175,7 +175,7 @@
     .badge-actif    { background: var(--vp); color: var(--v); }
     .badge-info     { background: #eff6ff; color: #2563eb; }
 
-    /* ── GRANDE CARTE STATUT INSCRIPTION ── */
+    /* ── GRANDE CARTE STATUT ── */
     .statut-card {
         border-radius: 12px; padding: 26px;
         margin-bottom: 16px; border: 2px solid;
@@ -397,7 +397,6 @@
             </div>
         </div>
 
-        {{-- Statut inscription principal --}}
         @if($inscription)
             @php
                 $statut = $inscription->statutInscription ?? 'en_attente';
@@ -422,6 +421,8 @@
                     default   => 'Votre dossier est en cours de vérification par l\'administration. Vous serez notifié dès qu\'une décision sera prise.',
                 };
             @endphp
+
+            {{-- ── CARTE STATUT INSCRIPTION ── --}}
             <div class="statut-card {{ $cssStatut }}">
                 <i class="bi {{ $iconStatut }} statut-icon"></i>
                 <div>
@@ -430,16 +431,61 @@
                     <div style="margin-top:10px;">
                         <span class="badge badge-{{ $cssStatut === 'attente' ? 'attente' : ($cssStatut === 'accepte' ? 'accepte' : 'refuse') }}">
                             <i class="bi {{ $iconStatut }}"></i>
-                            {{ strtoupper($statut) }}
+                            INSCRIPTION : {{ strtoupper($statut) }}
                         </span>
                         <span style="font-size:.75rem;color:var(--sub);margin-left:10px;">
-                            Catégorie : <strong>{{ $inscription->categoriePermis->pareCategorie ?? '—' }}</strong>
+                            Catégorie : <strong>{{ $inscription->categoriePermis->nomCategorie ?? '—' }}</strong>
                         </span>
                     </div>
                 </div>
             </div>
 
-            {{-- Timeline progression --}}
+            {{-- ── CARTE STATUT DOSSIER (PIÈCES JOINTES) ── --}}
+            @if($dossier)
+                @php
+                    $statutDoss = $dossier->statutDossier ?? 'en_attente';
+                    $cssDoss = match($statutDoss) {
+                        'valide'           => 'accepte',
+                        'rejete', 'rejeté' => 'refuse',
+                        default            => 'attente',
+                    };
+                    $iconDoss = match($cssDoss) {
+                        'accepte' => 'bi-folder-check',
+                        'refuse'  => 'bi-folder-x',
+                        default   => 'bi-folder-symlink',
+                    };
+                    $titreDoss = match($cssDoss) {
+                        'accepte' => 'Pièces du dossier validées ✓',
+                        'refuse'  => 'Pièces du dossier rejetées — action requise',
+                        default   => 'Pièces du dossier en cours de vérification',
+                    };
+                    $descDoss = match($cssDoss) {
+                        'accepte' => 'Toutes vos pièces ont été vérifiées et acceptées par l\'administration.',
+                        'refuse'  => $dossier->commentaireAdmin ?? 'Certaines pièces ont été rejetées. Veuillez contacter l\'administration.',
+                        default   => 'Vos pièces jointes sont en cours d\'examen par l\'administration. Vous serez informé dès qu\'une décision sera prise.',
+                    };
+                @endphp
+                <div class="statut-card {{ $cssDoss }}">
+                    <i class="bi {{ $iconDoss }} statut-icon"></i>
+                    <div>
+                        <div class="statut-title">{{ $titreDoss }}</div>
+                        <div class="statut-desc">{{ $descDoss }}</div>
+                        <div style="margin-top:10px;">
+                            <span class="badge badge-{{ $cssDoss === 'attente' ? 'attente' : ($cssDoss === 'accepte' ? 'accepte' : 'refuse') }}">
+                                <i class="bi {{ $iconDoss }}"></i>
+                                DOSSIER : {{ strtoupper($statutDoss) }}
+                            </span>
+                            @if($dossier->nomDossier)
+                                <span style="font-size:.75rem;color:var(--sub);margin-left:10px;">
+                                    Réf. : <strong>{{ $dossier->nomDossier }}</strong>
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── TIMELINE PROGRESSION ── --}}
             <div class="card">
                 <div class="card-head">
                     <i class="bi bi-list-check"></i> Progression de votre dossier
@@ -461,12 +507,27 @@
                             </div>
                         </div>
                         <div class="tl-item">
-                            <div class="tl-dot {{ $cssStatut === 'attente' ? 'wait' : ($cssStatut === 'accepte' ? 'done' : 'fail') }}">
-                                <i class="bi {{ $cssStatut === 'attente' ? 'bi-hourglass-split' : ($cssStatut === 'accepte' ? 'bi-check' : 'bi-x') }}"></i>
-                            </div>
+                            @php
+                                $dotDoss = match($cssDoss ?? 'attente') {
+                                    'accepte' => 'done',
+                                    'refuse'  => 'fail',
+                                    default   => 'wait',
+                                };
+                                $iconDotDoss = match($cssDoss ?? 'attente') {
+                                    'accepte' => 'bi-check',
+                                    'refuse'  => 'bi-x',
+                                    default   => 'bi-hourglass-split',
+                                };
+                            @endphp
+                            <div class="tl-dot {{ $dotDoss }}"><i class="bi {{ $iconDotDoss }}"></i></div>
                             <div class="tl-text">
-                                <strong>Vérification du dossier</strong>
-                                <span>{{ $cssStatut === 'attente' ? 'En cours de vérification par l\'administration' : ($cssStatut === 'accepte' ? 'Dossier validé ✓' : 'Dossier refusé') }}</span>
+                                <strong>Vérification des pièces</strong>
+                                <span>
+                                    @if(($cssDoss ?? 'attente') === 'accepte') Pièces validées ✓
+                                    @elseif(($cssDoss ?? 'attente') === 'refuse') Pièces rejetées — contactez l'administration
+                                    @else En cours de vérification par l'administration
+                                    @endif
+                                </span>
                             </div>
                         </div>
                         <div class="tl-item">
@@ -570,7 +631,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Catégorie de permis</span>
-                        <span class="info-val">{{ $inscription->categoriePermis->pareCategorie ?? '—' }}</span>
+                        <span class="info-val">{{ $inscription->categoriePermis->nomCategorie ?? '—' }}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Date d'inscription</span>
@@ -626,9 +687,9 @@
             @php
                 $statutDossierActuel = $dossier->statutDossier ?? 'en_attente';
                 $cssDossier = match($statutDossierActuel) {
-                    'valide' => 'accepte',
-                    'rejete' => 'refuse',
-                    default  => 'attente',
+                    'valide'           => 'accepte',
+                    'rejete', 'rejeté' => 'refuse',
+                    default            => 'attente',
                 };
                 $iconDossier = match($cssDossier) {
                     'accepte' => 'bi-check-circle-fill',
@@ -649,7 +710,11 @@
                         <div class="statut-desc">💬 {{ $dossier->commentaireAdmin }}</div>
                     @else
                         <div class="statut-desc">
-                            {{ $cssDossier === 'attente' ? 'L\'administration vérifie actuellement vos pièces. Vous serez notifié dès qu\'une décision sera prise.' : ($cssDossier === 'accepte' ? 'Toutes vos pièces ont été validées par l\'administration.' : 'Veuillez contacter l\'administration pour connaître le motif et corriger votre dossier.') }}
+                            {{ $cssDossier === 'attente'
+                                ? 'L\'administration vérifie actuellement vos pièces. Vous serez notifié dès qu\'une décision sera prise.'
+                                : ($cssDossier === 'accepte'
+                                    ? 'Toutes vos pièces ont été validées par l\'administration.'
+                                    : 'Veuillez contacter l\'administration pour connaître le motif et corriger votre dossier.') }}
                         </div>
                     @endif
                 </div>
@@ -683,7 +748,7 @@
                             <tr>
                                 <th>Type</th>
                                 <th>Date</th>
-                                <th>Lieu</th>
+                                <th>Statut</th>
                                 <th>Résultat</th>
                                 <th>Note</th>
                             </tr>
@@ -691,16 +756,16 @@
                         <tbody>
                             @foreach($examens as $ex)
                             <tr>
-                                <td>{{ $ex->typeExamen ?? $ex->type ?? '—' }}</td>
-                                <td>{{ $ex->dateExamen ? \Carbon\Carbon::parse($ex->dateExamen)->format('d/m/Y') : '—' }}</td>
-                                <td>{{ $ex->lieu ?? '—' }}</td>
+                                <td>{{ $ex->libelle ?? '—' }}</td>
+                                <td>{{ $ex->dateDebut ? \Carbon\Carbon::parse($ex->dateDebut)->format('d/m/Y') : '—' }}</td>
+                                <td>{{ $ex->statutExamen ?? '—' }}</td>
                                 <td>
-                                    @php $res = strtolower($ex->resultat ?? ''); @endphp
-                                    <span class="badge {{ $res === 'admis' || $res === 'reussi' ? 'badge-accepte' : ($res === 'echec' || $res === 'recale' ? 'badge-refuse' : 'badge-attente') }}">
-                                        {{ $ex->resultat ?? 'En attente' }}
+                                    @php $res = strtolower($ex->pivot->resultat ?? ''); @endphp
+                                    <span class="badge {{ $res === 'admis' || $res === 'reussi' ? 'badge-accepte' : ($res === 'echec' || $res === 'recale' || $res === 'ajourné' ? 'badge-refuse' : 'badge-attente') }}">
+                                        {{ $ex->pivot->resultat ?? 'En attente' }}
                                     </span>
                                 </td>
-                                <td>{{ $ex->note ?? '—' }}</td>
+                                <td>{{ $ex->pivot->note ?? '—' }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -741,8 +806,8 @@
                                 <td>{{ $p->datePaiement ? \Carbon\Carbon::parse($p->datePaiement)->format('d/m/Y') : '—' }}</td>
                                 <td>{{ $p->modePaiement ?? '—' }}</td>
                                 <td>
-                                    <span class="badge {{ ($p->statut ?? '') === 'payé' ? 'badge-accepte' : 'badge-attente' }}">
-                                        {{ $p->statut ?? 'En attente' }}
+                                    <span class="badge {{ ($p->statut ?? '') === 'paye' ? 'badge-accepte' : (($p->statut ?? '') === 'annule' ? 'badge-refuse' : 'badge-attente') }}">
+                                        {{ match($p->statut ?? '') { 'paye' => 'Payé', 'annule' => 'Annulé', default => 'En attente' } }}
                                     </span>
                                 </td>
                             </tr>
@@ -774,18 +839,30 @@
                                 <th>Type</th>
                                 <th>Date délivrance</th>
                                 <th>Statut</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($attestations as $att)
                             <tr>
-                                <td><strong>{{ $att->numero ?? 'ATT-'.$att->id }}</strong></td>
-                                <td>{{ $att->type ?? $att->typeAttestation ?? '—' }}</td>
+                                <td><strong>{{ $att->numeroAttestation }}</strong></td>
+                                <td>Permis {{ $att->categorieObtenue ?? 'E' }}</td>
                                 <td>{{ $att->dateDelivrance ? \Carbon\Carbon::parse($att->dateDelivrance)->format('d/m/Y') : '—' }}</td>
                                 <td>
                                     <span class="badge badge-accepte">
                                         <i class="bi bi-check-circle"></i> Disponible
                                     </span>
+                                </td>
+                                <td>
+                                    @php
+                                        $lienAttestation = ($modePreviewAdmin ?? false)
+                                            ? route('attestations.show', $att->id)
+                                            : route('candidat.attestation.show', $att->id);
+                                    @endphp
+                                    <a href="{{ $lienAttestation }}" target="_blank"
+                                       style="display:inline-flex; align-items:center; gap:6px; background:var(--v); color:white; padding:0.4rem 0.9rem; border-radius:6px; font-size:0.78rem; font-weight:700; text-decoration:none;">
+                                        <i class="bi bi-download"></i> Télécharger
+                                    </a>
                                 </td>
                             </tr>
                             @endforeach
@@ -854,11 +931,8 @@
 
 <script>
 function showTab(name, btn) {
-    // Cacher toutes les sections
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-
-    // Afficher la section cliquée
     document.getElementById('tab-' + name).classList.add('active');
     btn.classList.add('active');
 }
