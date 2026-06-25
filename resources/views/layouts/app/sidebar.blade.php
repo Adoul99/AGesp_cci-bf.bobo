@@ -418,9 +418,6 @@
             <a href="{{ route('candidats.index') }}" class="as-lnk {{ request()->routeIs('candidats.*') ? 'active' : '' }}">
                 <i class="bi bi-people"></i> Candidats
             </a>
-            <a href="{{ route('dossiers.index') }}" class="as-lnk {{ request()->routeIs('dossiers.*') ? 'active' : '' }}">
-                <i class="bi bi-folder2-open"></i> Dossiers
-            </a>
             <a href="{{ route('inscriptions.index') }}" class="as-lnk {{ request()->routeIs('inscriptions.*') ? 'active' : '' }}">
                 <i class="bi bi-check2-circle"></i> Inscriptions
             </a>

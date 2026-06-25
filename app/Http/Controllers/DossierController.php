@@ -26,15 +26,15 @@ class DossierController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nomDossier' => 'required',
-            'dateDepot' => 'required|date',
-            'candidat_id' => 'required',
-            'cnib' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'photo_identite' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'nomDossier'         => 'required',
+            'dateDepot'          => 'required|date',
+            'candidat_id'        => 'required',
+            'cnib'               => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'photo_identite'     => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'certificat_medical' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'acte_naissance' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'recu_paiement' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'permis_c' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'acte_naissance'     => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'recu_paiement'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'permis_c'           => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         $data = $request->except($this->fileFields);
@@ -77,7 +77,9 @@ class DossierController extends Controller
         }
 
         $dossier->update($data);
-        return redirect()->route('dossiers.index')->with('success', 'Dossier mis à jour.');
+
+        // ✅ Redirige vers la liste des candidats pour voir le badge mis à jour
+        return redirect()->route('candidats.index')->with('success', 'Dossier mis à jour avec succès.');
     }
 
     public function destroy(Dossier $dossier)

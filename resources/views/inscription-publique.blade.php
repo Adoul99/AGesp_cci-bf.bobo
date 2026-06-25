@@ -206,6 +206,11 @@
         .btn-submit { background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color: white; border: 2px solid var(--color-green); margin-left: auto; }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,122,94,.3); }
         .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+        .btn-next:disabled {
+            opacity: .55; cursor: not-allowed; transform: none; box-shadow: none;
+            background: var(--color-gray-200); border-color: var(--color-gray-200); color: var(--color-gray-500);
+        }
+        .btn-next:disabled:hover { transform: none; box-shadow: none; }
 
         .site-footer { background: var(--color-dark); color: rgba(255,255,255,.6); text-align: center; padding: 14px 20px; font-size: .75rem; margin-top: 30px; }
         .site-footer span { color: var(--color-gold); font-weight: 700; }
@@ -312,12 +317,12 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="lbl">Nom <span class="req">*</span></label>
-                            <input type="text" id="inp-nom" name="nom" class="inp @error('nom') is-invalid @enderror" value="{{ old('nom') }}" placeholder="Nom de famille" required>
+                            <input type="text" id="inp-nom" name="nom" class="inp @error('nom') is-invalid @enderror" value="{{ old('nom') }}" placeholder="Nom de famille" required oninput="updateStep1Button()">
                             @error('nom')<span class="invalid-msg">{{ $message }}</span>@enderror
                         </div>
                         <div class="col-md-6">
                             <label class="lbl">Prénom <span class="req">*</span></label>
-                            <input type="text" id="inp-prenom" name="prenom" class="inp @error('prenom') is-invalid @enderror" value="{{ old('prenom') }}" placeholder="Prénom(s)" required>
+                            <input type="text" id="inp-prenom" name="prenom" class="inp @error('prenom') is-invalid @enderror" value="{{ old('prenom') }}" placeholder="Prénom(s)" required oninput="updateStep1Button()">
                             @error('prenom')<span class="invalid-msg">{{ $message }}</span>@enderror
                         </div>
                     </div>
@@ -351,7 +356,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="lbl">Lieu de naissance <span class="req">*</span></label>
-                            <input type="text" id="inp-lieu" name="lieuNaissance" class="inp @error('lieuNaissance') is-invalid @enderror" value="{{ old('lieuNaissance') }}" placeholder="Ex: Bobo-Dioulasso" required>
+                            <input type="text" id="inp-lieu" name="lieuNaissance" class="inp @error('lieuNaissance') is-invalid @enderror" value="{{ old('lieuNaissance') }}" placeholder="Ex: Bobo-Dioulasso" required oninput="updateStep1Button()">
                             @error('lieuNaissance')<span class="invalid-msg">{{ $message }}</span>@enderror
                         </div>
                     </div>
@@ -387,12 +392,12 @@
                                 @else
                                     <input type="tel" id="inp-tel" name="telephone"
                                            class="inp" placeholder="+226 XX XX XX XX"
-                                           value="{{ old('telephone') }}" required>
+                                           value="{{ old('telephone') }}" required oninput="updateStep1Button()">
                                 @endif
                             @else
                                 <input type="tel" id="inp-tel" name="telephone"
                                        class="inp" placeholder="+226 XX XX XX XX"
-                                       value="{{ old('telephone') }}" required>
+                                       value="{{ old('telephone') }}" required oninput="updateStep1Button()">
                             @endauth
                             @error('telephone')<span class="invalid-msg">{{ $message }}</span>@enderror
                         </div>
@@ -472,7 +477,7 @@
                     </div>
 
                     <div class="btn-wrapper" style="border-top:none;padding-top:0;">
-                        <button type="button" class="btn-next" onclick="goToStep(2)">Suivant <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" class="btn-next" id="btn-next-1" onclick="goToStep(2)" disabled>Suivant <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -489,7 +494,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-12">
                             <label class="lbl">Catégorie de permis <span class="req">*</span></label>
-                            <select id="inp-cat" name="categoriePermis_id" class="inp @error('categoriePermis_id') is-invalid @enderror" required>
+                            <select id="inp-cat" name="categoriePermis_id" class="inp @error('categoriePermis_id') is-invalid @enderror" required onchange="updateStep2Button()">
                                 <option value="">-- Choisir une catégorie --</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ old('categoriePermis_id')==$cat->id?'selected':'' }}>
@@ -512,7 +517,7 @@
 
                     <div class="btn-wrapper">
                         <button type="button" class="btn-prev" onclick="goToStep(1)"><i class="bi bi-arrow-left"></i> Précédent</button>
-                        <button type="button" class="btn-next" onclick="goToStep(3)">Suivant <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" class="btn-next" id="btn-next-2" onclick="goToStep(3)" disabled>Suivant <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -580,7 +585,7 @@
 
                     <div class="btn-wrapper">
                         <button type="button" class="btn-prev" onclick="goToStep(2)"><i class="bi bi-arrow-left"></i> Précédent</button>
-                        <button type="button" class="btn-next" onclick="goToStep(4)">Suivant <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" class="btn-next" id="btn-next-3" onclick="goToStep(4)" disabled>Suivant <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -656,7 +661,7 @@
                         <div class="row g-3 mt-1">
                             <div class="col-md-6">
                                 <label class="lbl">Opérateur <span class="req">*</span></label>
-                                <select name="operateur" id="inp-operateur" class="inp">
+                                <select name="operateur" id="inp-operateur" class="inp" onchange="updateStep4Button()">
                                     <option value="">-- Choisir --</option>
                                     <option value="orange">Orange Money</option>
                                     <option value="moov">Moov Money</option>
@@ -665,7 +670,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="lbl">Numéro de téléphone / Référence <span class="req">*</span></label>
-                                <input type="text" name="numeroTransaction" id="inp-transaction" class="inp" placeholder="Ex: 70 12 34 56 ou TXN123456789">
+                                <input type="text" name="numeroTransaction" id="inp-transaction" class="inp" placeholder="Ex: 70 12 34 56 ou TXN123456789" oninput="updateStep4Button()">
                                 <span style="font-size:.65rem;color:var(--color-gray-500);margin-top:4px;display:block;"><i class="bi bi-info-circle"></i> Saisissez le numéro de téléphone utilisé pour le paiement, ou la référence de transaction</span>
                             </div>
                         </div>
@@ -692,7 +697,7 @@
                         <div class="row g-3 mt-1">
                             <div class="col-md-6">
                                 <label class="lbl">Référence du virement <span class="req">*</span></label>
-                                <input type="text" name="referenceVirement" id="inp-virement" class="inp" placeholder="Ex: VIR-2026-00123">
+                                <input type="text" name="referenceVirement" id="inp-virement" class="inp" placeholder="Ex: VIR-2026-00123" oninput="updateStep4Button()">
                             </div>
                             <div class="col-md-6">
                                 <label class="lbl">Date du virement</label>
@@ -708,7 +713,7 @@
 
                     <div class="btn-wrapper">
                         <button type="button" class="btn-prev" onclick="goToStep(3)"><i class="bi bi-arrow-left"></i> Précédent</button>
-                        <button type="button" class="btn-next" onclick="goToStep(5)">Suivant <i class="bi bi-arrow-right"></i></button>
+                        <button type="button" class="btn-next" id="btn-next-4" onclick="goToStep(5)" disabled>Suivant <i class="bi bi-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -805,6 +810,7 @@ function syncDateNaissance() {
     const m = document.getElementById('inp-ddn-mois').value;
     const a = document.getElementById('inp-ddn-annee').value;
     document.getElementById('inp-ddn').value = (j && m && a) ? `${a}-${m}-${j}` : '';
+    updateStep1Button();
 }
 document.addEventListener('DOMContentLoaded', function () {
     ['inp-ddn-jour','inp-ddn-mois','inp-ddn-annee'].forEach(id => {
@@ -820,7 +826,75 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('confirmCheck').addEventListener('change', function () {
         document.getElementById('btn-submit-final').disabled = !this.checked;
     });
+
+    // État initial des boutons "Suivant" (utile après un retour d'erreur serveur avec old())
+    updateStep1Button();
+    updateStep2Button();
+    updateStep3Button();
+    updateStep4Button();
 });
+
+// ── Validation temps réel — boutons "Suivant" grisés tant que l'étape n'est pas complète ──
+function step1Valid() {
+    const nom    = document.getElementById('inp-nom').value.trim();
+    const prenom = document.getElementById('inp-prenom').value.trim();
+    const lieu   = document.getElementById('inp-lieu').value.trim();
+    const tel    = document.getElementById('inp-tel').value.trim();
+    const ddn      = document.getElementById('inp-ddn').value;
+    const ddnJour  = document.getElementById('inp-ddn-jour').value;
+    const ddnMois  = document.getElementById('inp-ddn-mois').value;
+    const ddnAnnee = document.getElementById('inp-ddn-annee').value;
+
+    if (!nom || !prenom || !lieu || !tel) return false;
+    if (!ddnJour || !ddnMois || !ddnAnnee) return false;
+    if (calculerAge(ddn) < 21) return false;
+    if (/\d/.test(lieu)) return false;
+    if (/[a-zA-Z]/.test(tel)) return false;
+    return true;
+}
+function updateStep1Button() {
+    const btn = document.getElementById('btn-next-1');
+    if (btn) btn.disabled = !step1Valid();
+}
+
+function step2Valid() {
+    return !!document.getElementById('inp-cat').value;
+}
+function updateStep2Button() {
+    const btn = document.getElementById('btn-next-2');
+    if (btn) btn.disabled = !step2Valid();
+}
+
+function step3Valid() {
+    const required = ['file-cnib','file-photo','file-certif','file-acte'];
+    return required.every(id => {
+        const el = document.getElementById(id);
+        return el && el.files && el.files.length > 0;
+    });
+}
+function updateStep3Button() {
+    const btn = document.getElementById('btn-next-3');
+    if (btn) btn.disabled = !step3Valid();
+}
+
+function step4Valid() {
+    if (!modeSelectionne) return false;
+    if (!document.getElementById('inp-montant').value) return false;
+    if (modeSelectionne === 'mobile') {
+        const op = document.getElementById('inp-operateur').value;
+        const tx = document.getElementById('inp-transaction').value.trim();
+        if (!op || !tx) return false;
+    }
+    if (modeSelectionne === 'virement') {
+        const ref = document.getElementById('inp-virement').value.trim();
+        if (!ref) return false;
+    }
+    return true;
+}
+function updateStep4Button() {
+    const btn = document.getElementById('btn-next-4');
+    if (btn) btn.disabled = !step4Valid();
+}
 
 // ── Upload fichiers ─────────────────────────────────────────────
 function handleFileChange(input, cardId, nameId) {
@@ -833,7 +907,7 @@ function handleFileChange(input, cardId, nameId) {
             input.value = '';
             card.classList.remove('has-file'); card.classList.add('has-error');
             nameSpan.textContent = '';
-            updateFileCounter(); return;
+            updateFileCounter(); updateStep3Button(); return;
         }
         card.classList.add('has-file'); card.classList.remove('has-error','required-doc');
         nameSpan.textContent = file.name;
@@ -842,6 +916,7 @@ function handleFileChange(input, cardId, nameId) {
         nameSpan.textContent = '';
     }
     updateFileCounter();
+    updateStep3Button();
 }
 function updateFileCounter() {
     const required = ['file-cnib','file-photo','file-certif','file-acte'];
@@ -862,6 +937,7 @@ function selectMode(mode) {
     document.getElementById('inp-montant').value = '';
     document.getElementById('inp-tranche').value = '';
     document.querySelectorAll('.tranche-btn').forEach(b => b.classList.remove('selected'));
+    updateStep4Button();
 }
 
 function selectTranche(btn, tranche, montant) {
@@ -870,6 +946,7 @@ function selectTranche(btn, tranche, montant) {
     btn.classList.add('selected');
     document.getElementById('inp-montant').value = montant;
     document.getElementById('inp-tranche').value = tranche;
+    updateStep4Button();
 }
 
 // ── Utilitaires ──────────────────────────────────────────────────

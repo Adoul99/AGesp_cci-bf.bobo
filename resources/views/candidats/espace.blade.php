@@ -169,9 +169,10 @@
         padding: 4px 12px; border-radius: 20px;
         font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .72rem;
     }
-    .badge-attente  { background: var(--op); color: var(--o); }
-    .badge-accepte  { background: var(--vp); color: var(--v); }
-    .badge-refuse   { background: var(--rp); color: var(--r); }
+    .badge-attente   { background: var(--op); color: var(--o); }
+    .badge-accepte   { background: var(--vp); color: var(--v); }
+    .badge-refuse    { background: var(--rp); color: var(--r); }
+    .badge-partielle { background: var(--op); color: var(--o); }
     .badge-actif    { background: var(--vp); color: var(--v); }
     .badge-info     { background: #eff6ff; color: #2563eb; }
 
@@ -181,13 +182,15 @@
         margin-bottom: 16px; border: 2px solid;
         display: flex; align-items: flex-start; gap: 20px;
     }
-    .statut-card.attente { background: var(--op); border-color: var(--o); }
-    .statut-card.accepte { background: var(--vp); border-color: var(--v); }
-    .statut-card.refuse  { background: var(--rp); border-color: var(--r); }
+    .statut-card.attente   { background: var(--op); border-color: var(--o); }
+    .statut-card.accepte   { background: var(--vp); border-color: var(--v); }
+    .statut-card.refuse    { background: var(--rp); border-color: var(--r); }
+    .statut-card.partielle { background: var(--op); border-color: var(--o); }
     .statut-icon { font-size: 2.5rem; flex-shrink: 0; }
-    .statut-card.attente .statut-icon { color: var(--o); }
-    .statut-card.accepte .statut-icon { color: var(--v); }
-    .statut-card.refuse  .statut-icon { color: var(--r); }
+    .statut-card.attente   .statut-icon { color: var(--o); }
+    .statut-card.accepte   .statut-icon { color: var(--v); }
+    .statut-card.refuse    .statut-icon { color: var(--r); }
+    .statut-card.partielle .statut-icon { color: var(--o); }
     .statut-title {
         font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.15rem;
         margin-bottom: 6px;
@@ -399,26 +402,55 @@
 
         @if($inscription)
             @php
+                // ── Statut du dossier (pièces jointes) ──
+                // Calculé EN PREMIER car il conditionne le statut affiché de
+                // l'inscription : un dossier rejeté ne doit jamais laisser
+                // apparaître l'inscription comme "acceptée".
+                $statutDoss = $dossier?->statutDossier ?? 'en_attente';
+                $cssDoss = match($statutDoss) {
+                    'valide'           => 'accepte',
+                    'rejete', 'rejeté' => 'refuse',
+                    default            => 'attente',
+                };
+                $dossierRejete = (bool) $dossier && $cssDoss === 'refuse';
+                $dossierValide = (bool) $dossier && $cssDoss === 'accepte';
+
+                // ── Statut de l'inscription ──
                 $statut = $inscription->statutInscription ?? 'en_attente';
-                $cssStatut = match($statut) {
-                    'actif', 'accepte', 'acceptée' => 'accepte',
-                    'refuse', 'refusé', 'rejeté'   => 'refuse',
-                    default                          => 'attente',
+                $cssStatut = match(true) {
+                    // Pièces du dossier rejetées → l'inscription devient
+                    // automatiquement PARTIELLE, quel que soit statutInscription en base.
+                    $dossierRejete => 'partielle',
+                    // Pièces du dossier validées → l'inscription se présente
+                    // automatiquement comme ACCEPTÉE, même si statutInscription
+                    // n'a pas encore été basculé à "actif" en base.
+                    $dossierValide => 'accepte',
+                    in_array($statut, ['actif', 'accepte', 'acceptée']) => 'accepte',
+                    in_array($statut, ['refuse', 'refusé', 'rejeté'])   => 'refuse',
+                    default => 'attente',
                 };
                 $iconStatut = match($cssStatut) {
-                    'accepte' => 'bi-check-circle-fill',
-                    'refuse'  => 'bi-x-circle-fill',
-                    default   => 'bi-hourglass-split',
+                    'accepte'   => 'bi-check-circle-fill',
+                    'refuse'    => 'bi-x-circle-fill',
+                    'partielle' => 'bi-exclamation-diamond-fill',
+                    default     => 'bi-hourglass-split',
                 };
                 $titreStatut = match($cssStatut) {
-                    'accepte' => 'Votre inscription est acceptée !',
-                    'refuse'  => 'Votre inscription a été refusée.',
-                    default   => 'Votre inscription est en cours de traitement.',
+                    'accepte'   => 'Votre inscription est acceptée !',
+                    'refuse'    => 'Votre inscription a été refusée.',
+                    'partielle' => 'Votre inscription est partielle — pièces à corriger.',
+                    default     => 'Votre inscription est en cours de traitement.',
                 };
                 $descStatut = match($cssStatut) {
-                    'accepte' => 'Félicitations ! Votre dossier a été validé. Vous pouvez vous présenter à l\'auto-école avec votre récépissé.',
-                    'refuse'  => 'Votre dossier a été refusé. Veuillez contacter l\'administration pour plus d\'informations.',
-                    default   => 'Votre dossier est en cours de vérification par l\'administration. Vous serez notifié dès qu\'une décision sera prise.',
+                    'accepte'   => 'Félicitations ! Votre dossier a été validé. Vous pouvez vous présenter à l\'auto-école avec votre récépissé.',
+                    'refuse'    => 'Votre dossier a été refusé. Veuillez contacter l\'administration pour plus d\'informations.',
+                    'partielle' => 'Votre inscription est bien enregistrée, mais certaines pièces de votre dossier ont été rejetées. Votre admission ne sera définitive qu\'après correction de ces pièces.',
+                    default     => 'Votre dossier est en cours de vérification par l\'administration. Vous serez notifié dès qu\'une décision sera prise.',
+                };
+                $statutAffiche = match($cssStatut) {
+                    'partielle' => 'PARTIELLE',
+                    'accepte'   => 'ACTIF',
+                    default     => strtoupper($statut),
                 };
             @endphp
 
@@ -429,9 +461,9 @@
                     <div class="statut-title">{{ $titreStatut }}</div>
                     <div class="statut-desc">{{ $descStatut }}</div>
                     <div style="margin-top:10px;">
-                        <span class="badge badge-{{ $cssStatut === 'attente' ? 'attente' : ($cssStatut === 'accepte' ? 'accepte' : 'refuse') }}">
+                        <span class="badge badge-{{ $cssStatut }}">
                             <i class="bi {{ $iconStatut }}"></i>
-                            INSCRIPTION : {{ strtoupper($statut) }}
+                            INSCRIPTION : {{ $statutAffiche }}
                         </span>
                         <span style="font-size:.75rem;color:var(--sub);margin-left:10px;">
                             Catégorie : <strong>{{ $inscription->categoriePermis->nomCategorie ?? '—' }}</strong>
@@ -443,12 +475,6 @@
             {{-- ── CARTE STATUT DOSSIER (PIÈCES JOINTES) ── --}}
             @if($dossier)
                 @php
-                    $statutDoss = $dossier->statutDossier ?? 'en_attente';
-                    $cssDoss = match($statutDoss) {
-                        'valide'           => 'accepte',
-                        'rejete', 'rejeté' => 'refuse',
-                        default            => 'attente',
-                    };
                     $iconDoss = match($cssDoss) {
                         'accepte' => 'bi-folder-check',
                         'refuse'  => 'bi-folder-x',
@@ -645,7 +671,7 @@
                         <span class="info-label">Statut</span>
                         <span class="info-val">
                             <span class="badge badge-{{ $cssStatut ?? 'attente' }}">
-                                {{ strtoupper($inscription->statutInscription ?? 'en_attente') }}
+                                {{ $statutAffiche ?? strtoupper($inscription->statutInscription ?? 'en_attente') }}
                             </span>
                         </span>
                     </div>

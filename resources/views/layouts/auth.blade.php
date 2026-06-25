@@ -391,6 +391,15 @@
         box-shadow: 0 6px 20px rgba(26,107,58,.38);
         transform : translateY(-1px);
     }
+    .btn:disabled,
+    .btn:disabled:hover {
+        background : var(--brd) !important;
+        color       : var(--sub) !important;
+        box-shadow  : none !important;
+        cursor      : not-allowed !important;
+        transform   : none !important;
+        opacity     : .85;
+    }
     .btn-danger {
         background: linear-gradient(135deg, var(--r) 0%, var(--rd) 100%);
         color     : white;

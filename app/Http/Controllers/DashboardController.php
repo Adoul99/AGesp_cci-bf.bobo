@@ -3,68 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidat;
-use App\Models\Evaluation;
 use App\Models\Inscription;
-use App\Models\Paiement;
-use App\Models\Formation;
-use App\Models\SessionFormation;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // ── Total candidats ──
         $totalCandidats = Candidat::count();
 
-        // ── Répartition par étape ──
-        // Inscrits = tous les candidats du système
-        $candidatsInscrits  = $totalCandidats;
+        $statsD = $this->statsParCategorie('D');
+        $statsE = $this->statsParCategorie('E');
 
-        // Code = candidats ayant réussi le code
-        $candidatsCode      = Candidat::where('statut', 'code_admis')->count();
-
-        // Créneau = candidats en session créneau
-        $candidatsCreneau   = Candidat::where('statut', 'creneau')->count();
-
-        // Conduite en ville = candidats ajourné (en attente ou échec conduite)
-        $candidatsConduite  = Candidat::where('statut', 'ajourne')->count();
-
-        // Admis = permis obtenu
-        $candidatsAdmis     = Candidat::where('statut', 'admis')->count();
-
-        $candidatsAjournes  = Candidat::where('statut', 'ajourne')->count();
-
-        // ── Candidats ayant au moins une session formation ──
-        $candidatsEnSession = Candidat::whereHas('sessions')->count();
-
-        // ── Sessions ouvertes par type ──
-        $sessionsOuvertes = SessionFormation::with('typeSession')
-            ->where('statutSession', 'ouvert')
-            ->get();
-
-        $sessionCodeOuverte     = $sessionsOuvertes->first(fn($s) => $s->typeSession?->type === 'code');
-        $sessionCreneauOuverte  = $sessionsOuvertes->first(fn($s) => $s->typeSession?->type === 'creneau');
-        $sessionConduiteOuverte = $sessionsOuvertes->first(fn($s) => $s->typeSession?->type === 'conduite');
-
-        // ── Dernières inscriptions ──
-        $derniereInscriptions = Inscription::with('candidat')
-            ->orderBy('dateInscription', 'desc')
-            ->limit(5)
-            ->get();
-
-        // ── Paiements récents ──
-        $paiementsRecents = Paiement::with('candidat')
-            ->orderBy('datePaiement', 'desc')
-            ->limit(5)
-            ->get();
-
-        // ── Autres stats ──
-        $inscriptionsActives = Inscription::where('statutInscription', 'actif')->count();
-        $paiementsEffectues  = Paiement::where('statut', 'paye')->count();
-        $formationsEnCours   = Formation::count();
-        $moyenneNotes        = round(Evaluation::whereNotNull('note')->avg('note') ?? 0, 2);
-
-        // ── Répartition par catégorie de permis ──
         $repartitionPermis = Inscription::selectRaw('
                 COALESCE(categorie_permis.nomCategorie, "Non renseigné") AS categorie,
                 COUNT(*) AS total
@@ -75,24 +24,28 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'totalCandidats',
-            'inscriptionsActives',
-            'paiementsEffectues',
-            'formationsEnCours',
-            'derniereInscriptions',
-            'paiementsRecents',
-            'moyenneNotes',
-            'candidatsInscrits',
-            'candidatsCode',
-            'candidatsCreneau',
-            'candidatsConduite',
-            'candidatsAdmis',
-            'candidatsAjournes',
-            'candidatsEnSession',
-            'sessionsOuvertes',
-            'sessionCodeOuverte',
-            'sessionCreneauOuverte',
-            'sessionConduiteOuverte',
+            'statsD',
+            'statsE',
             'repartitionPermis'
         ));
+    }
+
+    private function statsParCategorie(string $nomCategorie): array
+    {
+        $candidatIds = Inscription::whereHas('categoriePermis', function ($q) use ($nomCategorie) {
+                $q->where('nomCategorie', $nomCategorie);
+            })
+            ->pluck('candidat_id')
+            ->unique();
+
+        $base = Candidat::whereIn('id', $candidatIds);
+
+        return [
+            'inscrits' => (clone $base)->count(),
+            'code'     => (clone $base)->where('statut', 'code_admis')->count(),
+            'creneau'  => (clone $base)->where('statut', 'creneau')->count(),
+            'conduite' => (clone $base)->where('statut', 'ajourne')->count(),
+            'admis'    => (clone $base)->where('statut', 'admis')->count(),
+        ];
     }
 }

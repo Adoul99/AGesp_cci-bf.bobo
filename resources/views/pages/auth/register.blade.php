@@ -60,7 +60,8 @@
                 @else
                     <input type="text" id="r-nom" class="inp"
                            placeholder="Nom de famille"
-                           value="{{ old('name','') }}" autocomplete="off">
+                           value="{{ old('name','') }}" autocomplete="off"
+                           oninput="updateStep1Button()">
                 @endauth
             </div>
         </div>
@@ -84,7 +85,8 @@
                 @else
                     <input type="text" id="r-prenom" class="inp"
                            placeholder="Prénom"
-                           value="{{ old('prenom','') }}" autocomplete="off">
+                           value="{{ old('prenom','') }}" autocomplete="off"
+                           oninput="updateStep1Button()">
                 @endauth
             </div>
         </div>
@@ -122,7 +124,8 @@
             @else
                 <input type="email" id="r-email" class="inp"
                        placeholder="votre@email.com"
-                       value="{{ old('email','') }}">
+                       value="{{ old('email','') }}"
+                       oninput="updateStep1Button()">
             @endauth
         </div>
     </div>
@@ -156,13 +159,13 @@
                     <input type="tel" id="r-tel" class="inp"
                            placeholder="XX XX XX XX" maxlength="8"
                            value="{{ old('telephone','') }}"
-                           oninput="this.value=this.value.replace(/\D/g,'')">
+                           oninput="this.value=this.value.replace(/\D/g,'');updateStep1Button()">
                 @endif
             @else
                 <input type="tel" id="r-tel" class="inp"
                        placeholder="XX XX XX XX" maxlength="8"
                        value="{{ old('telephone','') }}"
-                       oninput="this.value=this.value.replace(/\D/g,'')">
+                       oninput="this.value=this.value.replace(/\D/g,'');updateStep1Button()">
             @endauth
         </div>
         <span style="font-size:.68rem;color:#6b7a70;margin-top:4px;display:block;">
@@ -171,37 +174,35 @@
     </div>
 
     {{-- Mot de passe --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="fg" style="margin-bottom:0;">
-            <label>Mot de passe <span class="req">*</span></label>
-            <div class="inp-wrap">
-                <i class="bi bi-lock inp-ico"></i>
-                <input type="password" id="r-pwd" class="inp"
-                       placeholder="Min. 8 caractères"
-                       oninput="pwdStrength(this.value)">
-                <button type="button" class="inp-eye" onclick="togglePwd('r-pwd','eye1')" tabindex="-1">
-                    <i class="bi bi-eye" id="eye1"></i>
-                </button>
-            </div>
-            <div class="pwd-bar-wrap" id="pwd-bar-wrap" style="display:none;">
-                <div class="pwd-bar"><div class="pwd-fill" id="pwd-fill"></div></div>
-                <span class="pwd-text" id="pwd-text"></span>
-            </div>
+    <div class="fg">
+        <label>Mot de passe <span class="req">*</span></label>
+        <div class="inp-wrap">
+            <i class="bi bi-lock inp-ico"></i>
+            <input type="password" id="r-pwd" class="inp"
+                   placeholder="Min. 8 caractères"
+                   oninput="pwdStrength(this.value); updateStep1Button()">
+            <button type="button" class="inp-eye" onclick="togglePwd('r-pwd','eye1')" tabindex="-1">
+                <i class="bi bi-eye" id="eye1"></i>
+            </button>
         </div>
-        <div class="fg" style="margin-bottom:0;">
-            <label>Confirmer <span class="req">*</span></label>
-            <div class="inp-wrap">
-                <i class="bi bi-lock inp-ico"></i>
-                <input type="password" id="r-pwd2" class="inp" placeholder="Répéter">
-                <button type="button" class="inp-eye" onclick="togglePwd('r-pwd2','eye2')" tabindex="-1">
-                    <i class="bi bi-eye" id="eye2"></i>
-                </button>
-            </div>
+        <div class="pwd-bar-wrap" id="pwd-bar-wrap" style="display:none;">
+            <div class="pwd-bar"><div class="pwd-fill" id="pwd-fill"></div></div>
+            <span class="pwd-text" id="pwd-text"></span>
+        </div>
+    </div>
+    <div class="fg">
+        <label>Confirmer <span class="req">*</span></label>
+        <div class="inp-wrap">
+            <i class="bi bi-lock inp-ico"></i>
+            <input type="password" id="r-pwd2" class="inp" placeholder="Répéter" oninput="updateStep1Button()">
+            <button type="button" class="inp-eye" onclick="togglePwd('r-pwd2','eye2')" tabindex="-1">
+                <i class="bi bi-eye" id="eye2"></i>
+            </button>
         </div>
     </div>
 
     <div style="margin-top:20px;">
-        <button type="button" class="btn btn-primary" onclick="toStep2()">
+        <button type="button" class="btn btn-primary" id="step1-next-btn" onclick="toStep2()" disabled>
             Suivant — Vérifier mon email <i class="bi bi-arrow-right"></i>
         </button>
     </div>
@@ -249,7 +250,7 @@
         <button type="button" class="btn btn-ghost" style="flex:1;" onclick="toStep1()">
             <i class="bi bi-arrow-left"></i> Précédent
         </button>
-        <button type="button" class="btn btn-primary" style="flex:2;" onclick="verifyOtp()">
+        <button type="button" class="btn btn-primary" style="flex:2;" id="step2-next-btn" onclick="verifyOtp()" disabled>
             <i class="bi bi-shield-check"></i> Vérifier et créer le compte
         </button>
     </div>
@@ -307,6 +308,11 @@
 
 @push('scripts')
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    updateStep1Button();
+    updateStep2Button();
+});
+
 function togglePwd(id, ico) {
     const f = document.getElementById(id), i = document.getElementById(ico);
     f.type = f.type === 'password' ? 'text' : 'password';
@@ -343,7 +349,29 @@ function pwdStrength(v) {
 
 function show(id) { document.getElementById(id).style.display = 'block'; }
 function hide(id) { document.getElementById(id).style.display = 'none'; }
-function toStep1() { hide('reg-step2'); show('reg-step1'); window.scrollTo({top:0}); }
+function toStep1() { hide('reg-step2'); show('reg-step1'); updateStep1Button(); window.scrollTo({top:0}); }
+
+// ── Active/désactive le bouton "Suivant" de l'étape 1 tant que tous les champs requis ne sont pas valides ──
+function step1IsValid() {
+    const nom   = document.getElementById('r-nom').value.trim();
+    const prn   = document.getElementById('r-prenom').value.trim();
+    const email = document.getElementById('r-email').value.trim();
+    const tel   = document.getElementById('r-tel').value.trim();
+    const pwd   = document.getElementById('r-pwd').value;
+    const pwd2  = document.getElementById('r-pwd2').value;
+
+    return !!nom
+        && !!prn
+        && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+        && tel.length >= 8
+        && pwd.length >= 8
+        && pwd2.length > 0
+        && pwd === pwd2;
+}
+function updateStep1Button() {
+    const btn = document.getElementById('step1-next-btn');
+    if (btn) btn.disabled = !step1IsValid();
+}
 
 function toStep2() {
     hideErr('js-err');
@@ -414,6 +442,11 @@ function syncOtp() {
     let c = '';
     for (let i=1; i<=6; i++) c += document.getElementById('d'+i).value;
     document.getElementById('otp-hidden').value = c;
+    updateStep2Button();
+}
+function updateStep2Button() {
+    const btn = document.getElementById('step2-next-btn');
+    if (btn) btn.disabled = document.getElementById('otp-hidden').value.length < 6;
 }
 
 function verifyOtp() {
@@ -498,6 +531,7 @@ function resend() {
                 const d = document.getElementById('d'+i);
                 d.value = ''; d.classList.remove('filled');
             });
+            syncOtp();
             document.getElementById('d1').focus();
         } else {
             showErr('js-err2','js-err2-msg', data.message || 'Erreur lors du renvoi.');
