@@ -23,7 +23,6 @@
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'Source Sans 3',sans-serif; background:#f3f6f4; color:var(--dk); font-size:14px; }
 
-    /* ══ BARRE TRICOLORE TOP ══ */
     .tricolor {
         height    : 5px;
         background: linear-gradient(90deg,
@@ -32,7 +31,6 @@
             var(--v) 66%,var(--v) 100%);
     }
 
-    /* ══ HEADER BANNER ══ */
     .site-header {
         background: linear-gradient(135deg, #0a1f0f 0%, var(--v) 50%, #0f2e1c 100%);
         padding   : 0;
@@ -101,7 +99,6 @@
         letter-spacing: 0.05em;
     }
 
-    /* Header image droite */
     .header-image {
         display      : flex;
         gap          : 6px;
@@ -123,7 +120,6 @@
         border       : 1px solid rgba(255,255,255,0.1);
     }
 
-    /* Slogan sous header */
     .site-slogan {
         background   : linear-gradient(90deg, var(--r), #8b1a12);
         color        : white;
@@ -137,7 +133,6 @@
 
     .site-slogan span { color:var(--o); }
 
-    /* ══ NAVBAR ══ */
     .site-nav {
         background   : var(--v);
         padding      : 0 30px;
@@ -195,7 +190,6 @@
         transform : translateY(-1px);
     }
 
-    /* ══ CONTENU PRINCIPAL ══ */
     .site-body {
         max-width: 1200px;
         margin   : 0 auto;
@@ -206,7 +200,6 @@
         align-items: start;
     }
 
-    /* ── COLONNE GAUCHE ── */
     .col-left { display:flex; flex-direction:column; gap:12px; }
 
     .side-card {
@@ -264,7 +257,6 @@
     .side-link-item:hover { color:var(--v); }
     .side-link-item i { color:var(--v); font-size:0.75rem; }
 
-    /* ── COLONNE CENTRALE ── */
     .col-center { display:flex; flex-direction:column; gap:14px; }
 
     .main-card {
@@ -303,7 +295,6 @@
         font-weight: 700;
     }
 
-    /* Modules grid */
     .modules-grid {
         display              : grid;
         grid-template-columns: repeat(3, 1fr);
@@ -342,10 +333,8 @@
         font-size  : 0.72rem;
     }
 
-    /* ── COLONNE DROITE ── */
     .col-right { display:flex; flex-direction:column; gap:12px; }
 
-    /* Formulaire connexion */
     .login-card {
         background   : white;
         border-radius: 8px;
@@ -415,7 +404,6 @@
 
     .btn-connexion:hover { background:var(--vc); }
 
-    /* ══ FOOTER ══ */
     .site-footer {
         background : var(--dk);
         color      : rgba(255,255,255,0.6);
@@ -442,13 +430,9 @@
 {{-- ══ HEADER ══ --}}
 <div class="site-header">
     <div class="header-inner">
-        {{-- Logo --}}
         <div class="header-logo">
             <div class="logo-img-box">
                 @if(file_exists(public_path('images/logo.jpeg')))
-                    <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CCI-BF"
-                         onerror="this.style.display='none'">
-                @elseif(file_exists(public_path('images/logo.jpeg')))
                     <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CCI-BF"
                          onerror="this.style.display='none'">
                 @else
@@ -464,7 +448,6 @@
             </div>
         </div>
 
-        {{-- Tuiles image droite --}}
         <div class="header-image">
             <div class="header-img-tile">🚗</div>
             <div class="header-img-tile">📋</div>
@@ -472,7 +455,6 @@
         </div>
     </div>
 
-    {{-- Slogan --}}
     <div class="site-slogan">
         Plateforme de Gestion — <span>Auto-École GESP</span> — Formation · Examens · Certification
     </div>
@@ -495,13 +477,13 @@
         </a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-    <a href="{{ route('register') }}" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--o);color:var(--dk);text-decoration:none;font-size:0.82rem;font-weight:700;font-family:'Nunito',sans-serif;border-radius:5px;transition:all 0.2s;white-space:nowrap;">
-        <i class="bi bi-pencil-square"></i> S'inscrire
-    </a>
-    <a href="{{ route('login') }}" class="nav-connexion">
-        <i class="bi bi-person-circle"></i> Connexion
-    </a>
-</div>
+        <a href="{{ route('register') }}" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--o);color:var(--dk);text-decoration:none;font-size:0.82rem;font-weight:700;font-family:'Nunito',sans-serif;border-radius:5px;transition:all 0.2s;white-space:nowrap;">
+            <i class="bi bi-pencil-square"></i> S'inscrire
+        </a>
+        <a href="{{ route('login') }}" class="nav-connexion">
+            <i class="bi bi-person-circle"></i> Connexion
+        </a>
+    </div>
 </div>
 
 {{-- ══ CORPS ══ --}}
@@ -518,19 +500,19 @@
             <div class="side-card-body">
                 <div class="side-stat-item">
                     <span>Candidats inscrits</span>
-                    <span class="side-stat-val">—</span>
+                    <span class="side-stat-val">{{ $totalCandidats }}</span>
                 </div>
                 <div class="side-stat-item">
                     <span>Examens ce mois</span>
-                    <span class="side-stat-val">—</span>
+                    <span class="side-stat-val">{{ $examensThisMois }}</span>
                 </div>
                 <div class="side-stat-item">
                     <span>Formations actives</span>
-                    <span class="side-stat-val">—</span>
+                    <span class="side-stat-val">{{ $formationsActives }}</span>
                 </div>
                 <div class="side-stat-item">
                     <span>Moniteurs</span>
-                    <span class="side-stat-val">—</span>
+                    <span class="side-stat-val">{{ $totalMoniteurs }}</span>
                 </div>
             </div>
         </div>

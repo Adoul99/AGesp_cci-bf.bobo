@@ -20,7 +20,6 @@ use App\Http\Controllers\SessionFormationController;
 use App\Http\Controllers\TypeSessionController;
 use App\Http\Controllers\Auth\VerificationCodeController;
 use App\Http\Controllers\EspaceCandidatController;
-
 use App\Http\Controllers\UserController;
 
 // ══════════════════════════════════════════════════════════════
@@ -36,7 +35,20 @@ Route::get('/', function () {
             return redirect()->route('dashboard');
         }
     }
-    return view('welcome');
+
+    $totalCandidats    = \App\Models\Candidat::count();
+    $totalMoniteurs    = \App\Models\Moniteur::count();
+    $formationsActives = \App\Models\SessionFormation::count();
+    $examensThisMois   = \App\Models\SessionFormation::whereMonth('created_at', now()->month)
+                            ->whereYear('created_at', now()->year)
+                            ->count();
+
+    return view('welcome', compact(
+        'totalCandidats',
+        'totalMoniteurs',
+        'formationsActives',
+        'examensThisMois'
+    ));
 })->name('home');
 
 // ══════════════════════════════════════════════════════════════
@@ -122,8 +134,8 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::resource('attestations',       AttestationController::class);
 
     // ── Catégories de permis ─────────────────────────────────
-   Route::resource('categorie_permis', CategoriePermisController::class)
-     ->parameters(['categorie_permis' => 'categoriePermis']);
+    Route::resource('categorie_permis', CategoriePermisController::class)
+         ->parameters(['categorie_permis' => 'categoriePermis']);
 
     // ── Évaluations ──────────────────────────────────────────
     Route::get('evaluations/rapport', [EvaluationController::class, 'report'])
@@ -137,8 +149,6 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::resource('lieu_formations',    LieuFormationController::class);
 
     // ── Programmations ───────────────────────────────────────
-    // IMPORTANT : routes spécifiques déclarées AVANT le resource()
-    // pour éviter que 'rechercher-candidat' soit interprété comme un {programmation} id
     Route::get('programmations/candidats-par-type/{typeSession}', [ProgrammationController::class, 'candidatsParType'])
          ->name('programmations.candidats-par-type');
 
