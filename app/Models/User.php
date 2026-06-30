@@ -62,4 +62,17 @@ class User extends Authenticatable
     {
         return $this->role === 'candidat';
     }
+
+    public function isMoniteur(): bool
+    {
+        return $this->role === 'moniteur';
+    }
+
+    /**
+     * Fiche Moniteur liée à ce compte utilisateur (si le rôle est moniteur)
+     */
+    public function moniteur()
+    {
+        return $this->hasOne(\App\Models\Moniteur::class);
+    }
 }

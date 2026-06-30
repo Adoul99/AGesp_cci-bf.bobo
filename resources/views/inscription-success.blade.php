@@ -116,7 +116,7 @@
     .recepisse-grid {
         display: grid;
         grid-template-columns: 240px 1fr;
-        row-gap: 16px; /* Réduit pour gagner de l'espace vertical */
+        row-gap: 16px;
         font-size: 1.15rem;
         margin-bottom: 30px;
         align-items: center;
@@ -137,7 +137,7 @@
         font-size: 0.82rem;
         border-top: 1px dashed #000;
         padding-top: 10px;
-        margin-bottom: 40px; /* Espace équilibré avant les signatures */
+        margin-bottom: 40px;
         line-height: 1.5;
         color: #111;
     }
@@ -153,7 +153,6 @@
     .steps-list li { font-size:0.82rem; color:var(--dk); padding:4px 0; display:flex; align-items:flex-start; gap:8px; }
     .steps-list li i { color:var(--v); flex-shrink:0; margin-top:2px; }
     
-    /* Boutons de navigation */
     .btn-group-responsive { display: flex; justify-content: center; gap: 10px; }
     .btn-home { background:var(--v); color:white; border:none; border-radius:8px; padding:11px 24px; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.88rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:background 0.18s; }
     .btn-home:hover { background:#22883f; color:white; }
@@ -165,11 +164,10 @@
     .footer { background:var(--dk); color:rgba(255,255,255,0.5); text-align:center; padding:15px; font-size:0.7rem; margin-top:30px; }
     .footer span { color:var(--o); }
     
-    /* CONFIGURATION STRICTE POUR L'IMPRESSION SUR UNE SEULE PAGE */
     @media print {
         @page {
             size: A4;
-            margin: 10mm 15mm; /* Marges de page optimisées */
+            margin: 10mm 15mm;
         }
         .header, .check-circle, h1, .success-card > p, .steps-list, .btn-group-responsive, .footer { display: none !important; }
         body { background: white; padding: 0; margin: 0; }
@@ -177,19 +175,19 @@
         .success-card { box-shadow: none; padding: 0; margin: 0; background: transparent; }
         
         .recepisse-officiel { 
-            border: 2px solid #000000; /* On garde la bordure à l'impression comme sur la photo */
+            border: 2px solid #000000;
             margin: 0; 
-            padding: 25px; /* Légèrement réduit à l'impression pour garantir le tient sur une page */
+            padding: 25px;
             width: 100%;
             box-sizing: border-box;
-            page-break-inside: avoid; /* Interdit au navigateur de couper ce bloc */
+            page-break-inside: avoid;
         }
         .recepisse-officiel::before { 
             opacity: 0.07; 
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact; 
         }
-        .recepisse-grid { row-gap: 12px; } /* Compacte les lignes uniquement à l'impression */
+        .recepisse-grid { row-gap: 12px; }
     }
 
     @media (max-width: 768px) {
@@ -283,11 +281,6 @@
 
                 <div class="recepisse-label">Catégorie sollicitée :</div>
                 <div class="recepisse-value highlight" style="color: var(--v);">{{ session('categorie_nom', '—') }}</div>
-
-                <div class="recepisse-label">Début de la formation :</div>
-                <div class="recepisse-value">
-                    {{ session('dataDebut_formation') ? \Carbon\Carbon::parse(session('dataDebut_formation'))->format('d/m/Y') : '—' }}
-                </div>
             </div>
 
             <div class="recepisse-nb">
