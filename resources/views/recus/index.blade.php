@@ -99,6 +99,8 @@
 
                     <td style="padding:0.875rem 1.25rem; text-align:center;" class="no-print">
                         <div style="display:flex; gap:0.4rem; justify-content:center;">
+                            <a href="{{ route('recus.show', $recu->id) }}"
+                               style="padding:0.4rem 0.7rem; background:rgba(252,209,22,0.15); color:#8a6900; border:1.5px solid var(--color-gold); border-radius:var(--radius-md); font-size:0.75rem; font-weight:600; text-decoration:none;" title="Voir / Imprimer PDF">🖨️</a>
                             <a href="{{ route('recus.edit', $recu->id) }}"
                                style="padding:0.4rem 0.85rem; background:rgba(0,122,94,0.1); color:var(--color-green); border:1.5px solid var(--color-green); border-radius:var(--radius-md); font-size:0.75rem; font-weight:600; text-decoration:none;" title="Modifier">✎</a>
                             <form method="POST" action="{{ route('recus.destroy', $recu->id) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce reçu ?');">

@@ -105,6 +105,10 @@ Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () 
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
          ->name('dashboard');
 
+    // ── Alertes ──────────────────────────────────────────────
+    Route::get('alertes', [App\Http\Controllers\AlerteController::class, 'index'])
+         ->name('alertes.index');
+
     // ── Formations ───────────────────────────────────────────
     Route::resource('formations',         FormationController::class);
 
@@ -143,10 +147,6 @@ Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () 
 // ESPACE ADMIN UNIQUEMENT
 // ══════════════════════════════════════════════════════════════
 Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
-
-    // ── Alertes ──────────────────────────────────────────────
-    Route::get('alertes', [App\Http\Controllers\AlerteController::class, 'index'])
-         ->name('alertes.index');
 
     // ── Gestion des utilisateurs & rôles ─────────────────────
     Route::get   ('users',             [UserController::class, 'index'])      ->name('users.index');

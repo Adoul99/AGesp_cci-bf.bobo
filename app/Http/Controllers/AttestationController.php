@@ -23,7 +23,7 @@ class AttestationController extends Controller
 
         $candidats = Candidat::where('statut', 'admis')
             ->whereNotIn('id', $candidatsAvecAttestation)
-            ->with(['evaluations.typeSession', 'sessions'])
+            ->with(['evaluations.typeSession', 'sessions', 'inscriptions.categoriePermis'])
             ->orderBy('nom')
             ->get();
 
@@ -32,7 +32,7 @@ class AttestationController extends Controller
         // Numéro pré-généré automatiquement
         $numeroAuto = Attestation::genererNumero();
 
-        // Suggestions de dates par candidat (auto-remplissage JS, modifiable)
+        // Suggestions de dates + catégorie par candidat (auto-remplissage JS, modifiable)
         $suggestions = $candidats->mapWithKeys(fn($c) => [$c->id => $this->calculerSuggestions($c)]);
 
         return view('attestations.create', compact('candidats', 'examens', 'numeroAuto', 'suggestions'));
@@ -83,7 +83,7 @@ class AttestationController extends Controller
             $q->where('statut', 'admis')
               ->whereNotIn('id', $candidatsAvecAttestation);
         })->orWhere('id', $attestation->candidat_id)
-          ->with(['evaluations.typeSession', 'sessions'])
+          ->with(['evaluations.typeSession', 'sessions', 'inscriptions.categoriePermis'])
           ->orderBy('nom')->get();
 
         $examens = Examen::orderBy('dateDebut', 'desc')->get();
@@ -128,7 +128,7 @@ class AttestationController extends Controller
     }
 
     /**
-     * Calcule des suggestions de dates pour un candidat (formation + admissions),
+     * Calcule des suggestions (dates + catégorie de permis) pour un candidat,
      * utilisées pour pré-remplir automatiquement le formulaire (reste modifiable).
      */
     private function calculerSuggestions(Candidat $candidat): array
@@ -149,6 +149,33 @@ class AttestationController extends Controller
             'dateAdmissionConduite' => $dateAdmissionConduite,
             'formationDateDebut'    => $formationDateDebut,
             'formationDateFin'      => $formationDateFin,
+            'categorieObtenue'      => $this->determinerCategorieObtenue($candidat),
         ];
+    }
+
+    /**
+     * Détermine la catégorie de permis (E ou D) du candidat à partir
+     * de sa dernière inscription (relation Inscription -> CategoriePermis).
+     */
+    private function determinerCategorieObtenue(Candidat $candidat): ?string
+    {
+        $inscription = $candidat->inscriptions->sortByDesc('id')->first();
+        $nomCategorie = $inscription?->categoriePermis?->nomCategorie;
+
+        if (!$nomCategorie) {
+            return null;
+        }
+
+        $nomCategorie = strtoupper($nomCategorie);
+
+        if (str_contains($nomCategorie, 'D')) {
+            return 'D';
+        }
+
+        if (str_contains($nomCategorie, 'E')) {
+            return 'E';
+        }
+
+        return null;
     }
 }

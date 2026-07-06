@@ -70,13 +70,14 @@
                                 data-formation-debut="{{ $sug['formationDateDebut'] ? \Carbon\Carbon::parse($sug['formationDateDebut'])->format('Y-m-d') : '' }}"
                                 data-formation-fin="{{ $sug['formationDateFin'] ? \Carbon\Carbon::parse($sug['formationDateFin'])->format('Y-m-d') : '' }}"
                                 data-admission-code="{{ $sug['dateAdmissionCode'] ? \Carbon\Carbon::parse($sug['dateAdmissionCode'])->format('Y-m-d') : '' }}"
-                                data-admission-conduite="{{ $sug['dateAdmissionConduite'] ? \Carbon\Carbon::parse($sug['dateAdmissionConduite'])->format('Y-m-d') : '' }}">
+                                data-admission-conduite="{{ $sug['dateAdmissionConduite'] ? \Carbon\Carbon::parse($sug['dateAdmissionConduite'])->format('Y-m-d') : '' }}"
+                                data-categorie="{{ $sug['categorieObtenue'] ?? '' }}">
                             🏆 {{ $c->nom }} {{ $c->prenom }}
                         </option>
                     @endforeach
                 </select>
                 @error('candidat_id')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
-                <div style="font-size:0.7rem; color:var(--color-gray-500); margin-top:0.3rem;">💡 Les dates ci-dessous se remplissent automatiquement — vérifiez et corrigez si besoin.</div>
+                <div style="font-size:0.7rem; color:var(--color-gray-500); margin-top:0.3rem;">💡 La catégorie et les dates ci-dessous se remplissent automatiquement — vérifiez et corrigez si besoin.</div>
             </div>
 
             {{-- Civilité --}}
@@ -95,8 +96,9 @@
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
                     Catégorie de Permis Obtenue <span style="color:var(--color-red);">*</span>
+                    <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
                 </label>
-                <select name="categorieObtenue" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; font-weight:700;">
+                <select name="categorieObtenue" id="categorieObtenue" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; font-weight:700;">
                     <option value="E" {{ old('categorieObtenue','E') == 'E' ? 'selected' : '' }}>Catégorie E</option>
                     <option value="D" {{ old('categorieObtenue') == 'D' ? 'selected' : '' }}>Catégorie D</option>
                 </select>
@@ -215,6 +217,12 @@ function appliquerSuggestions(select) {
     };
     for (const [id, val] of Object.entries(map)) {
         if (val) document.getElementById(id).value = val;
+    }
+
+    // Auto-remplissage de la catégorie de permis obtenue
+    const categorie = opt.dataset.categorie;
+    if (categorie) {
+        document.getElementById('categorieObtenue').value = categorie;
     }
 }
 </script>

@@ -75,14 +75,35 @@
 
     @media print {
         @page { size: A4; margin: 10mm 15mm; }
-        .header, .btn-group, .footer, .no-print { display:none !important; }
+
+        /* Masquer TOUT ce qui n'est pas le document officiel, y compris la bande tricolore */
+        .tricolor, .header, .btn-group, .footer, .no-print { display:none !important; }
+
         body { background:white; padding:0; margin:0; }
         .wrap { margin:0; padding:0; max-width:100%; width:100%; }
         .card { box-shadow:none; padding:0; margin:0; background:transparent; }
+
+        /* Compression du contenu pour tenir sur une seule page A4 */
         .attestation-officielle {
-            border:1.5px solid #000; margin:0; padding:45px 55px 35px; width:100%; box-sizing:border-box;
-            page-break-inside: avoid;
+            border:1.5px solid #000; margin:0; padding:22px 40px 18px; width:100%; box-sizing:border-box;
         }
+        .att-letterhead { margin-bottom:18px; }
+        .att-letterhead .lh-line { font-size:0.85rem; padding-bottom:2px; margin-bottom:8px; }
+
+        .att-title-box { margin:0 auto 20px; padding:9px 22px; font-size:0.95rem; }
+
+        .att-body { font-size:0.86rem; line-height:1.55; margin-bottom:16px; }
+
+        .att-table-intro { font-size:0.86rem; margin-bottom:8px; }
+        .att-table { margin-bottom:18px; }
+        .att-table th, .att-table td { padding:6px 12px; font-size:0.76rem; }
+
+        .att-closing { font-size:0.86rem; line-height:1.5; margin-bottom:22px; }
+
+        .att-signature-block { font-size:0.82rem; line-height:1.6; }
+
+        /* Référence document repositionnée en flux normal pour ne pas chevaucher */
+        .att-doc-ref { position:static; margin-top:14px; text-align:left; }
     }
     </style>
 </head>

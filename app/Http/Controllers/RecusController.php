@@ -47,19 +47,19 @@ class RecusController extends Controller
             ->with('success', '✅ Reçu créé avec succès.');
     }
 
-    public function show(Recus $recus)
+    public function show(Recus $recu)
     {
-        $recus->load('paiement.candidat');
-        return view('recus.show', compact('recus'));
+        $recu->load('paiement.candidat');
+        return view('recus.show', ['recus' => $recu]);
     }
 
-    public function edit(Recus $recus)
+    public function edit(Recus $recu)
     {
         $paiements = Paiement::with('candidat')->get();
-        return view('recus.edit', compact('recus', 'paiements'));
+        return view('recus.edit', ['recus' => $recu, 'paiements' => $paiements]);
     }
 
-    public function update(Request $request, Recus $recus)
+    public function update(Request $request, Recus $recu)
     {
         $request->validate([
             'montant'        => 'required|numeric|min:0',
@@ -68,7 +68,7 @@ class RecusController extends Controller
             'recus_paiement' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        $cheminFichier = $recus->recus_paiement; // garder l'ancien si pas de nouveau
+        $cheminFichier = $recu->recus_paiement; // garder l'ancien si pas de nouveau
         if ($request->hasFile('recus_paiement')) {
             // Supprimer l'ancien fichier si existant
             if ($cheminFichier && \Storage::disk('public')->exists($cheminFichier)) {
@@ -78,7 +78,7 @@ class RecusController extends Controller
                 ->store('recus_paiements', 'public');
         }
 
-        $recus->update([
+        $recu->update([
             'montant'        => $request->montant,
             'dateRecus'      => $request->dateRecus,
             'paiement_id'    => $request->paiement_id,
@@ -89,9 +89,9 @@ class RecusController extends Controller
             ->with('success', '✅ Reçu mis à jour.');
     }
 
-    public function destroy(Recus $recus)
+    public function destroy(Recus $recu)
     {
-        $recus->delete();
+        $recu->delete();
         return redirect()->route('recus.index')
             ->with('success', '✅ Reçu supprimé.');
     }
