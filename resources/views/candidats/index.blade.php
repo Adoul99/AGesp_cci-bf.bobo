@@ -20,18 +20,68 @@
             --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
             --transition-normal: 300ms ease-in-out;
             --radius-md: 8px;
-            --radius-lg: 12px;
+            --radius-lg: 14px;
         }
         @media print {
-            .no-print, .header-section div:last-child,
+            .no-print, .brand-banner .add-actions,
             table th:last-child, table td:last-child,
+            .wave-footer,
             nav, .sidebar { display: none !important; }
             body { background: white !important; color: black !important; }
             .content-wrapper { padding: 0 !important; margin: 0 !important; }
-            .header-section { box-shadow: none !important; border: 1px solid #ccc !important; margin-bottom: 2rem !important; border-left: 4px solid var(--color-red) !important; }
+            .brand-banner { box-shadow: none !important; border: 1px solid #ccc !important; margin-bottom: 2rem !important; }
             table { border-collapse: collapse !important; border: 1px solid #000 !important; }
             th { background: #f2f2f2 !important; color: black !important; border: 1px solid #000 !important; }
             td { border: 1px solid #ccc !important; }
+        }
+
+        .page-bg {
+            background: linear-gradient(180deg, #F4F6F5 0%, #EEF1F0 100%);
+            border-radius: 18px;
+            padding: 1.75rem;
+            margin: -1.25rem -1.25rem 0;
+        }
+
+        /* ── Bannière logo façon document officiel ── */
+        .brand-banner {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .brand-left { display: flex; align-items: center; gap: 1rem; }
+        .brand-logo {
+            width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+            object-fit: cover; border: 2px solid var(--color-gray-100);
+        }
+        .brand-title {
+            font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.55rem; color: var(--color-green-dark);
+            letter-spacing: 0.01em; text-transform: uppercase; margin: 0;
+        }
+        .brand-name { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; color: #4B5157; text-transform: uppercase; line-height: 1.3; }
+        .brand-name small { display: block; font-weight: 600; color: #8A9199; font-size: 0.68rem; text-transform: none; margin-top: 2px; }
+        .brand-title-bar {
+            height: 4px; width: 100%; margin-top: 6px; border-radius: 2px;
+            background: linear-gradient(90deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%);
+        }
+        .add-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn-add {
+            background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white;
+            padding: 0.7rem 1.4rem; border-radius: var(--radius-md); text-decoration: none; font-weight: 600;
+            border: 2px solid var(--color-red); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;
+            text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.78rem;
+        }
+        .btn-export {
+            background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%); color: var(--color-dark);
+            padding: 0.7rem 1.4rem; border-radius: var(--radius-md); border: 2px solid var(--color-gold); font-weight: 600;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;
+            text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.78rem;
         }
 
         /* ── Badge statut dossier ── */
@@ -45,27 +95,40 @@
         .badge-rejete   { background: rgba(206,17,38,0.1);  color: #A00D20; border: 1px solid rgba(206,17,38,0.3); }
         .badge-attente  { background: rgba(252,209,22,0.15); color: #7a5800; border: 1px solid rgba(252,209,22,0.4); }
         .badge-aucun    { background: rgba(102,102,102,0.1); color: #555;    border: 1px solid rgba(102,102,102,0.2); }
+
+        /* ── Carte tableau ── */
+        .table-card {
+            background: white; border-radius: var(--radius-lg); overflow: hidden;
+            box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100); position: relative;
+        }
+        .row-num {
+            display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--color-green); color: #fff;
+            font-weight: 800; font-size: 0.8rem; margin: 0 auto;
+        }
+        .th-num { width: 54px; text-align: center; }
+
+        /* ── Vague décorative en bas de carte ── */
+        .wave-footer { position: relative; height: 34px; overflow: hidden; }
+        .wave-footer svg { position: absolute; bottom: -2px; left: 0; width: 100%; height: 100%; }
     </style>
 
-    <div class="content-wrapper" style="padding: 2rem;">
+    <div class="content-wrapper page-bg">
 
-        <!-- En-tête -->
-        <div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
-            <div>
-                <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-dark); margin: 0; display: flex; align-items: center;">
-                    <span style="width: 5px; height: 35px; background: linear-gradient(180deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%); margin-right: 1rem; border-radius: 2px;"></span>
-                    Liste des Candidats
-                </h1>
+        {{-- ── Bannière logo ── --}}
+        <div class="brand-banner">
+            <div class="brand-left">
+                <img src="{{ asset('images/logo.jpeg') }}" alt="Logo" class="brand-logo">
+                <div>
+                    <div class="brand-name">AGesP <small>Auto-École GESP — CFTRAF / CCI-BF</small></div>
+                    <h1 class="brand-title">Liste des Candidats</h1>
+                    <div class="brand-title-bar"></div>
+                </div>
             </div>
-            <div style="display: flex; gap: 1rem;">
-                <a href="{{ route('candidats.create') }}"
-                   style="background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-md); text-decoration: none; font-weight: 600; border: 2px solid var(--color-red); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem;">
-                    + Nouveau Candidat
-                </a>
-                <button onclick="window.print()"
-                   style="background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%); color: var(--color-dark); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); border: 2px solid var(--color-gold); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem;">
-                    ⬇️ Exporter en PDF
-                </button>
+            <div class="add-actions no-print">
+                <a href="{{ route('candidats.create') }}" class="btn-add">+ Nouveau Candidat</a>
+                <button onclick="window.print()" class="btn-export">⬇️ Exporter en PDF</button>
             </div>
         </div>
 
@@ -102,10 +165,12 @@
         </div>
 
         <!-- Table -->
-        <div style="background: white; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
+        <div class="table-card">
+            <div style="overflow-x:auto;">
             <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: linear-gradient(90deg, var(--color-green) 0%, var(--color-green-light) 100%); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.5px;">
+                <thead style="background: var(--color-green); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.5px;">
                     <tr>
+                        <th class="th-num" style="padding: 1rem 0.5rem; border-bottom: 3px solid var(--color-gold);">N°</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidat</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Téléphone</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Email</th>
@@ -114,7 +179,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($candidats as $candidat)
+                    @forelse($candidats as $i => $candidat)
                     @php
                         $dossier = $candidat->dossiers->first();
                         $piecesJointes = [
@@ -148,6 +213,8 @@
                     <tr style="border-bottom: 1px solid var(--color-gray-100); transition: all var(--transition-normal);"
                         onmouseover="this.style.backgroundColor='rgba(0, 122, 94, 0.04)'"
                         onmouseout="this.style.backgroundColor='transparent'">
+
+                        <td class="th-num" style="padding: 1rem 0.5rem;"><span class="row-num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span></td>
 
                         {{-- ── Colonne Candidat : photo + nom + badge dossier ── --}}
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
@@ -239,13 +306,23 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" style="padding: 3rem; text-align: center; color: var(--color-gray-500);">
+                        <td colspan="6" style="padding: 3rem; text-align: center; color: var(--color-gray-500);">
                             <p style="margin: 0; font-size: 1rem;">📭 Aucun candidat trouvé</p>
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
+            </div>
+
+            {{-- ── Vague décorative façon document officiel ── --}}
+            <div class="wave-footer no-print">
+                <svg viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,30 C300,60 900,0 1200,30 L1200,60 L0,60 Z" fill="#007A5E" opacity="0.9"/>
+                    <path d="M0,40 C300,65 900,15 1200,40 L1200,60 L0,60 Z" fill="#FCD116" opacity="0.85"/>
+                    <path d="M0,50 C300,68 900,32 1200,50 L1200,60 L0,60 Z" fill="#CE1126" opacity="0.15"/>
+                </svg>
+            </div>
         </div>
 
         @if($candidats->count() > 0)

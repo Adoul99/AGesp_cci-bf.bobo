@@ -41,8 +41,8 @@ class DashboardController extends Controller
         $base = Candidat::whereIn('id', $candidatIds);
 
         return [
-            // "Inscrit" = TOUS les candidats de la catégorie, même logique que CandidatController::index()
-            'inscrits' => (clone $base)->count(),
+            'total'    => (clone $base)->count(), // candidats uniques de cette catégorie
+            'inscrits' => (clone $base)->where('statut', 'inscrit')->count(),
             'code'     => (clone $base)->where('statut', 'code_admis')->count(),
             'creneau'  => 0, // ⚠️ aucun statut "creneau" n'existe en base actuellement
             'conduite' => (clone $base)->where('statut', 'en_formation')->count(),

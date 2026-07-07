@@ -7,126 +7,72 @@ use App\Models\Candidat;
 use App\Models\CategoriePermis;
 use App\Models\Dossier;
 use App\Models\Paiement;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class InscriptionController extends Controller
 {
-    // ── ADMIN : liste ──────────────────────────────────────────
+    // ── Liste ───────────────────────────────────────────────
     public function index()
     {
-        $inscriptions = Inscription::with('candidat', 'paiement')->get();
+        $inscriptions = Inscription::with('candidat', 'paiement', 'categoriePermis')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('inscriptions.index', compact('inscriptions'));
     }
 
-    // ── ADMIN : formulaire création ────────────────────────────
+    // ── Formulaire de création (guichet CCI-BF) ────────────
     public function create()
     {
-        $candidats = Candidat::all();
-        return view('inscriptions.create', compact('candidats'));
+        $categories = CategoriePermis::orderBy('nomCategorie')->get();
+        return view('inscriptions.create', compact('categories'));
     }
 
-    // ── ADMIN : enregistrer ────────────────────────────────────
+    // ── Enregistrement : crée candidat + dossier + paiement + inscription ──
     public function store(Request $request)
     {
+        $dateLimitePermisC = Carbon::now()->subMonths(6)->format('Y-m-d');
+
         $request->validate([
-            'dateInscription' => 'required|date',
-            'candidat_id'     => 'required',
-            'paiement_id'     => 'required',
-        ]);
+            // Identité du candidat
+            'nom'                    => 'required|string|max:100',
+            'prenom'                 => 'required|string|max:100',
+            'telephone'              => 'required|string|max:20',
+            'email'                  => 'nullable|email|max:100',
+            'dateNaissance'          => 'required|date',
+            'lieuNaissance'          => 'required|string|max:100',
 
-        Inscription::create($request->all());
-        return redirect()->route('inscriptions.index')->with('success', 'Inscription créée avec succès.');
-    }
+            // Permis C — obligatoire, avec règle des 6 mois minimum
+            'numeroPermisC'          => 'required|string|max:50',
+            'dateDelivrancePermisC'  => "required|date|before_or_equal:{$dateLimitePermisC}",
+            'lieuDelivrancePermisC'  => 'required|string|max:100',
 
-    // ── ADMIN : modifier ───────────────────────────────────────
-    public function edit(Inscription $inscription)
-    {
-        $candidats  = Candidat::all();
-        $categories = CategoriePermis::orderBy('nomCategorie')->get();
-        return view('inscriptions.edit', compact('inscription', 'candidats', 'categories'));
-    }
+            // Formation
+            'categoriePermis_id'     => 'required|exists:categorie_permis,id',
+            'dateInscription'        => 'required|date',
 
-    // ── ADMIN : mettre à jour ──────────────────────────────────
-    public function update(Request $request, Inscription $inscription)
-    {
-        $inscription->update($request->all());
-        return redirect()->route('inscriptions.index')->with('success', 'Inscription mise à jour.');
-    }
+            // Pièces jointes
+            'cnib'                   => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'photo_identite'         => 'required|file|mimes:jpeg,jpg,png|max:5120',
+            'certificat_medical'     => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'acte_naissance'         => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
+            'permis_c'               => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
 
-    // ── ADMIN : supprimer ──────────────────────────────────────
-    public function destroy(Inscription $inscription)
-    {
-        $inscription->delete();
-        return redirect()->route('inscriptions.index')->with('success', 'Inscription supprimée.');
-    }
-
-    // ══════════════════════════════════════════════════════════
-    // PUBLIC : formulaire d'inscription en ligne
-    // ══════════════════════════════════════════════════════════
-
-    /**
-     * Affiche le formulaire d'inscription en ligne
-     */
-    public function formulairePublic()
-    {
-        $categories = CategoriePermis::orderBy('nomCategorie')->get();
-        return view('inscription-publique', compact('categories'));
-    }
-
-    /**
-     * Enregistre une nouvelle inscription
-     * SANS recu_paiement (le reçu sera remis à l'arrivée)
-     */
-    public function storePublic(Request $request)
-    {
-        // ── Validation ────────────────────────────────────────
-        $request->validate([
-            'nom'                   => 'required|string|max:100',
-            'prenom'                => 'required|string|max:100',
-            'telephone'             => 'required|string|max:20',
-            'email'                 => 'nullable|email|max:100',
-            'dateNaissance'         => 'required|date',
-            'lieuNaissance'         => 'required|string|max:100',
-            'numeroPermisC'         => 'nullable|string|max:50',
-            'dateDelivrancePermisC' => 'nullable|date',
-            'lieuDelivrancePermisC' => 'nullable|string|max:100',
-            'categoriePermis_id'    => 'required|exists:categorie_permis,id',
-            'dataDebut_formation'   => 'required|date',
-            'dateInscription'       => 'nullable|date',
-
-            // Pièces jointes — SANS recu_paiement
-            'cnib'                  => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
-            'photo_identite'        => 'required|file|mimes:jpeg,jpg,png|max:5120',
-            'certificat_medical'    => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
-            'acte_naissance'        => 'required|file|mimes:jpeg,jpg,png,pdf|max:5120',
-            'permis_c'              => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:5120',
-
-            // Paiement — OBLIGATOIRE
-            'modePaiement'          => 'required|in:especes,mobile_money,virement',
-            'montantPaiement'       => 'required|numeric|min:1',
-            'tranchePaiement'       => 'required|string|in:total,tranche1,tranche2',
-            'operateur'             => 'nullable|string|max:100',
-            'numeroTransaction'     => 'nullable|string|max:100',
-            'referenceVirement'     => 'nullable|string|max:100',
-            'dateVirement'          => 'nullable|date',
-            'datePaiement'          => 'required|date',
+            // Paiement — encaissé en espèces au moment de l'inscription
+            'montantPaiement'        => 'required|numeric|min:1',
         ], [
-            'nom.required'                  => 'Le nom est obligatoire.',
-            'prenom.required'               => 'Le prénom est obligatoire.',
-            'telephone.required'            => 'Le téléphone est obligatoire.',
-            'dateNaissance.required'        => 'La date de naissance est obligatoire.',
-            'lieuNaissance.required'        => 'Le lieu de naissance est obligatoire.',
-            'categoriePermis_id.required'   => 'Veuillez choisir une catégorie de permis.',
-            'dataDebut_formation.required'  => 'La date de début de formation est obligatoire.',
-            'cnib.required'                 => 'La CNIB est obligatoire.',
-            'photo_identite.required'       => 'La photo d\'identité est obligatoire.',
-            'certificat_medical.required'   => 'Le certificat médical est obligatoire.',
-            'acte_naissance.required'       => 'L\'acte de naissance est obligatoire.',
-            'modePaiement.required'         => 'Veuillez choisir un mode de paiement.',
-            'montantPaiement.required'      => 'Le montant de paiement est obligatoire.',
-            'tranchePaiement.required'      => 'Veuillez choisir une modalité (total ou tranche).',
+            'dateDelivrancePermisC.before_or_equal' =>
+                "Le permis C doit avoir au moins 6 mois d'ancienneté (délivré avant le " .
+                Carbon::parse($dateLimitePermisC)->format('d/m/Y') . ").",
+            'nom.required'                    => 'Le nom est obligatoire.',
+            'prenom.required'                 => 'Le prénom est obligatoire.',
+            'telephone.required'              => 'Le téléphone est obligatoire.',
+            'numeroPermisC.required'          => 'Le numéro du permis C est obligatoire.',
+            'dateDelivrancePermisC.required'  => 'La date de délivrance du permis C est obligatoire.',
+            'categoriePermis_id.required'     => 'Veuillez choisir une catégorie de permis.',
+            'montantPaiement.required'        => 'Le montant encaissé est obligatoire.',
         ]);
 
         $data = DB::transaction(function () use ($request) {
@@ -142,14 +88,14 @@ class InscriptionController extends Controller
                 'numeroPermisC'         => $request->numeroPermisC,
                 'dateDelivrancePermisC' => $request->dateDelivrancePermisC,
                 'lieuDelivrancePermisC' => $request->lieuDelivrancePermisC,
+                'statut'                => 'inscrit',
             ]);
 
-            // 2. Référence unique
+            // 2. Référence unique du dossier
             $reference = 'GESP-' . date('Y') . '-' . str_pad($candidat->id, 5, '0', STR_PAD_LEFT);
-
-            // 3. Upload pièces jointes — SANS recu_paiement
             $dossierPath = 'dossiers/' . $reference;
 
+            // 3. Upload des pièces jointes
             $cnibPath          = $request->file('cnib')->store($dossierPath, 'public');
             $photoIdentitePath = $request->file('photo_identite')->store($dossierPath, 'public');
             $certificatPath    = $request->file('certificat_medical')->store($dossierPath, 'public');
@@ -158,36 +104,25 @@ class InscriptionController extends Controller
                                     ? $request->file('permis_c')->store($dossierPath, 'public')
                                     : null;
 
-            // 4. Créer le paiement
+            // 4. Créer le paiement — encaissement immédiat en espèces au guichet
             $paiement = Paiement::create([
-                'montant'           => $request->montantPaiement,
-                'modePaiement'      => $request->modePaiement,
-                'tranchePaiement'   => $request->tranchePaiement,
-                'operateur'         => $request->operateur,
-                'numeroTransaction' => $request->numeroTransaction,
-                'referenceVirement' => $request->referenceVirement,
-                'dateVirement'      => $request->dateVirement,
-                'datePaiement'      => $request->datePaiement,
-                'statut'            => 'en_attente',
-                'candidat_id'       => $candidat->id,
+                'montant'      => $request->montantPaiement,
+                'datePaiement' => now()->toDateString(),
+                'statut'       => 'paye',
+                'candidat_id'  => $candidat->id,
             ]);
 
-            // 5. Statut inscription — TOUJOURS "en attente" lors d'une inscription publique.
-            // Seule l'administration peut faire passer une inscription à "actif",
-            // après vérification du dossier (pièces jointes). Le candidat ne doit
-            // jamais pouvoir choisir lui-même ce statut.
-            $statutFormate = 'en_attente';
-
-            // 6. Créer l'inscription
+            // 5. Créer l'inscription — validée directement (saisie par un agent CCI-BF)
+            //    La date de début de formation n'est plus saisie séparément :
+            //    elle est alignée sur la date d'inscription par défaut.
             Inscription::create([
                 'candidat_id'         => $candidat->id,
                 'categoriePermis_id'  => $request->categoriePermis_id,
                 'reference'           => $reference,
-                'dateInscription'     => $request->dateInscription ?? now()->toDateString(),
-                'statutInscription'   => $statutFormate,
-                'dataDebut_formation' => $request->dataDebut_formation,
+                'dateInscription'     => $request->dateInscription,
+                'statutInscription'   => 'actif',
+                'dataDebut_formation' => $request->dateInscription,
                 'paiement_id'         => $paiement->id,
-                // Fichiers — SANS recu_paiement
                 'cnib'                => $cnibPath,
                 'photo_identite'      => $photoIdentitePath,
                 'certificat_medical'  => $certificatPath,
@@ -195,12 +130,12 @@ class InscriptionController extends Controller
                 'permis_c'            => $permisCPath,
             ]);
 
-            // 7. Créer le dossier lié
+            // 6. Créer le dossier lié — validé directement (vérifié sur place par l'agent)
             Dossier::create([
                 'nomDossier'         => $reference,
-                'description'        => 'Dossier automatique créé après inscription en ligne',
+                'description'        => 'Dossier créé lors de l\'inscription au guichet CCI-BF',
                 'dateDepot'          => now()->toDateString(),
-                'statutDossier'      => 'en_attente',
+                'statutDossier'      => 'valide',
                 'candidat_id'        => $candidat->id,
                 'cnib'               => $cnibPath,
                 'photo_identite'     => $photoIdentitePath,
@@ -209,41 +144,32 @@ class InscriptionController extends Controller
                 'permis_c'           => $permisCPath,
             ]);
 
-            // 8. Données pour le récépissé
-            $categorie    = CategoriePermis::find($request->categoriePermis_id);
-            $nomCategorie = $categorie
-                ? ($categorie->pareCategorie ?? $categorie->nomCategorie ?? $categorie->nom ?? '—')
-                : '—';
-
-            return [
-                'reference'           => $reference,
-                'nom'                 => $candidat->nom,
-                'prenom'              => $candidat->prenom,
-                'telephone'           => $candidat->telephone,
-                'dateNaissance'       => $candidat->dateNaissance,
-                'lieuNaissance'       => $candidat->lieuNaissance,
-                'categorie_nom'       => $nomCategorie,
-                'dataDebut_formation' => $request->dataDebut_formation,
-                'dateInscription'     => $request->dateInscription ?? now()->toDateString(),
-                'montantPaiement'     => $request->montantPaiement,
-                'modePaiement'        => $request->modePaiement,
-                'tranchePaiement'     => $request->tranchePaiement,
-            ];
+            return $reference;
         });
 
-        return redirect()
-            ->route('inscription.succes')
-            ->with($data);
+        return redirect()->route('inscriptions.index')
+            ->with('success', "✅ Inscription enregistrée avec succès. Référence : {$data}");
     }
 
-    /**
-     * Affiche la page de succès avec le récépissé
-     */
-    public function succes()
+    // ── Modifier ────────────────────────────────────────────
+    public function edit(Inscription $inscription)
     {
-        if (!session('reference')) {
-            return redirect()->route('inscription.public');
-        }
-        return view('inscription-success');
+        $candidats  = Candidat::all();
+        $categories = CategoriePermis::orderBy('nomCategorie')->get();
+        return view('inscriptions.edit', compact('inscription', 'candidats', 'categories'));
+    }
+
+    // ── Mettre à jour ───────────────────────────────────────
+    public function update(Request $request, Inscription $inscription)
+    {
+        $inscription->update($request->all());
+        return redirect()->route('inscriptions.index')->with('success', 'Inscription mise à jour.');
+    }
+
+    // ── Supprimer ───────────────────────────────────────────
+    public function destroy(Inscription $inscription)
+    {
+        $inscription->delete();
+        return redirect()->route('inscriptions.index')->with('success', 'Inscription supprimée.');
     }
 }

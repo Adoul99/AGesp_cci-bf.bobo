@@ -11,17 +11,16 @@ class CandidatController extends Controller
     {
         $query = Candidat::query();
 
-        // Le filtre "inscrit" affiche TOUS les candidats
-        if ($request->filled('statut') && $request->statut !== 'inscrit') {
+        if ($request->filled('statut')) {
             $query->where('statut', $request->statut);
         }
 
-        $candidats = $query->with('dossiers')->orderBy('nom')->get();
+        // Les candidats les plus récemment inscrits apparaissent en premier
+        $candidats = $query->with('dossiers')->orderBy('created_at', 'desc')->get();
 
-        // Compter par statut pour les badges du filtre
         $counts = [
             'tous'         => Candidat::count(),
-            'inscrit'      => Candidat::count(), // Inscrit = TOUS les candidats
+            'inscrit'      => Candidat::where('statut', 'inscrit')->count(),
             'en_formation' => Candidat::where('statut', 'en_formation')->count(),
             'code_admis'   => Candidat::where('statut', 'code_admis')->count(),
             'admis'        => Candidat::where('statut', 'admis')->count(),
@@ -67,7 +66,6 @@ class CandidatController extends Controller
             'statut'                => 'inscrit',
         ]);
 
-        // Créer le dossier et stocker les pièces jointes
         $pieces = [
             'cnib'               => 'cnib',
             'photo_identite'     => 'photo_identite',
@@ -89,7 +87,6 @@ class CandidatController extends Controller
             }
         }
 
-        // Créer le dossier si au moins une pièce fournie
         if (count($dossierData) > 1) {
             \App\Models\Dossier::create($dossierData);
         }
@@ -98,9 +95,6 @@ class CandidatController extends Controller
             ->with('success', '✅ Candidat enregistré avec succès.');
     }
 
-    /**
-     * Fiche statut du candidat — affiche son niveau complet
-     */
     public function show(Candidat $candidat)
     {
         $candidat->load([
@@ -110,11 +104,9 @@ class CandidatController extends Controller
             'dossiers',
         ]);
 
-        // Mettre à jour le statut automatiquement
         $candidat->mettreAJourStatut();
         $candidat->refresh();
 
-        // Résumé des évaluations par type
         $evalParType = $candidat->evaluations->groupBy(function($e) {
             return $e->typeSession?->type ?? 'inconnu';
         });

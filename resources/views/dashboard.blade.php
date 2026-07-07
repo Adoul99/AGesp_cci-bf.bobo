@@ -3,18 +3,17 @@
     Variables attendues (avec valeurs de secours si non transmises par le contrôleur) :
     $permisD = ['total'=>0,'inscrits'=>0,'code'=>0,'creneau'=>0,'conduite'=>0,'admis'=>0]
     $permisE = ['total'=>0,'inscrits'=>0,'code'=>0,'creneau'=>0,'conduite'=>0,'admis'=>0]
+    $totalCandidats = 0
 --}}
 <x-layouts::app.sidebar :title="'Tableau de bord'">
 
     @php
-        $permisD = $permisD ?? ['total'=>7,'inscrits'=>7,'code'=>1,'creneau'=>0,'conduite'=>2,'admis'=>2];
-        $permisE = $permisE ?? ['total'=>5,'inscrits'=>5,'code'=>0,'creneau'=>0,'conduite'=>1,'admis'=>4];
+        $permisD = $permisD ?? ['total'=>7,'inscrits'=>0,'code'=>1,'creneau'=>0,'conduite'=>2,'admis'=>2];
+        $permisE = $permisE ?? ['total'=>5,'inscrits'=>0,'code'=>0,'creneau'=>0,'conduite'=>1,'admis'=>4];
+        $totalCandidats = $totalCandidats ?? 0;
 
-        // ⚠️ Le total vient TOUJOURS du contrôleur (candidats uniques), jamais d'une somme
-        // des étapes ci-dessous : 'inscrits' n'est pas mutuellement exclusif avec les autres.
-        $totalD = $permisD['total'] ?? array_sum($permisD);
-        $totalE = $permisE['total'] ?? array_sum($permisE);
-        $totalGlobal = $totalD + $totalE;
+        $totalD = $permisD['total'] ?? 0;
+        $totalE = $permisE['total'] ?? 0;
 
         // Construit les segments (couleur, %) du donut à partir des SEULES étapes de
         // progression mutuellement exclusives. 'inscrits' est volontairement exclu :
@@ -47,8 +46,8 @@
         $gradD = 'conic-gradient(' . collect($segD)->map(fn($s) => "{$s['color']} {$s['start']}% {$s['end']}%")->implode(', ') . ')';
         $gradE = 'conic-gradient(' . collect($segE)->map(fn($s) => "{$s['color']} {$s['start']}% {$s['end']}%")->implode(', ') . ')';
 
-        // Donut global Permis D vs Permis E
-        $pctGlobalD = $totalGlobal > 0 ? ($totalD / $totalGlobal) * 100 : 0;
+        // Donut global Permis D vs Permis E (basé sur le vrai total de candidats, pas D+E)
+        $pctGlobalD = $totalCandidats > 0 ? ($totalD / $totalCandidats) * 100 : 0;
         $gradGlobal = "conic-gradient(#1a6b3a 0% {$pctGlobalD}%, #d4a017 {$pctGlobalD}% 100%)";
     @endphp
 
@@ -155,7 +154,7 @@
         <div class="kpi-card">
             <div class="kpi-icon" style="background:#1a6b3a;"><i class="bi bi-people-fill"></i></div>
             <div>
-                <div class="kpi-num">{{ $totalGlobal }}</div>
+                <div class="kpi-num">{{ $totalCandidats }}</div>
                 <div class="kpi-label">Candidats au total</div>
             </div>
         </div>
@@ -238,13 +237,13 @@
             <div class="donut-wrap">
                 <div class="donut" style="background: {{ $gradGlobal }};">
                     <div class="donut-center">
-                        <div class="num">{{ $totalGlobal }}</div>
+                        <div class="num">{{ $totalCandidats }}</div>
                         <div class="lbl">Total</div>
                     </div>
                 </div>
             </div>
             <div>
-                <div class="global-total">Total candidats : <strong>{{ $totalGlobal }}</strong></div>
+                <div class="global-total">Total candidats : <strong>{{ $totalCandidats }}</strong></div>
                 <div class="legend">
                     <div class="legend-item"><span class="legend-dot" style="background:#1a6b3a;"></span> Permis D <span class="legend-val">{{ $totalD }}</span></div>
                     <div class="legend-item"><span class="legend-dot" style="background:#d4a017;"></span> Permis E <span class="legend-val">{{ $totalE }}</span></div>
