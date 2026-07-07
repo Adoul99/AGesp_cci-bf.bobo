@@ -6,6 +6,19 @@
             --color-gray-200: #D1D1D1; --color-dark: #1A1A1A; --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
             --radius-md: 8px; --radius-lg: 12px; --transition-normal: 300ms ease-in-out;
         }
+
+        /* ── Changement de couleur dès qu'on touche les boutons (survol / appui), avant même le clic ── */
+        #btnValider:hover            { background: var(--color-red) !important; }
+        #btnValider:active           { background: var(--color-red-dark) !important; transform: scale(0.97); }
+
+        #btnRejeter:hover            { background: var(--color-green) !important; }
+        #btnRejeter:active           { background: var(--color-green-dark) !important; transform: scale(0.97); }
+
+        #btnConfirmerValidation:hover { background: var(--color-red) !important; }
+        #btnConfirmerValidation:active { background: var(--color-red-dark) !important; transform: scale(0.96); }
+
+        #btnConfirmerRejet:hover    { background: var(--color-green) !important; }
+        #btnConfirmerRejet:active  { background: var(--color-green-dark) !important; transform: scale(0.96); }
     </style>
 
     <div class="content-wrapper" style="padding: 2rem;">
@@ -95,38 +108,152 @@
                         💬 Le statut et le message ci-dessous sont visibles par le candidat dans son espace personnel.
                     </p>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-                        <div class="form-group">
-                            <label for="statutDossier" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; text-transform: uppercase;">Statut du dossier</label>
-                            <select name="statutDossier" id="statutDossier" style="width: 100%; padding: 0.75rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-weight: 600;">
-                                <option value="en_attente" {{ old('statutDossier', $dossier->statutDossier) == 'en_attente' ? 'selected' : '' }}>⏳ En attente</option>
-                                <option value="valide"     {{ old('statutDossier', $dossier->statutDossier) == 'valide'     ? 'selected' : '' }}>✅ Validé</option>
-                                <option value="rejete"     {{ old('statutDossier', $dossier->statutDossier) == 'rejete'     ? 'selected' : '' }}>❌ Rejeté</option>
-                            </select>
-                        </div>
+                    {{-- Statut actuel --}}
+                    <div style="margin-bottom: 1.25rem; font-size: 0.85rem;">
+                        Statut actuel :
+                        @php
+                            $statutActuel = old('statutDossier', $dossier->statutDossier);
+                            $statutLabels = ['en_attente' => '⏳ En attente', 'valide' => '✅ Validé', 'rejete' => '❌ Rejeté'];
+                        @endphp
+                        <strong id="statutActuelLabel">{{ $statutLabels[$statutActuel] ?? $statutActuel }}</strong>
                     </div>
 
-                    <div class="form-group" style="margin-top: 1.5rem;">
-                        <label for="commentaireAdmin" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; text-transform: uppercase;">
-                            Message pour le candidat
-                            <span style="font-weight: normal; text-transform: none; color: #888;">(motif du rejet, ou observation)</span>
-                        </label>
-                        <textarea name="commentaireAdmin" id="commentaireAdmin" rows="3" maxlength="1000"
-                                  placeholder="Ex : Votre certificat médical est illisible, merci de le renvoyer."
-                                  style="width: 100%; padding: 0.75rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-family: inherit; resize: vertical;">{{ old('commentaireAdmin', $dossier->commentaireAdmin) }}</textarea>
+                    {{-- Champs cachés soumis avec le formulaire --}}
+                    <input type="hidden" name="statutDossier" id="statutDossier" value="{{ $statutActuel }}">
+                    <input type="hidden" name="commentaireAdmin" id="commentaireAdmin" value="{{ old('commentaireAdmin', $dossier->commentaireAdmin) }}">
+
+                    {{-- Boutons de décision --}}
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                        <button type="button" id="btnValider" onclick="ouvrirConfirmationValidation()"
+                                style="display:flex; align-items:center; gap:0.5rem; background: var(--color-green); color:white; padding:0.75rem 1.5rem; border:none; border-radius: var(--radius-md); font-weight:600; cursor:pointer; font-size:0.9rem; transition: background 0.25s, transform 0.15s;">
+                            ✅ Valider le dossier
+                        </button>
+                        <button type="button" id="btnRejeter" onclick="ouvrirMotifRejet()"
+                                style="display:flex; align-items:center; gap:0.5rem; background: var(--color-red); color:white; padding:0.75rem 1.5rem; border:none; border-radius: var(--radius-md); font-weight:600; cursor:pointer; font-size:0.9rem; transition: background 0.25s, transform 0.15s;">
+                            ❌ Rejeter le dossier
+                        </button>
+                    </div>
+
+                    @if($dossier->commentaireAdmin)
+                        <div style="margin-top:1.25rem; font-size:0.8rem; color:#555; background:white; border:1px solid var(--color-gray-200); border-radius:var(--radius-md); padding:0.85rem 1rem;">
+                            <strong>Dernier message enregistré :</strong>
+                            <div id="commentaireAffiche" style="margin-top:0.35rem;">{{ $dossier->commentaireAdmin }}</div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- ── Modale : confirmation de validation ── --}}
+            <div id="modaleValidation" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center;">
+                <div style="background:white; border-radius:var(--radius-lg); padding:2rem; max-width:420px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+                    <h3 style="margin:0 0 0.75rem; font-size:1.1rem; color:var(--color-dark);">Valider ce dossier ?</h3>
+                    <p style="font-size:0.85rem; color:#555; margin:0 0 1.5rem;">
+                        Voulez-vous valider le dossier de <strong>{{ $dossier->nomDossier }}</strong> ?
+                        Le candidat verra ce statut dans son espace personnel.
+                    </p>
+                    <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+                        <button type="button" onclick="fermerModales()"
+                                style="background: var(--color-gray-100); color: var(--color-dark); padding:0.65rem 1.25rem; border:none; border-radius:var(--radius-md); font-weight:600; cursor:pointer;">
+                            Annuler
+                        </button>
+                        <button type="button" id="btnConfirmerValidation" onclick="confirmerValidation()"
+                                style="background: var(--color-green); color:white; padding:0.65rem 1.25rem; border:none; border-radius:var(--radius-md); font-weight:600; cursor:pointer; transition: background 0.25s;">
+                            ✓ Oui, valider
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Boutons -->
-            <div style="display: flex; gap: 1rem; border-top: 1px solid var(--color-gray-100); padding-top: 2rem;">
-                <button type="submit" style="background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: none; font-weight: 600; cursor: pointer; font-size: 1rem;">
-                    ✓ Mettre à jour
-                </button>
-                <a href="{{ route('dossiers.index') }}" style="background: var(--color-gray-100); color: var(--color-dark); padding: 0.875rem 2rem; border-radius: var(--radius-md); text-decoration: none; font-weight: 600;">
-                    ✕ Annuler
-                </a>
+            {{-- ── Modale : motif du rejet ── --}}
+            <div id="modaleRejet" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center;">
+                <div style="background:white; border-radius:var(--radius-lg); padding:2rem; max-width:480px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+                    <h3 style="margin:0 0 0.75rem; font-size:1.1rem; color:var(--color-dark);">Rejeter ce dossier</h3>
+                    <p style="font-size:0.85rem; color:#555; margin:0 0 1rem;">
+                        Indiquez le motif du rejet pour <strong>{{ $dossier->nomDossier }}</strong>.
+                        Ce message sera visible par le candidat.
+                    </p>
+                    <textarea id="motifRejetTexte" rows="4" maxlength="1000" placeholder="Ex : Votre certificat médical est illisible, merci de le renvoyer."
+                              style="width:100%; padding:0.75rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-family:inherit; resize:vertical; margin-bottom:0.5rem;"></textarea>
+                    <div id="motifRejetErreur" style="display:none; color:var(--color-red); font-size:0.78rem; margin-bottom:1rem;">
+                        Merci d'indiquer un motif avant de confirmer le rejet.
+                    </div>
+                    <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1rem;">
+                        <button type="button" onclick="fermerModales()"
+                                style="background: var(--color-gray-100); color: var(--color-dark); padding:0.65rem 1.25rem; border:none; border-radius:var(--radius-md); font-weight:600; cursor:pointer;">
+                            Annuler
+                        </button>
+                        <button type="button" id="btnConfirmerRejet" onclick="confirmerRejet()"
+                                style="background: var(--color-red); color:white; padding:0.65rem 1.25rem; border:none; border-radius:var(--radius-md); font-weight:600; cursor:pointer; transition: background 0.25s;">
+                            ✕ Confirmer le rejet
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            <script>
+                function ouvrirConfirmationValidation() {
+                    // Feedback visuel immédiat sur le bouton cliqué
+                    const btn = document.getElementById('btnValider');
+                    btn.style.background = '#004D3A';
+                    btn.style.transform = 'scale(0.97)';
+                    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+
+                    document.getElementById('modaleValidation').style.display = 'flex';
+                }
+                function ouvrirMotifRejet() {
+                    // Feedback visuel immédiat sur le bouton cliqué
+                    const btn = document.getElementById('btnRejeter');
+                    btn.style.background = '#A00D20';
+                    btn.style.transform = 'scale(0.97)';
+                    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+
+                    document.getElementById('motifRejetTexte').value = '';
+                    document.getElementById('motifRejetErreur').style.display = 'none';
+                    document.getElementById('modaleRejet').style.display = 'flex';
+                }
+                function fermerModales() {
+                    document.getElementById('modaleValidation').style.display = 'none';
+                    document.getElementById('modaleRejet').style.display = 'none';
+                    // Remet les boutons principaux à leur couleur d'origine
+                    document.getElementById('btnValider').style.background = 'var(--color-green)';
+                    document.getElementById('btnRejeter').style.background = 'var(--color-red)';
+                }
+                function confirmerValidation() {
+                    // Le bouton de confirmation change de couleur pour signaler que l'action est prise en compte
+                    const btnConfirm = document.getElementById('btnConfirmerValidation');
+                    btnConfirm.style.background = '#004D3A';
+                    btnConfirm.textContent = '✓ Validation en cours...';
+                    btnConfirm.disabled = true;
+
+                    // Le bouton principal "Valider le dossier" reste dans sa couleur active
+                    document.getElementById('btnValider').style.background = '#004D3A';
+
+                    document.getElementById('statutDossier').value = 'valide';
+                    document.getElementById('commentaireAdmin').value = document.getElementById('commentaireAdmin').value || '';
+                    document.querySelector('form[action*="dossiers"]').submit();
+                }
+                function confirmerRejet() {
+                    const motif = document.getElementById('motifRejetTexte').value.trim();
+                    if (!motif) {
+                        document.getElementById('motifRejetErreur').style.display = 'block';
+                        return;
+                    }
+
+                    // Le bouton de confirmation change de couleur pour signaler que l'action est prise en compte
+                    const btnConfirm = document.getElementById('btnConfirmerRejet');
+                    btnConfirm.style.background = '#A00D20';
+                    btnConfirm.textContent = '✕ Rejet en cours...';
+                    btnConfirm.disabled = true;
+
+                    // Le bouton principal "Rejeter le dossier" reste dans sa couleur active
+                    document.getElementById('btnRejeter').style.background = '#A00D20';
+
+                    document.getElementById('statutDossier').value = 'rejete';
+                    document.getElementById('commentaireAdmin').value = motif;
+                    document.querySelector('form[action*="dossiers"]').submit();
+                }
+            </script>
+
         </form>
     </div>
 </x-layouts::app.sidebar>

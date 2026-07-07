@@ -21,6 +21,7 @@
     }
 
     * { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior: smooth; }
     body { font-family:'Source Sans 3',sans-serif; background:#f3f6f4; color:var(--dk); font-size:14px; }
 
     .tricolor {
@@ -31,172 +32,248 @@
             var(--v) 66%,var(--v) 100%);
     }
 
-    .site-header {
-        background: linear-gradient(135deg, #0a1f0f 0%, var(--v) 50%, #0f2e1c 100%);
-        padding   : 0;
-        position  : relative;
-        overflow  : hidden;
+    /* ── Bandeau de navigation (logo + liens + boutons) ── */
+    .top-bar {
+        background : var(--v);
+        box-shadow : 0 2px 10px rgba(0,0,0,0.15);
     }
 
-    .site-header::before {
-        content   : '';
-        position  : absolute;
-        inset     : 0;
-        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        opacity   : 1;
-    }
-
-    .header-inner {
+    .top-bar-inner {
+        max-width      : 1300px;
+        margin         : 0 auto;
         display        : flex;
         align-items    : center;
         justify-content: space-between;
-        padding        : 14px 30px;
-        position       : relative;
-        z-index        : 1;
+        gap            : 20px;
+        padding        : 10px 24px;
     }
 
-    .header-logo {
-        display    : flex;
-        align-items: center;
-        gap        : 14px;
+    .top-logo {
+        display        : flex;
+        align-items    : center;
+        gap            : 12px;
+        text-decoration: none;
+        flex-shrink    : 0;
     }
 
     .logo-img-box {
-        width          : 58px;
-        height         : 58px;
+        width          : 46px;
+        height         : 46px;
         background     : white;
-        border-radius  : 10px;
+        border-radius  : 50%;
         display        : flex;
         align-items    : center;
         justify-content: center;
         overflow       : hidden;
-        box-shadow     : 0 2px 12px rgba(0,0,0,0.25);
         flex-shrink    : 0;
     }
 
-    .logo-img-box img {
-        width     : 88%;
-        height    : 88%;
-        object-fit: contain;
+    .logo-img-box img { width:82%; height:82%; object-fit:contain; }
+
+    .top-logo-text {
+        color      : white;
+        font-family: 'Nunito',sans-serif;
+        font-weight: 800;
+        font-size  : 0.78rem;
+        line-height: 1.35;
+        letter-spacing: 0.01em;
     }
 
-    .logo-text-box { color:white; }
+    .top-nav-links {
+        display : flex;
+        align-items: center;
+        gap     : 30px;
+    }
 
-    .logo-main {
+    .top-nav-links a {
+        color          : rgba(255,255,255,0.92);
+        text-decoration: none;
+        font-family    : 'Nunito',sans-serif;
+        font-weight    : 700;
+        font-size      : 0.78rem;
+        letter-spacing : 0.03em;
+        white-space    : nowrap;
+        transition     : color 0.15s;
+    }
+
+    .top-nav-links a:hover { color:var(--o); }
+
+    .top-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+
+    .btn-pill {
+        display        : inline-flex;
+        align-items    : center;
+        gap            : 8px;
+        padding        : 9px 20px;
+        border-radius  : 999px;
+        font-family    : 'Nunito',sans-serif;
+        font-weight    : 700;
+        font-size      : 0.76rem;
+        letter-spacing : 0.02em;
+        text-decoration: none;
+        white-space    : nowrap;
+        transition     : all 0.2s;
+        border         : 1.5px solid transparent;
+    }
+
+    .btn-pill-solid  { background:white; color:var(--v); }
+    .btn-pill-solid:hover { background:var(--op); }
+
+    .btn-pill-outline { background:transparent; color:white; border-color:rgba(255,255,255,0.7); }
+    .btn-pill-outline:hover { background:rgba(255,255,255,0.12); }
+
+    .btn-pill-lg { padding:13px 26px; font-size:0.86rem; }
+
+    .btn-pill-outline-light { background:rgba(255,255,255,0.06); color:white; border-color:rgba(255,255,255,0.65); }
+    .btn-pill-outline-light:hover { background:rgba(255,255,255,0.18); }
+
+    /* ── Bouton désactivé (inscriptions temporairement fermées) ── */
+    .btn-pill-disabled {
+        opacity     : 0.5;
+        cursor      : not-allowed;
+        pointer-events: auto;
+    }
+    .btn-pill-disabled:hover { background:inherit; }
+
+    /* ── Hero plein écran avec photo de fond ── */
+    .hero-banner {
+        background-size    : cover;
+        background-position: center;
+        min-height         : 520px;
+        display            : flex;
+        align-items        : center;
+        padding            : 40px 24px;
+    }
+
+    .hero-banner-inner { max-width:900px; margin:0 auto; }
+
+    .hero-banner-title {
         font-family: 'Nunito',sans-serif;
         font-weight: 900;
-        font-size  : 1.6rem;
-        line-height: 1;
-        letter-spacing: 0.02em;
+        font-size  : 2.5rem;
+        line-height: 1.25;
+        color      : white;
+        margin-bottom: 20px;
     }
 
-    .logo-main span { color:var(--o); }
+    .hero-banner-title span { color:var(--vc); }
 
-    .logo-sub {
-        font-size  : 0.75rem;
-        opacity    : 0.8;
-        margin-top : 2px;
-        letter-spacing: 0.05em;
+    .hero-banner-sub {
+        color      : rgba(255,255,255,0.88);
+        font-size  : 1rem;
+        line-height: 1.7;
+        max-width  : 680px;
+        margin-bottom: 30px;
     }
 
-    .header-image {
-        display      : flex;
-        gap          : 6px;
-        align-items  : center;
-        opacity      : 0.85;
+    .hero-banner-actions { display:flex; gap:14px; flex-wrap:wrap; }
+
+    /* ── Bandeau 3 étapes (chevauche le bas du hero) ── */
+    .steps-strip {
+        max-width : 1100px;
+        margin    : -34px auto 0;
+        position  : relative;
+        z-index   : 2;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        display   : grid;
+        grid-template-columns: repeat(3, 1fr);
+        padding   : 0 24px;
     }
 
-    .header-img-tile {
-        width        : 120px;
-        height       : 70px;
-        border-radius: 6px;
+    .step-item {
+        display    : flex;
+        align-items: center;
+        gap        : 14px;
+        padding    : 22px 14px;
+    }
+
+    .step-item + .step-item { border-left:1px solid rgba(0,0,0,0.08); }
+
+    .step-num {
+        font-family: 'Nunito',sans-serif;
+        font-weight: 900;
+        font-size  : 1.7rem;
+        color      : var(--r);
+        flex-shrink: 0;
+    }
+
+    .step-label { font-size:0.85rem; color:#3a4a40; font-weight:600; }
+
+    /* ── FAQ (accordéon) ── */
+    .faq-item {
+        border       : 1px solid rgba(26,107,58,0.15);
+        border-radius: 8px;
+        margin-bottom: 10px;
         overflow     : hidden;
-        background   : rgba(255,255,255,0.1);
-        display      : flex;
-        align-items  : center;
-        justify-content: center;
-        font-size    : 2rem;
-        color        : rgba(255,255,255,0.3);
-        border       : 1px solid rgba(255,255,255,0.1);
     }
 
-    .site-slogan {
-        background   : linear-gradient(90deg, var(--r), #8b1a12);
-        color        : white;
-        text-align   : center;
-        padding      : 7px 20px;
-        font-family  : 'Nunito',sans-serif;
-        font-weight  : 700;
-        font-size    : 0.9rem;
-        letter-spacing: 0.03em;
-    }
+    .faq-item:last-child { margin-bottom:0; }
 
-    .site-slogan span { color:var(--o); }
-
-    .site-nav {
-        background   : var(--v);
-        padding      : 0 30px;
+    .faq-item summary {
+        list-style   : none;
+        cursor       : pointer;
+        padding      : 13px 16px;
         display      : flex;
         align-items  : center;
         justify-content: space-between;
-        box-shadow   : 0 2px 8px rgba(0,0,0,0.2);
+        font-family  : 'Nunito',sans-serif;
+        font-weight  : 700;
+        font-size    : 0.85rem;
+        color        : var(--dk);
     }
 
-    .nav-links { display:flex; align-items:center; gap:2px; }
+    .faq-item summary::-webkit-details-marker { display:none; }
 
-    .nav-link-item {
+    .faq-item summary i { color:var(--v); transition:transform 0.2s; flex-shrink:0; }
+    .faq-item[open] summary i { transform:rotate(180deg); }
+
+    .faq-item p {
+        padding   : 0 16px 15px;
+        font-size : 0.8rem;
+        line-height: 1.65;
+        color     : #5a6b60;
+    }
+
+    /* ── Bandeau Besoin d'aide ── */
+    .help-banner {
+        max-width : 1180px;
+        margin    : 24px auto 0;
+        background: linear-gradient(120deg, var(--v), var(--vc));
+        border-radius: 10px;
+        padding   : 26px 30px;
+        display   : flex;
+        align-items: center;
+        justify-content: space-between;
+        gap       : 20px;
+        flex-wrap : wrap;
+    }
+
+    .help-banner-text { display:flex; align-items:center; gap:16px; color:white; }
+
+    .help-banner-icon {
+        width          : 46px;
+        height         : 46px;
+        border-radius  : 50%;
+        background     : rgba(255,255,255,0.15);
         display        : flex;
         align-items    : center;
-        gap            : 6px;
-        padding        : 10px 16px;
-        color          : rgba(255,255,255,0.85);
-        text-decoration: none;
-        font-size      : 0.82rem;
-        font-weight    : 600;
-        font-family    : 'Nunito',sans-serif;
-        border-bottom  : 3px solid transparent;
-        transition     : all 0.2s;
-        white-space    : nowrap;
+        justify-content: center;
+        font-size      : 1.3rem;
+        flex-shrink    : 0;
     }
 
-    .nav-link-item:hover,
-    .nav-link-item.active {
-        color           : white;
-        border-bottom-color: var(--o);
-        background      : rgba(255,255,255,0.08);
-    }
-
-    .nav-link-item i { font-size:0.9rem; }
-
-    .nav-connexion {
-        display        : flex;
-        align-items    : center;
-        gap            : 7px;
-        padding        : 7px 16px;
-        background     : var(--o);
-        color          : var(--dk);
-        text-decoration: none;
-        font-size      : 0.82rem;
-        font-weight    : 700;
-        font-family    : 'Nunito',sans-serif;
-        border-radius  : 5px;
-        transition     : all 0.2s;
-        white-space    : nowrap;
-    }
-
-    .nav-connexion:hover {
-        background: #e6b020;
-        color     : var(--dk);
-        transform : translateY(-1px);
-    }
+    .help-banner-title { font-family:'Nunito',sans-serif; font-weight:800; font-size:1.05rem; margin-bottom:4px; }
+    .help-banner-desc  { font-size:0.82rem; opacity:0.92; max-width:520px; line-height:1.55; }
 
     .site-body {
-        max-width: 1200px;
+        max-width: 1180px;
         margin   : 0 auto;
-        padding  : 20px 20px;
+        padding  : 28px 20px;
         display  : grid;
-        grid-template-columns: 220px 1fr 220px;
-        gap      : 16px;
+        grid-template-columns: 1fr 300px;
+        gap      : 22px;
         align-items: start;
     }
 
@@ -264,6 +341,7 @@
         border-radius: 8px;
         box-shadow   : 0 1px 6px rgba(26,107,58,0.1);
         overflow     : hidden;
+        scroll-margin-top: 20px;
     }
 
     .main-card-head {
@@ -295,44 +373,6 @@
         font-weight: 700;
     }
 
-    .modules-grid {
-        display              : grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap                  : 10px;
-        margin-top           : 4px;
-    }
-
-    .module-item {
-        border       : 1px solid rgba(26,107,58,0.15);
-        border-radius: 8px;
-        padding      : 12px 10px;
-        text-align   : center;
-        transition   : all 0.2s;
-        cursor       : pointer;
-        text-decoration: none;
-        color        : var(--dk);
-    }
-
-    .module-item:hover {
-        background  : var(--vp);
-        border-color: var(--v);
-        color       : var(--v);
-        transform   : translateY(-2px);
-        box-shadow  : 0 4px 12px rgba(26,107,58,0.12);
-    }
-
-    .module-icon {
-        font-size    : 1.5rem;
-        margin-bottom: 6px;
-        display      : block;
-    }
-
-    .module-name {
-        font-family: 'Nunito',sans-serif;
-        font-weight: 700;
-        font-size  : 0.72rem;
-    }
-
     .col-right { display:flex; flex-direction:column; gap:12px; }
 
     .login-card {
@@ -345,35 +385,35 @@
     .login-head {
         background   : var(--r);
         color        : white;
-        padding      : 8px 12px;
+        padding      : 12px 16px;
         font-family  : 'Nunito',sans-serif;
         font-weight  : 700;
-        font-size    : 0.8rem;
+        font-size    : 0.95rem;
         display      : flex;
         align-items  : center;
         gap          : 6px;
     }
 
-    .login-body { padding:14px; }
+    .login-body { padding:22px; }
 
     .lbl {
         font-family  : 'Nunito',sans-serif;
         font-weight  : 700;
-        font-size    : 0.72rem;
+        font-size    : 0.85rem;
         color        : var(--dk);
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         display      : block;
     }
 
     .inp {
         width        : 100%;
         border       : 1.5px solid #cdd8d0;
-        border-radius: 5px;
-        padding      : 7px 9px;
-        font-size    : 0.8rem;
+        border-radius: 6px;
+        padding      : 12px 14px;
+        font-size    : 0.95rem;
         background   : #f9fbfa;
         font-family  : 'Source Sans 3',sans-serif;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
         transition   : border-color 0.2s;
     }
 
@@ -384,16 +424,18 @@
         outline     : none;
     }
 
+    textarea.inp { resize:vertical; min-height:80px; }
+
     .btn-connexion {
         width        : 100%;
         background   : var(--v);
         color        : white;
         border       : none;
-        border-radius: 5px;
-        padding      : 8px;
+        border-radius: 6px;
+        padding      : 13px;
         font-family  : 'Nunito',sans-serif;
         font-weight  : 700;
-        font-size    : 0.8rem;
+        font-size    : 0.9rem;
         cursor       : pointer;
         transition   : background 0.2s;
         display      : flex;
@@ -415,10 +457,162 @@
 
     .site-footer span { color:var(--o); }
 
+    html, body { overflow-x: hidden; }
+
+    /* ── Galerie photos : candidats en formation (créneau / conduite) ── */
+    .col-center, .main-card, .main-card-body { min-width: 0; }
+
+    .gallery-frame {
+        margin       : 0;
+        padding      : 10px;
+        background   : var(--vp);
+        border       : 1px solid rgba(26,107,58,0.15);
+        border-radius: 10px;
+    }
+
+    .gallery-viewport {
+        overflow     : hidden;
+        min-width    : 0;
+        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+                mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+    }
+
+    .gallery-track {
+        display    : flex;
+        gap        : 14px;
+        width      : max-content;
+        animation  : gallery-scroll 34s linear infinite;
+    }
+
+    .gallery-viewport:hover .gallery-track { animation-play-state: paused; }
+
+    .gallery-item {
+        position     : relative;
+        flex-shrink  : 0;
+        width        : 260px;
+        height       : 170px;
+        border-radius: 8px;
+        overflow     : hidden;
+        background   : #ffffff;
+        border       : 1px solid rgba(26,107,58,0.15);
+    }
+
+    .gallery-item img {
+        width     : 100%;
+        height    : 100%;
+        object-fit: cover;
+        display   : block;
+    }
+
+    .gallery-caption {
+        position  : absolute;
+        left:0; right:0; bottom:0;
+        padding   : 16px 10px 7px;
+        background: linear-gradient(0deg, rgba(10,20,15,0.82) 0%, transparent 100%);
+        color     : #fff;
+        font-family: 'Nunito',sans-serif;
+        font-weight: 700;
+        font-size : 0.72rem;
+        letter-spacing: 0.02em;
+    }
+
+    .gallery-empty {
+        display        : flex;
+        flex-direction : column;
+        align-items    : center;
+        justify-content: center;
+        gap            : 8px;
+        width          : 100%;
+        padding        : 28px 10px;
+        color          : #6b7a70;
+        font-size      : 0.8rem;
+        text-align     : center;
+    }
+
+    .gallery-empty i { font-size:1.6rem; color:var(--v); opacity:0.5; }
+
+    @keyframes gallery-scroll {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+    }
+
+    /* ── Cartes de contact (adresse, téléphone, e-mail, WhatsApp) ── */
+    .contact-cards {
+        display              : grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap                   : 10px;
+        margin-bottom         : 16px;
+    }
+
+    .contact-card {
+        background   : var(--vp);
+        border       : 1px solid rgba(26,107,58,0.15);
+        border-radius: 8px;
+        padding      : 16px 12px;
+        text-align   : center;
+        transition   : transform 0.15s, box-shadow 0.15s;
+    }
+
+    .contact-card:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(26,107,58,0.12); }
+
+    .contact-card i {
+        font-size    : 1.4rem;
+        color        : var(--v);
+        margin-bottom: 6px;
+        display      : block;
+    }
+
+    .contact-card-title {
+        font-family: 'Nunito',sans-serif;
+        font-weight: 800;
+        font-size  : 0.8rem;
+        color      : var(--dk);
+        margin-bottom: 4px;
+    }
+
+    .contact-card-detail { font-size:0.75rem; color:#5a6b60; line-height:1.5; }
+
+    .contact-form-title {
+        font-family  : 'Nunito',sans-serif;
+        font-weight  : 800;
+        font-size    : 0.88rem;
+        color        : var(--v);
+        margin-bottom: 12px;
+    }
+
     @media (max-width:900px) {
-        .site-body { grid-template-columns:1fr; }
-        .col-left,.col-right { display:none; }
-        .header-image { display:none; }
+        .steps-strip {
+            grid-template-columns: 1fr;
+            margin: -20px 14px 0;
+        }
+        .step-item + .step-item { border-left:none; border-top:1px solid rgba(0,0,0,0.08); }
+
+        .help-banner { margin:20px 14px 0; padding:20px; }
+        .help-banner-desc { max-width:100%; }
+        .site-body {
+            grid-template-columns: 1fr;
+            padding: 16px 14px;
+            gap: 16px;
+        }
+
+        .top-bar-inner { padding:10px 14px; gap:12px; flex-wrap:wrap; }
+        .top-nav-links { display:none; }
+        .top-logo-text { font-size:0.68rem; }
+        .logo-img-box { width:38px; height:38px; }
+        .btn-pill { padding:7px 14px; font-size:0.7rem; }
+
+        .hero-banner { min-height:420px; padding:32px 18px; }
+        .hero-banner-title { font-size:1.7rem; }
+        .hero-banner-sub { font-size:0.88rem; }
+        .btn-pill-lg { padding:11px 18px; font-size:0.78rem; }
+
+        .gallery-item { width:210px; height:140px; }
+        .contact-cards { grid-template-columns:1fr; }
+    }
+
+    @media (max-width:420px) {
+        .hero-banner-title { font-size:1.4rem; }
+        .gallery-item { width:180px; height:120px; }
     }
     </style>
 </head>
@@ -427,118 +621,82 @@
 {{-- Barre tricolore --}}
 <div class="tricolor"></div>
 
-{{-- ══ HEADER ══ --}}
-<div class="site-header">
-    <div class="header-inner">
-        <div class="header-logo">
+{{-- ══ BANDEAU / NAVIGATION ══ --}}
+<div class="top-bar">
+    <div class="top-bar-inner">
+        <a href="#" class="top-logo">
             <div class="logo-img-box">
                 @if(file_exists(public_path('images/logo.jpeg')))
                     <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CCI-BF"
                          onerror="this.style.display='none'">
                 @else
-                    <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.2rem;color:#1a6b3a;">AG</span>
+                    <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem;color:#1a6b3a;">AG</span>
                 @endif
             </div>
-            <div class="logo-text-box">
-                <div class="logo-main">A<span>G</span>esP</div>
-                <div class="logo-sub">Système de Gestion Auto-École</div>
-                <div style="font-size:0.65rem;opacity:0.6;margin-top:1px;letter-spacing:0.04em;">
-                    CCI-BF · Burkina Faso
-                </div>
+            <div class="top-logo-text">
+                <div>CHAMBRE DE COMMERCE</div>
+                <div>ET D'INDUSTRIE DU BURKINA FASO</div>
             </div>
+        </a>
+
+        <div class="top-nav-links">
+            <a href="#presentation">À PROPOS</a>
+            <a href="#galerie">GALERIE</a>
+            <a href="#faq">FAQ</a>
         </div>
 
-        <div class="header-image">
-            <div class="header-img-tile">🚗</div>
-            <div class="header-img-tile">📋</div>
-            <div class="header-img-tile">🎓</div>
+        <div class="top-actions">
+            {{-- Inscriptions temporairement fermées : le lien ne mène nulle part --}}
+            <a href="#" onclick="return false;" class="btn-pill btn-pill-outline btn-pill-disabled"
+               title="Les inscriptions sont temporairement fermées">S'INSCRIRE</a>
+            <a href="{{ route('login') }}" class="btn-pill btn-pill-solid">CONNEXION</a>
         </div>
-    </div>
-
-    <div class="site-slogan">
-        Plateforme de Gestion — <span>Auto-École GESP</span> — Formation · Examens · Certification
     </div>
 </div>
 
-{{-- ══ NAVBAR ══ --}}
-<div class="site-nav">
-    <div class="nav-links">
-        <a href="#" class="nav-link-item active">
-            <i class="bi bi-house"></i> Accueil
-        </a>
-        <a href="#modules" class="nav-link-item">
-            <i class="bi bi-grid"></i> Modules
-        </a>
-        <a href="#presentation" class="nav-link-item">
-            <i class="bi bi-info-circle"></i> À propos
-        </a>
-        <a href="#contact" class="nav-link-item">
-            <i class="bi bi-telephone"></i> Contact
-        </a>
+{{-- ══ HERO ══ --}}
+<div class="hero-banner" style="background-image:linear-gradient(180deg, rgba(10,20,15,0.55) 0%, rgba(10,20,15,0.72) 55%, rgba(10,20,15,0.88) 100%), url('{{ $heroImage }}');">
+    <div class="hero-banner-inner">
+        <h1 class="hero-banner-title">
+            AGesP — la plateforme de gestion de
+            <span>l'Auto-École GESP</span>
+        </h1>
+        <p class="hero-banner-sub">
+            Inscription, formation, examens et certification des candidats aux
+            permis professionnels D et E, sous l'égide de la Chambre de Commerce
+            et d'Industrie du Burkina Faso (CCI-BF).
+        </p>
+        <div class="hero-banner-actions">
+            {{-- Inscriptions temporairement fermées : le lien ne mène nulle part --}}
+            <a href="#" onclick="return false;" class="btn-pill btn-pill-solid btn-pill-lg btn-pill-disabled"
+               title="Les inscriptions sont temporairement fermées">
+                S'inscrire maintenant <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="#galerie" class="btn-pill btn-pill-outline-light btn-pill-lg">
+                Voir la galerie <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('register') }}" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--o);color:var(--dk);text-decoration:none;font-size:0.82rem;font-weight:700;font-family:'Nunito',sans-serif;border-radius:5px;transition:all 0.2s;white-space:nowrap;">
-            <i class="bi bi-pencil-square"></i> S'inscrire
-        </a>
-        <a href="{{ route('login') }}" class="nav-connexion">
-            <i class="bi bi-person-circle"></i> Connexion
-        </a>
+</div>
+
+{{-- ══ 3 ÉTAPES ══ --}}
+<div class="steps-strip">
+    <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-label">S'inscrire gratuitement en ligne</div>
+    </div>
+    <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-label">Constituer rapidement son dossier</div>
+    </div>
+    <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-label">Suivre sa formation et ses résultats</div>
     </div>
 </div>
 
 {{-- ══ CORPS ══ --}}
 <div class="site-body">
-
-    {{-- ── GAUCHE ── --}}
-    <div class="col-left">
-
-        {{-- Statistiques --}}
-        <div class="side-card">
-            <div class="side-card-head">
-                <i class="bi bi-bar-chart"></i> Statistiques
-            </div>
-            <div class="side-card-body">
-                <div class="side-stat-item">
-                    <span>Candidats inscrits</span>
-                    <span class="side-stat-val">{{ $totalCandidats }}</span>
-                </div>
-                <div class="side-stat-item">
-                    <span>Examens ce mois</span>
-                    <span class="side-stat-val">{{ $examensThisMois }}</span>
-                </div>
-                <div class="side-stat-item">
-                    <span>Formations actives</span>
-                    <span class="side-stat-val">{{ $formationsActives }}</span>
-                </div>
-                <div class="side-stat-item">
-                    <span>Moniteurs</span>
-                    <span class="side-stat-val">{{ $totalMoniteurs }}</span>
-                </div>
-            </div>
-        </div>
-
-        {{-- Liens rapides --}}
-        <div class="side-card">
-            <div class="side-card-head">
-                <i class="bi bi-link-45deg"></i> Liens rapides
-            </div>
-            <div class="side-card-body">
-                <a href="{{ route('login') }}" class="side-link-item">
-                    <i class="bi bi-chevron-right"></i> Espace administrateur
-                </a>
-                <a href="#" class="side-link-item">
-                    <i class="bi bi-chevron-right"></i> Vérifier une inscription
-                </a>
-                <a href="#" class="side-link-item">
-                    <i class="bi bi-chevron-right"></i> Résultats d'examens
-                </a>
-                <a href="#contact" class="side-link-item">
-                    <i class="bi bi-chevron-right"></i> Nous contacter
-                </a>
-            </div>
-        </div>
-
-    </div>
 
     {{-- ── CENTRE ── --}}
     <div class="col-center" id="presentation">
@@ -547,14 +705,9 @@
         <div class="main-card">
             <div class="main-card-head">
                 <i class="bi bi-info-circle"></i>
-                Bienvenue sur AGesp — Système de Gestion Auto-École
+                À propos de la plateforme
             </div>
             <div class="main-card-body">
-                <p>
-                    La plateforme <strong>« AGesp »</strong> est le système de gestion intégré
-                    de l'Auto-École GESP, développé sous l'égide de la
-                    <strong>Chambre de Commerce et d'Industrie du Burkina Faso (CCI-BF)</strong>.
-                </p>
                 <p>
                     Elle permet la gestion complète des candidats, des formations,
                     des examens et des ressources de l'auto-école en toute sécurité.
@@ -570,60 +723,66 @@
             </div>
         </div>
 
-        {{-- Modules --}}
-        <div class="main-card" id="modules">
+        {{-- Galerie : candidats en formation (créneau / conduite) --}}
+        <div class="main-card" id="galerie">
             <div class="main-card-head">
-                <i class="bi bi-grid"></i>
-                Modules disponibles
+                <i class="bi bi-images"></i>
+                Nos candidats en formation
             </div>
             <div class="main-card-body">
-                <div class="modules-grid">
-                    <a href="{{ route('login') }}" class="module-item">
-                        <span class="module-icon">👥</span>
-                        <div class="module-name">Candidats</div>
-                    </a>
-                    <a href="{{ route('login') }}" class="module-item">
-                        <span class="module-icon">📚</span>
-                        <div class="module-name">Formations</div>
-                    </a>
-                    <a href="{{ route('login') }}" class="module-item">
-                        <span class="module-icon">📝</span>
-                        <div class="module-name">Examens</div>
-                    </a>
-                    <a href="{{ route('login') }}" class="module-item">
-                        <span class="module-icon">💰</span>
-                        <div class="module-name">Paiements</div>
-                    </a>
-                    <a href="{{ route('login') }}" class="module-item">
-                        <span class="module-icon">🏆</span>
-                        <div class="module-name">Attestations</div>
-                    </a>
-                    <a href="{{ route('login') }}" class="module-item">
-                        <span class="module-icon">🚗</span>
-                        <div class="module-name">Véhicules</div>
-                    </a>
-                </div>
+                @if(count($galleryImages) > 0)
+                    <div class="gallery-frame">
+                        <div class="gallery-viewport">
+                            <div class="gallery-track">
+                                {{-- La liste est dupliquée pour un défilement continu et fluide --}}
+                                @foreach ([...$galleryImages, ...$galleryImages] as $photo)
+                                    <div class="gallery-item">
+                                        <img src="{{ $photo['url'] }}" alt="{{ $photo['caption'] }}" loading="lazy">
+                                        <div class="gallery-caption">{{ $photo['caption'] }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="gallery-empty">
+                        <i class="bi bi-camera"></i>
+                        <span>
+                            Les photos des candidats en séance de créneau et de conduite
+                            seront bientôt affichées ici.
+                        </span>
+                    </div>
+                @endif
             </div>
         </div>
 
-        {{-- Contact --}}
-        <div class="main-card" id="contact">
+        {{-- FAQ --}}
+        <div class="main-card" id="faq">
             <div class="main-card-head">
-                <i class="bi bi-telephone"></i> Contacts
+                <i class="bi bi-question-circle"></i>
+                Questions fréquentes
             </div>
             <div class="main-card-body">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div>
-                        <div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;color:var(--r);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em;">E-MAIL</div>
-                        <div style="font-size:0.78rem;color:#3a4a40;">contact@gesp.bf</div>
-                        <div style="font-size:0.78rem;color:#3a4a40;">admin@gesp.bf</div>
-                    </div>
-                    <div>
-                        <div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;color:var(--r);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em;">TÉLÉPHONE</div>
-                        <div style="font-size:0.78rem;color:#3a4a40;">+226 25 30 XX XX</div>
-                        <div style="font-size:0.78rem;color:#3a4a40;">+226 70 XX XX XX</div>
-                    </div>
-                </div>
+                <details class="faq-item">
+                    <summary>Comment m'inscrire sur AGesP ? <i class="bi bi-chevron-down"></i></summary>
+                    <p>Cliquez sur « S'inscrire », remplissez le formulaire en plusieurs étapes et joignez les pièces demandées (CNIB, photo d'identité, certificat médical, acte de naissance).</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Puis-je modifier mon dossier après l'avoir soumis ? <i class="bi bi-chevron-down"></i></summary>
+                    <p>Contactez l'administration via la rubrique Contact ci-dessous ; certaines modifications restent possibles tant que le dossier n'est pas validé.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Comment se déroulent les paiements ? <i class="bi bi-chevron-down"></i></summary>
+                    <p>Les frais de formation doivent être réglés avant le début des cours ; un reçu est généré automatiquement après confirmation du paiement.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>La plateforme est-elle sécurisée ? <i class="bi bi-chevron-down"></i></summary>
+                    <p>Oui, l'accès à l'espace administrateur et aux espaces candidats est protégé par authentification, et toute tentative non autorisée est enregistrée.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Quand connaître les résultats d'examen ? <i class="bi bi-chevron-down"></i></summary>
+                    <p>Les résultats du code, du créneau et de la conduite sont communiqués par votre moniteur et disponibles depuis votre espace candidat.</p>
+                </details>
             </div>
         </div>
 
@@ -631,52 +790,6 @@
 
     {{-- ── DROITE ── --}}
     <div class="col-right">
-
-        {{-- Formulaire connexion --}}
-        <div class="login-card">
-            <div class="login-head">
-                <i class="bi bi-person-lock"></i> Connexion
-            </div>
-            <div class="login-body">
-
-                @if ($errors->any())
-                    <div style="background:#fbeaea;color:#c0281e;border-left:3px solid #c0281e;border-radius:5px;padding:7px 10px;font-size:0.72rem;margin-bottom:10px;">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        {{ $errors->first() }}
-                    </div>
-                @endif
-
-                <form method="POST" action="{{ route('login') }}">
-                    @csrf
-                    <label class="lbl"><i class="bi bi-envelope me-1"></i>Email</label>
-                    <input type="email" name="email" class="inp"
-                           value="{{ old('email') }}"
-                           placeholder="votre@email.com"
-                           required autofocus>
-
-                    <label class="lbl"><i class="bi bi-lock me-1"></i>Mot de passe</label>
-                    <input type="password" name="password" class="inp"
-                           placeholder="••••••••"
-                           required>
-
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <label style="display:flex;align-items:center;gap:5px;font-size:0.7rem;color:#6b7a70;cursor:pointer;">
-                            <input type="checkbox" name="remember" style="accent-color:#1a6b3a;"> Se souvenir
-                        </label>
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}"
-                               style="font-size:0.7rem;color:var(--v);text-decoration:none;">
-                                Oublié ?
-                            </a>
-                        @endif
-                    </div>
-
-                    <button type="submit" class="btn-connexion">
-                        <i class="bi bi-box-arrow-in-right"></i> Se connecter
-                    </button>
-                </form>
-            </div>
-        </div>
 
         {{-- Info sécurité --}}
         <div class="side-card">
@@ -687,33 +800,27 @@
                 <p style="font-size:0.75rem;color:#3a4a40;line-height:1.6;">
                     Cet espace est réservé au personnel autorisé de l'Auto-École GESP.
                     Toute tentative d'accès non autorisé est enregistrée.
+                    Utilisez le bouton « Connexion » en haut de la page pour accéder à votre espace.
                 </p>
-            </div>
-        </div>
-
-        {{-- Infos système --}}
-        <div class="side-card">
-            <div class="side-card-head" style="background:#3a4a40;">
-                <i class="bi bi-info-circle"></i> Système
-            </div>
-            <div class="side-card-body">
-                <div class="side-stat-item">
-                    <span>Version</span>
-                    <span style="font-weight:700;font-size:0.78rem;">AGesp v1.0</span>
-                </div>
-                <div class="side-stat-item">
-                    <span>Année</span>
-                    <span style="font-weight:700;font-size:0.78rem;">{{ date('Y') }}</span>
-                </div>
-                <div class="side-stat-item">
-                    <span>Laravel</span>
-                    <span style="font-weight:700;font-size:0.78rem;">v{{ app()->version() }}</span>
-                </div>
             </div>
         </div>
 
     </div>
 
+</div>
+
+{{-- ══ HORAIRES D'OUVERTURE ══ --}}
+<div class="help-banner">
+    <div class="help-banner-text">
+        <div class="help-banner-icon"><i class="bi bi-clock-history"></i></div>
+        <div>
+            <div class="help-banner-title">Horaires d'ouverture</div>
+            <div class="help-banner-desc">
+                Nos bureaux sont ouverts du lundi au vendredi, de 7h30 à 16h00.
+                Les inscriptions et le suivi des dossiers se font uniquement sur ces créneaux.
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- ══ FOOTER ══ --}}

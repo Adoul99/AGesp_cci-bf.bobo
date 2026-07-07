@@ -11,8 +11,8 @@ class DashboardController extends Controller
     {
         $totalCandidats = Candidat::count();
 
-        $statsD = $this->statsParCategorie('D');
-        $statsE = $this->statsParCategorie('E');
+        $permisD = $this->statsParCategorie('D');
+        $permisE = $this->statsParCategorie('E');
 
         $repartitionPermis = Inscription::selectRaw('
                 COALESCE(categorie_permis.nomCategorie, "Non renseigné") AS categorie,
@@ -24,8 +24,8 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'totalCandidats',
-            'statsD',
-            'statsE',
+            'permisD',
+            'permisE',
             'repartitionPermis'
         ));
     }
@@ -41,10 +41,11 @@ class DashboardController extends Controller
         $base = Candidat::whereIn('id', $candidatIds);
 
         return [
+            // "Inscrit" = TOUS les candidats de la catégorie, même logique que CandidatController::index()
             'inscrits' => (clone $base)->count(),
             'code'     => (clone $base)->where('statut', 'code_admis')->count(),
-            'creneau'  => (clone $base)->where('statut', 'creneau')->count(),
-            'conduite' => (clone $base)->where('statut', 'ajourne')->count(),
+            'creneau'  => 0, // ⚠️ aucun statut "creneau" n'existe en base actuellement
+            'conduite' => (clone $base)->where('statut', 'en_formation')->count(),
             'admis'    => (clone $base)->where('statut', 'admis')->count(),
         ];
     }

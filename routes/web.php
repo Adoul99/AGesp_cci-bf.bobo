@@ -46,11 +46,28 @@ Route::get('/', function () {
                             ->whereYear('created_at', now()->year)
                             ->count();
 
+    // ── Galerie photos (candidats en formation : créneau, conduite, véhicules) ──
+    // Les photos sont intégrées directement dans le code (base64), aucun fichier
+    // externe à déposer. Pour changer/ajouter des photos : voir
+    // resources/data/gallery_images.php
+    $galleryImages = [];
+    foreach (require resource_path('data/gallery_images.php') as $photo) {
+        $galleryImages[] = [
+            'url'     => 'data:image/jpeg;base64,' . $photo['data'],
+            'caption' => $photo['caption'],
+        ];
+    }
+
+    // ── Photo de fond du hero ──
+    $heroImage = 'data:image/jpeg;base64,' . require resource_path('data/hero_image.php');
+
     return view('welcome', compact(
         'totalCandidats',
         'totalMoniteurs',
         'formationsActives',
-        'examensThisMois'
+        'examensThisMois',
+        'galleryImages',
+        'heroImage'
     ));
 })->name('home');
 
@@ -159,6 +176,14 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::resource('candidats',          CandidatController::class);
     Route::get('candidats/{candidat}/espace', [EspaceCandidatController::class, 'voirCommeAdmin'])
          ->name('candidats.espace.admin');
+
+    // ── Remplacement d'un candidat désistant ──
+    Route::get('candidats/{candidat}/remplacer', [CandidatController::class, 'remplacerForm'])
+         ->name('candidats.remplacer.form');
+    Route::put('candidats/{candidat}/remplacer', [CandidatController::class, 'remplacerStore'])
+         ->name('candidats.remplacer.store');
+    Route::get('candidats/{candidat}/remplacements', [CandidatController::class, 'remplacementsHistorique'])
+         ->name('candidats.remplacements.historique');
 
     // ── Dossiers ─────────────────────────────────────────────
     Route::resource('dossiers',           DossierController::class);
