@@ -11,6 +11,7 @@ class Evaluation extends Model
         'typeSession_id',
         'dateEvaluation',
         'note',
+        'mention',
         'resultat',
         'statut',
         'moniteur_id',
@@ -43,14 +44,53 @@ class Evaluation extends Model
         return $this->hasMany(NoteEvaluation::class);
     }
 
-    // Calcule automatiquement le résultat selon la note
-    public function getResultatAutomatiqueAttribute(): string
+    // Label lisible du type de session (Code / Créneau / Conduite)
+    public function getLibelleTypeSessionAttribute(): string
     {
-        if (is_null($this->note)) return 'En attente';
-        return $this->note >= 25 ? 'Admis' : 'Ajourné';
+        return match ($this->typeSession?->type) {
+            'code'     => 'Code',
+            'creneau'  => 'Créneau',
+            'conduite' => 'Conduite',
+            default    => $this->typeSession?->type ?? '',
+        };
     }
 
-    // Vérifie si la note est suffisante
+    // Calcule automatiquement si l'évaluation est validée
+    // - Code : note >= 25
+    // - Créneau / Conduite : mention "bien" ou "passable"
+    public function estValidee(): bool
+    {
+        if ($this->typeSession?->type === 'code') {
+            return !is_null($this->note) && $this->note >= 25;
+        }
+
+        return in_array($this->mention, ['bien', 'passable']);
+    }
+
+    // Calcule automatiquement le résultat selon le type de session
+    public function getResultatAutomatiqueAttribute(): string
+    {
+        $type = $this->typeSession?->type;
+
+        if ($type === 'code') {
+            if (is_null($this->note)) return 'En attente';
+            return $this->note >= 25
+                ? 'Validé la session de Code'
+                : 'Échoué la session de Code';
+        }
+
+        if (in_array($type, ['creneau', 'conduite'])) {
+            if (is_null($this->mention) || $this->mention === '') return 'En attente';
+            $libelle = $this->libelle_type_session;
+            return in_array($this->mention, ['bien', 'passable'])
+                ? "Validé la session de {$libelle}"
+                : "Échoué la session de {$libelle}";
+        }
+
+        return 'En attente';
+    }
+
+    // Vérifie si la note est suffisante (Code uniquement)
     public function getNoteValideeAttribute(): bool
     {
         return !is_null($this->note) && $this->note >= 25;

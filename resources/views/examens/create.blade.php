@@ -94,50 +94,39 @@
             </div>
         </div>
 
-        {{-- Candidats --}}
+        {{-- ── Candidats programmés : sélection via liste multiple ── --}}
         <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
             <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
-                👥 Candidats à inscrire à cet examen
+                👥 Candidats programmés — à inscrire à cet examen
             </h2>
 
-            {{-- Candidats admis (prioritaires) --}}
-            @if($candidatsAdmis->isNotEmpty())
-            <div style="margin-bottom:1.5rem; padding:1rem 1.25rem; background:rgba(0,122,94,0.06); border:2px solid var(--color-green); border-radius:var(--radius-md);">
-                <div style="font-size:0.8rem; font-weight:700; color:var(--color-green-dark); margin-bottom:0.75rem;">
-                    🏆 Candidats admis — prêts pour l'examen ({{ $candidatsAdmis->count() }})
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:0.5rem;">
-                    @foreach($candidatsAdmis as $c)
-                    <label style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.875rem; border:2px solid var(--color-green); border-radius:var(--radius-md); cursor:pointer; background:white; font-size:0.875rem; font-weight:600; color:var(--color-dark);">
-                        <input type="checkbox" name="candidat_ids[]" value="{{ $c->id }}"
-                               {{ is_array(old('candidat_ids')) && in_array($c->id, old('candidat_ids')) ? 'checked' : '' }}
-                               style="width:16px; height:16px; accent-color:var(--color-green);">
-                        🏆 {{ $c->nom }} {{ $c->prenom }}
-                    </label>
-                    @endforeach
-                </div>
+            @if($candidatsProgrammes->isEmpty())
+            <div style="padding:2rem; text-align:center; color:var(--color-gray-500); background:var(--color-light); border-radius:var(--radius-md);">
+                📭 Aucun candidat programmé pour le moment.<br>
+                <span style="font-size:0.8rem;">Programmez d'abord des candidats via le module <strong>Programmations</strong>.</span>
             </div>
-            @endif
+            @else
+            <div style="margin-bottom:0.75rem;">
+                <input type="text" id="candidatSearch" onkeyup="filterSelect('candidatSearch','candidatSelect')"
+                       placeholder="🔍 Rechercher un candidat par nom ou prénom..."
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+            </div>
 
-            {{-- Autres candidats --}}
-            @if($autresCandidats->isNotEmpty())
-            <div>
-                <div style="font-size:0.8rem; font-weight:700; color:var(--color-gray-500); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
-                    Autres candidats ({{ $autresCandidats->count() }})
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:0.5rem; max-height:250px; overflow-y:auto; padding:0.25rem;">
-                    @foreach($autresCandidats as $c)
-                    <label style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.875rem; border:2px solid var(--color-gray-100); border-radius:var(--radius-md); cursor:pointer; background:white; font-size:0.875rem; color:var(--color-dark);"
-                           onmouseover="this.style.borderColor='var(--color-green)'" onmouseout="this.style.borderColor='var(--color-gray-100)'">
-                        <input type="checkbox" name="candidat_ids[]" value="{{ $c->id }}"
-                               {{ is_array(old('candidat_ids')) && in_array($c->id, old('candidat_ids')) ? 'checked' : '' }}
-                               style="width:16px; height:16px; accent-color:var(--color-green);">
-                        {{ $c->nom }} {{ $c->prenom }}
-                        <span style="font-size:0.7rem; color:var(--color-gray-500); margin-left:auto;">{{ $c->statut }}</span>
-                    </label>
-                    @endforeach
-                </div>
-            </div>
+            <select name="candidat_ids[]" id="candidatSelect" multiple size="10"
+                    style="width:100%; padding:0.5rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.9rem; color:var(--color-dark); background:white;">
+                @foreach($candidatsProgrammes as $c)
+                    <option value="{{ $c->id }}"
+                            data-search="{{ strtolower($c->nom.' '.$c->prenom) }}"
+                            {{ is_array(old('candidat_ids')) && in_array($c->id, old('candidat_ids')) ? 'selected' : '' }}>
+                        {{ $c->nom }} {{ $c->prenom }} — {{ $c->programmations->last()->typeSession->type ?? '—' }}
+                    </option>
+                @endforeach
+            </select>
+
+            <p style="margin-top:0.75rem; font-size:0.75rem; color:var(--color-gray-500);">
+                ℹ️ Maintenez <strong>Ctrl</strong> (ou <strong>Cmd</strong> sur Mac) enfoncé pour sélectionner plusieurs candidats. Seuls les candidats déjà programmés (module Programmations) apparaissent ici.
+            </p>
             @endif
         </div>
 
@@ -154,4 +143,14 @@
         </div>
     </form>
 </div>
+
+<script>
+function filterSelect(inputId, selectId) {
+    const query = document.getElementById(inputId).value.toLowerCase().trim();
+    const options = document.querySelectorAll('#' + selectId + ' option');
+    options.forEach(opt => {
+        opt.style.display = opt.dataset.search.includes(query) ? '' : 'none';
+    });
+}
+</script>
 </x-layouts::app.sidebar>

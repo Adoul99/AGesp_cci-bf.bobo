@@ -57,7 +57,7 @@
                         <th style="padding: 1rem 1rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidat</th>
                         <th style="padding: 1rem 1rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Type Session</th>
                         <th style="padding: 1rem 1rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Date</th>
-                        <th style="padding: 1rem 1rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Note /30</th>
+                        <th style="padding: 1rem 1rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Note / Mention</th>
                         <th style="padding: 1rem 1rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Résultat</th>
                         <th style="padding: 1rem 1rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Statut</th>
                         <th style="padding: 1rem 1rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Moniteur</th>
@@ -75,7 +75,7 @@
                             {{ $evaluation->candidat->nom ?? 'N/A' }} {{ $evaluation->candidat->prenom ?? '' }}
                         </td>
 
-                        {{-- ✅ Type Session --}}
+                        {{-- Type Session --}}
                         <td style="padding: 0.875rem 1rem; text-align: center;">
                             @if($evaluation->typeSession)
                                 @switch($evaluation->typeSession->type)
@@ -103,16 +103,26 @@
                             </span>
                         </td>
 
-                        {{-- Note --}}
+                        {{-- Note / Mention --}}
                         <td style="padding: 0.875rem 1rem; text-align: center;">
                             @if(!is_null($evaluation->note))
+                                {{-- Session Code : note chiffrée --}}
                                 @php $noteColor = $evaluation->note >= 25 ? 'var(--color-green)' : 'var(--color-red)'; @endphp
                                 <span style="font-size: 1.2rem; font-weight: 800; color: {{ $noteColor }};">{{ $evaluation->note }}</span>
                                 <span style="font-size: 0.75rem; color: var(--color-gray-500);">/30</span>
-                                <br>
-                                <span style="font-size: 0.7rem; font-weight: 600; color: {{ $noteColor }};">
-                                    {{ $evaluation->note >= 25 ? '✅ Validé' : '❌ Non validé' }}
-                                </span>
+                            @elseif(!empty($evaluation->mention))
+                                {{-- Session Créneau/Conduite : mention --}}
+                                @switch($evaluation->mention)
+                                    @case('bien')
+                                        <span style="background: rgba(0,122,94,0.15); color: var(--color-green); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.78rem; font-weight: 700; border: 1px solid var(--color-green-light);">🟢 Bien</span>
+                                        @break
+                                    @case('passable')
+                                        <span style="background: rgba(252,209,22,0.2); color: var(--color-gold-dark); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.78rem; font-weight: 700; border: 1px solid var(--color-gold);">🟡 Passable</span>
+                                        @break
+                                    @case('mediocre')
+                                        <span style="background: rgba(206,17,38,0.1); color: var(--color-red-dark); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.78rem; font-weight: 700; border: 1px solid var(--color-red-light);">🔴 Médiocre</span>
+                                        @break
+                                @endswitch
                             @else
                                 <span style="color: var(--color-gray-500); font-size: 0.85rem;">—</span>
                             @endif
@@ -120,12 +130,18 @@
 
                         {{-- Résultat --}}
                         <td style="padding: 0.875rem 1rem; text-align: center;">
-                            @if($evaluation->resultat == 'Admis')
+                            @if(str_starts_with($evaluation->resultat ?? '', 'Validé'))
+                                <span style="background: rgba(0,122,94,0.15); color: var(--color-green); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; border: 1px solid var(--color-green-light);">🟢 {{ $evaluation->resultat }}</span>
+                            @elseif(str_starts_with($evaluation->resultat ?? '', 'Échoué'))
+                                <span style="background: rgba(206,17,38,0.1); color: var(--color-red-dark); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; border: 1px solid var(--color-red-light);">🔴 {{ $evaluation->resultat }}</span>
+                            @elseif($evaluation->resultat == 'Admis')
                                 <span style="background: rgba(0,122,94,0.15); color: var(--color-green); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; border: 1px solid var(--color-green-light);">🟢 Admis</span>
                             @elseif($evaluation->resultat == 'Ajourné')
                                 <span style="background: rgba(206,17,38,0.1); color: var(--color-red-dark); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; border: 1px solid var(--color-red-light);">🔴 Ajourné</span>
                             @elseif($evaluation->resultat == 'En attente')
                                 <span style="background: rgba(252,209,22,0.2); color: var(--color-gold-dark); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; border: 1px solid var(--color-gold);">⏳ En attente</span>
+                            @elseif($evaluation->resultat == 'Absent')
+                                <span style="background: var(--color-gray-100); color: var(--color-gray-500); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700;">⚪ Absent</span>
                             @else
                                 <span style="background: var(--color-gray-100); color: var(--color-gray-500); padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700;">⚪ {{ $evaluation->resultat }}</span>
                             @endif
@@ -137,8 +153,10 @@
                                 <span style="background: rgba(252,209,22,0.2); color: var(--color-gold-dark); padding: 0.25rem 0.65rem; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; text-transform: uppercase;">En attente</span>
                             @elseif($evaluation->statut == 'reussi')
                                 <span style="background: rgba(0,122,94,0.1); color: var(--color-green); padding: 0.25rem 0.65rem; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; text-transform: uppercase;">Réussi</span>
-                            @else
+                            @elseif($evaluation->statut == 'echoue')
                                 <span style="background: rgba(206,17,38,0.1); color: var(--color-red-dark); padding: 0.25rem 0.65rem; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; text-transform: uppercase;">Échoué</span>
+                            @else
+                                <span style="background: var(--color-gray-100); color: var(--color-gray-500); padding: 0.25rem 0.65rem; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; text-transform: uppercase;">{{ $evaluation->statut ?? '—' }}</span>
                             @endif
                         </td>
 
@@ -181,11 +199,11 @@
         {{-- Résumé statistique --}}
         @if($evaluations->count() > 0)
         @php
-            $total        = $evaluations->count();
-            $admis        = $evaluations->where('resultat', 'Admis')->count();
-            $ajournes     = $evaluations->where('resultat', 'Ajourné')->count();
-            $attente      = $evaluations->whereNull('note')->count();
-            $moyenneNote  = $evaluations->whereNotNull('note')->avg('note');
+            $total       = $evaluations->count();
+            $reussis     = $evaluations->filter(fn($e) => str_starts_with($e->resultat ?? '', 'Validé') || $e->resultat === 'Admis')->count();
+            $echoues     = $evaluations->filter(fn($e) => str_starts_with($e->resultat ?? '', 'Échoué') || $e->resultat === 'Ajourné')->count();
+            $attente     = $evaluations->filter(fn($e) => is_null($e->note) && empty($e->mention))->count();
+            $moyenneNote = $evaluations->whereNotNull('note')->avg('note');
         @endphp
         <div style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
             <div style="padding: 1rem; background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border-left: 4px solid var(--color-dark); text-align: center;">
@@ -193,12 +211,12 @@
                 <div style="font-size: 0.75rem; color: var(--color-gray-500); text-transform: uppercase;">Total</div>
             </div>
             <div style="padding: 1rem; background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border-left: 4px solid var(--color-green); text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: var(--color-green);">{{ $admis }}</div>
-                <div style="font-size: 0.75rem; color: var(--color-gray-500); text-transform: uppercase;">🟢 Admis</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--color-green);">{{ $reussis }}</div>
+                <div style="font-size: 0.75rem; color: var(--color-gray-500); text-transform: uppercase;">🟢 Validées</div>
             </div>
             <div style="padding: 1rem; background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border-left: 4px solid var(--color-red); text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: var(--color-red);">{{ $ajournes }}</div>
-                <div style="font-size: 0.75rem; color: var(--color-gray-500); text-transform: uppercase;">🔴 Ajournés</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--color-red);">{{ $echoues }}</div>
+                <div style="font-size: 0.75rem; color: var(--color-gray-500); text-transform: uppercase;">🔴 Échouées</div>
             </div>
             <div style="padding: 1rem; background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border-left: 4px solid var(--color-gold); text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: 800; color: var(--color-gold-dark);">{{ $attente }}</div>
@@ -208,7 +226,7 @@
                 <div style="font-size: 1.5rem; font-weight: 800; color: {{ ($moyenneNote ?? 0) >= 25 ? 'var(--color-green)' : 'var(--color-red)' }};">
                     {{ $moyenneNote ? number_format($moyenneNote, 1) : '—' }}
                 </div>
-                <div style="font-size: 0.75rem; color: var(--color-gray-500); text-transform: uppercase;">Moyenne /30</div>
+                <div style="font-size: 0.75rem; color: var(--color-gray-500); text-transform: uppercase;">Moyenne /30 (Code)</div>
             </div>
         </div>
         @endif

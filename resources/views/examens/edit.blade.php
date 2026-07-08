@@ -87,26 +87,37 @@
             </div>
         </div>
 
-        {{-- Candidats admis (ajout possible) --}}
-        @if($candidatsAdmis->isNotEmpty())
+        {{-- ── Candidats programmés disponibles : sélection via liste multiple ── --}}
+        @if($candidatsProgrammes->isNotEmpty())
         <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
             <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
-                🏆 Candidats admis disponibles ({{ $candidatsAdmis->count() }})
+                📋 Candidats programmés disponibles ({{ $candidatsProgrammes->count() }})
             </h2>
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:0.5rem;">
-                @foreach($candidatsAdmis as $c)
-                <label style="display:flex; align-items:center; gap:0.6rem; padding:0.6rem 0.875rem; border:2px solid var(--color-green); border-radius:var(--radius-md); cursor:pointer; background:white; font-size:0.875rem; font-weight:600; color:var(--color-dark);">
-                    <input type="checkbox" name="candidat_ids[]" value="{{ $c->id }}"
-                           {{ in_array($c->id, old('candidat_ids', $candidatsSelectionnes)) ? 'checked' : '' }}
-                           style="width:16px; height:16px; accent-color:var(--color-green);">
-                    🏆 {{ $c->nom }} {{ $c->prenom }}
-                </label>
-                @endforeach
+
+            <div style="margin-bottom:0.75rem;">
+                <input type="text" id="candidatSearchDispo" onkeyup="filterSelect('candidatSearchDispo','candidatSelectDispo')"
+                       placeholder="🔍 Rechercher un candidat par nom ou prénom..."
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
             </div>
+
+            <select name="candidat_ids[]" id="candidatSelectDispo" multiple size="8"
+                    style="width:100%; padding:0.5rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.9rem; color:var(--color-dark); background:white;">
+                @foreach($candidatsProgrammes as $c)
+                    <option value="{{ $c->id }}"
+                            data-search="{{ strtolower($c->nom.' '.$c->prenom) }}"
+                            {{ in_array($c->id, old('candidat_ids', $candidatsSelectionnes)) ? 'selected' : '' }}>
+                        {{ $c->nom }} {{ $c->prenom }} — {{ $c->programmations->last()->typeSession->type ?? '—' }}
+                    </option>
+                @endforeach
+            </select>
+            <p style="margin-top:0.75rem; font-size:0.75rem; color:var(--color-gray-500);">
+                ℹ️ Maintenez <strong>Ctrl</strong> enfoncé pour sélectionner plusieurs candidats.
+            </p>
         </div>
         @endif
 
-        {{-- Candidats inscrits avec saisie résultat --}}
+        {{-- ── Candidats inscrits avec saisie résultat : reste en tableau (résultat + observation par ligne) ── --}}
         <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
             <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
                 📋 Candidats inscrits & Résultats ({{ $examen->candidats->count() }})
@@ -117,19 +128,26 @@
                 📭 Aucun candidat inscrit pour le moment.
             </div>
             @else
-            <div style="overflow-x:auto;">
+            <div style="margin-bottom:1rem;">
+                <input type="text" id="candidatSearchInscrits" onkeyup="filterTable('candidatSearchInscrits','candidatsInscritsTableBody','noResultsInscrits')"
+                       placeholder="🔍 Rechercher parmi les candidats inscrits..."
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+            </div>
+
+            <div style="overflow-x:auto; border:1px solid var(--color-gray-100); border-radius:var(--radius-md); max-height:420px; overflow-y:auto;">
                 <table style="width:100%; border-collapse:collapse; font-size:0.875rem;">
-                    <thead>
-                        <tr style="background:rgba(0,122,94,0.08); font-size:0.75rem; text-transform:uppercase;">
-                            <th style="padding:0.75rem 1rem; text-align:left; font-weight:700; color:var(--color-dark);">Inscrire</th>
+                    <thead style="position:sticky; top:0; background:rgba(0,122,94,0.1); font-size:0.72rem; text-transform:uppercase; z-index:1;">
+                        <tr>
+                            <th style="padding:0.75rem 1rem; text-align:center; font-weight:700; color:var(--color-dark); width:70px;">Inscrire</th>
                             <th style="padding:0.75rem 1rem; text-align:left; font-weight:700; color:var(--color-dark);">Candidat</th>
-                            <th style="padding:0.75rem 1rem; text-align:center; font-weight:700; color:var(--color-dark);">Résultat</th>
+                            <th style="padding:0.75rem 1rem; text-align:center; font-weight:700; color:var(--color-dark); width:160px;">Résultat</th>
                             <th style="padding:0.75rem 1rem; text-align:left; font-weight:700; color:var(--color-dark);">Observation</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="candidatsInscritsTableBody">
                         @foreach($examen->candidats as $candidat)
-                        <tr style="border-bottom:1px solid var(--color-gray-100);">
+                        <tr data-search="{{ strtolower($candidat->nom.' '.$candidat->prenom) }}" style="border-bottom:1px solid var(--color-gray-100);">
                             <td style="padding:0.75rem 1rem; text-align:center;">
                                 <input type="checkbox" name="candidat_ids[]" value="{{ $candidat->id }}" checked
                                        style="width:18px; height:18px; accent-color:var(--color-green); cursor:pointer;">
@@ -154,6 +172,9 @@
                         @endforeach
                     </tbody>
                 </table>
+                <div id="noResultsInscrits" style="display:none; padding:1.5rem; text-align:center; color:var(--color-gray-500);">
+                    Aucun candidat ne correspond à cette recherche.
+                </div>
             </div>
             <p style="margin-top:0.75rem; font-size:0.75rem; color:var(--color-gray-500);">
                 ℹ️ Décochez "Inscrire" pour retirer un candidat de l'examen.
@@ -179,4 +200,26 @@
         </div>
     </form>
 </div>
+
+<script>
+function filterSelect(inputId, selectId) {
+    const query = document.getElementById(inputId).value.toLowerCase().trim();
+    const options = document.querySelectorAll('#' + selectId + ' option');
+    options.forEach(opt => {
+        opt.style.display = opt.dataset.search.includes(query) ? '' : 'none';
+    });
+}
+
+function filterTable(inputId, tbodyId, noResultsId) {
+    const query = document.getElementById(inputId).value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#' + tbodyId + ' tr');
+    let visibleCount = 0;
+    rows.forEach(row => {
+        const match = row.dataset.search.includes(query);
+        row.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+    });
+    document.getElementById(noResultsId).style.display = visibleCount === 0 ? 'block' : 'none';
+}
+</script>
 </x-layouts::app.sidebar>

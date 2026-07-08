@@ -99,27 +99,7 @@ class ProgrammationController extends Controller
             'typeSession_id' => $request->typeSession_id,
         ]);
 
-        $candidatIds = $request->candidat_ids;
-        $programmation->candidats()->sync($candidatIds);
-
-        $candidatsAdmis = Candidat::whereIn('id', $candidatIds)
-            ->where('statut', 'admis')
-            ->get();
-
-        if ($candidatsAdmis->isNotEmpty()) {
-            $examenOuvert = \App\Models\Examen::where('statutExamen', 'ouvert')
-                ->orWhereNull('statutExamen')
-                ->latest()
-                ->first();
-
-            if ($examenOuvert) {
-                foreach ($candidatsAdmis as $candidat) {
-                    $examenOuvert->candidats()->syncWithoutDetaching([
-                        $candidat->id => ['resultat' => 'En attente']
-                    ]);
-                }
-            }
-        }
+        $programmation->candidats()->sync($request->candidat_ids);
 
         return redirect()->route('programmations.show', $programmation->id)
             ->with('success', '✅ Programmation créée avec succès.');

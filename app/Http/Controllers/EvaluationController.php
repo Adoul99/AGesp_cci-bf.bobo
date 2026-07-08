@@ -75,6 +75,61 @@ class EvaluationController extends Controller
         ));
     }
 
+    // ── Helpers privés ───────────────────────────────────────────
+
+    /**
+     * Libellé lisible du type de session (Code / Créneau / Conduite).
+     */
+    private function libelleType(?string $type): string
+    {
+        return match ($type) {
+            'code'     => 'Code',
+            'creneau'  => 'Créneau',
+            'conduite' => 'Conduite',
+            default    => $type ?? '',
+        };
+    }
+
+    /**
+     * Calcule resultat + statut pour UNE évaluation, selon le type de session.
+     *
+     * @return array{0:?string,1:?float,2:?string,3:string,4:string} [note, mention, resultat, statut]
+     */
+    private function calculerResultat(bool $absent, ?string $type, ?float $note, ?string $mention): array
+    {
+        $libelle = $this->libelleType($type);
+
+        if ($absent) {
+            return [$note, $mention, 'Absent', 'absent'];
+        }
+
+        // Session Code : logique par note chiffrée /30 (seuil 25)
+        if ($type === 'code') {
+            $mention = null; // pas de mention pour le Code
+            if (is_null($note)) {
+                return [$note, $mention, 'En attente', 'en_attente'];
+            }
+            $valide = $note >= 25;
+            $resultat = $valide ? "Validé la session de {$libelle}" : "Échoué la session de {$libelle}";
+            return [$note, $mention, $resultat, $valide ? 'reussi' : 'echoue'];
+        }
+
+        // Session Créneau / Conduite : logique par mention
+        if (in_array($type, ['creneau', 'conduite'])) {
+            $note = null; // pas de note chiffrée pour Créneau/Conduite
+            if (empty($mention)) {
+                return [$note, $mention, 'En attente', 'en_attente'];
+            }
+            // Bien et Passable = validé, Médiocre = échoué
+            $valide = in_array($mention, ['bien', 'passable']);
+            $resultat = $valide ? "Validé la session de {$libelle}" : "Échoué la session de {$libelle}";
+            return [$note, $mention, $resultat, $valide ? 'reussi' : 'echoue'];
+        }
+
+        // Type inconnu / non défini
+        return [$note, $mention, 'En attente', 'en_attente'];
+    }
+
     // ── STORE (tableau de candidats) ─────────────────────────────
 
     public function store(Request $request)
@@ -86,12 +141,16 @@ class EvaluationController extends Controller
             $typeSessionId   = $request->typeSession_id;
 
             $request->validate([
-                'dateEvaluation'     => 'required|date',
-                'typeSession_id'     => 'nullable|exists:type_sessions,id',
-                'moniteur_id'        => 'nullable|exists:moniteurs,id',
-                'evaluations'        => 'required|array',
-                'evaluations.*.note' => 'nullable|numeric|min:0|max:30',
+                'dateEvaluation'         => 'required|date',
+                'typeSession_id'         => 'nullable|exists:type_sessions,id',
+                'moniteur_id'            => 'nullable|exists:moniteurs,id',
+                'evaluations'            => 'required|array',
+                'evaluations.*.note'     => 'nullable|numeric|min:0|max:30',
+                'evaluations.*.mention'  => 'nullable|in:bien,passable,mediocre',
             ]);
+
+            $typeSession = $typeSessionId ? TypeSession::find($typeSessionId) : null;
+            $type        = $typeSession?->type;
 
             $count = 0;
 
@@ -112,16 +171,18 @@ class EvaluationController extends Controller
             $resultatsPourSession = [];
 
             foreach ($request->evaluations as $candidatId => $data) {
-                $absent  = isset($data['absent']) && $data['absent'] == '1';
-                $noteRaw = isset($data['note']) ? trim($data['note']) : '';
-                $obs     = trim($data['observation'] ?? '');
+                $absent     = isset($data['absent']) && $data['absent'] == '1';
+                $noteRaw    = isset($data['note']) ? trim($data['note']) : '';
+                $mentionRaw = isset($data['mention']) ? trim($data['mention']) : '';
+                $obs        = trim($data['observation'] ?? '');
 
-                // Ignorer si rien n'a été saisi (ni absence, ni note, ni observation)
-                if (!$absent && $noteRaw === '' && $obs === '') continue;
+                // Ignorer si rien n'a été saisi (ni absence, ni note, ni mention, ni observation)
+                if (!$absent && $noteRaw === '' && $mentionRaw === '' && $obs === '') continue;
 
-                $note     = ($absent || $noteRaw === '') ? null : (float) $noteRaw;
-                $resultat = $absent ? 'Absent' : (is_null($note) ? 'En attente' : ($note >= 25 ? 'Admis' : 'Ajourné'));
-                $statut   = $absent ? 'absent' : (is_null($note) ? 'en_attente' : ($note >= 25 ? 'reussi' : 'echoue'));
+                $note    = ($noteRaw !== '') ? (float) $noteRaw : null;
+                $mention = ($mentionRaw !== '') ? $mentionRaw : null;
+
+                [$note, $mention, $resultat, $statut] = $this->calculerResultat($absent, $type, $note, $mention);
 
                 // 1. Enregistrer dans la table evaluations
                 Evaluation::updateOrCreate(
@@ -132,6 +193,7 @@ class EvaluationController extends Controller
                     [
                         'typeSession_id' => $typeSessionId ?: null,
                         'note'           => $note,
+                        'mention'        => $mention,
                         'resultat'       => $resultat,
                         'statut'         => $statut,
                         'moniteur_id'    => $moniteurId ?: null,
@@ -143,6 +205,7 @@ class EvaluationController extends Controller
                 $resultatsPourSession[$candidatId] = [
                     'absent'      => $absent,
                     'note'        => $note,
+                    'mention'     => $mention,
                     'observation' => $obs ?: null,
                 ];
 
@@ -172,19 +235,27 @@ class EvaluationController extends Controller
         // Cas 2 : formulaire individuel (fallback)
         $request->validate([
             'candidat_id'    => 'required|exists:candidats,id',
+            'typeSession_id' => 'nullable|exists:type_sessions,id',
             'dateEvaluation' => 'required|date',
             'note'           => 'nullable|numeric|min:0|max:30',
+            'mention'        => 'nullable|in:bien,passable,mediocre',
             'statut'         => 'required|in:en_attente,reussi,echoue',
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
         ]);
 
-        $note     = $request->note;
-        $resultat = is_null($note) ? 'En attente' : ($note >= 25 ? 'Admis' : 'Ajourné');
+        $typeSession = $request->typeSession_id ? TypeSession::find($request->typeSession_id) : null;
+        $type        = $typeSession?->type;
+
+        [$note, $mention, $resultat] = $this->calculerResultat(
+            false, $type, $request->note, $request->mention
+        );
 
         Evaluation::create([
             'candidat_id'    => $request->candidat_id,
+            'typeSession_id' => $request->typeSession_id,
             'dateEvaluation' => $request->dateEvaluation,
             'note'           => $note,
+            'mention'        => $mention,
             'resultat'       => $resultat,
             'statut'         => $request->statut,
             'moniteur_id'    => $request->moniteur_id,
@@ -211,19 +282,27 @@ class EvaluationController extends Controller
     {
         $request->validate([
             'candidat_id'    => 'required|exists:candidats,id',
+            'typeSession_id' => 'nullable|exists:type_sessions,id',
             'dateEvaluation' => 'required|date',
             'note'           => 'nullable|numeric|min:0|max:30',
+            'mention'        => 'nullable|in:bien,passable,mediocre',
             'statut'         => 'required|in:en_attente,reussi,echoue',
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
         ]);
 
-        $note     = $request->note;
-        $resultat = is_null($note) ? 'En attente' : ($note >= 25 ? 'Admis' : 'Ajourné');
+        $typeSession = $request->typeSession_id ? TypeSession::find($request->typeSession_id) : null;
+        $type        = $typeSession?->type;
+
+        [$note, $mention, $resultat] = $this->calculerResultat(
+            false, $type, $request->note, $request->mention
+        );
 
         $evaluation->update([
             'candidat_id'    => $request->candidat_id,
+            'typeSession_id' => $request->typeSession_id,
             'dateEvaluation' => $request->dateEvaluation,
             'note'           => $note,
+            'mention'        => $mention,
             'resultat'       => $resultat,
             'statut'         => $request->statut,
             'moniteur_id'    => $request->moniteur_id,

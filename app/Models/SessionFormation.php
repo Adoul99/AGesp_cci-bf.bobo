@@ -46,12 +46,13 @@ class SessionFormation extends Model
 
     /**
      * Candidats attachés à cette session (via pivot session_candidat)
-     * Le pivot contient : absent (bool), note (decimal), observation (string)
+     * Le pivot contient : absent (bool), note (decimal, sessions Code),
+     * mention (enum bien/passable/mediocre, sessions Créneau/Conduite), observation (string)
      */
     public function candidats()
     {
         return $this->belongsToMany(Candidat::class, 'session_candidat')
-                    ->withPivot('absent', 'note', 'observation')
+                    ->withPivot('absent', 'note', 'mention', 'observation')
                     ->withTimestamps();
     }
 
@@ -63,8 +64,20 @@ class SessionFormation extends Model
     }
 
     /**
+     * Un candidat du pivot est-il "traité" pour la clôture ?
+     * → absent, OU note renseignée (session Code), OU mention renseignée (Créneau/Conduite).
+     */
+    private function pivotEstTraite($pivot): bool
+    {
+        if ($pivot->absent) return true;
+        if (!is_null($pivot->note)) return true;
+        if (!empty($pivot->mention)) return true;
+        return false;
+    }
+
+    /**
      * Vérifie si la session peut être clôturée :
-     * tous les candidats doivent avoir une note OU être marqués absents.
+     * tous les candidats doivent avoir une note/mention OU être marqués absents.
      */
     public function peutEtreCloturee(): bool
     {
@@ -75,30 +88,29 @@ class SessionFormation extends Model
         }
 
         foreach ($candidats as $c) {
-            if ($c->pivot->absent) continue;
-            if (is_null($c->pivot->note)) return false;
+            if (!$this->pivotEstTraite($c->pivot)) return false;
         }
 
         return true;
     }
 
     /**
-     * Candidats sans note et non marqués absents (bloquants pour la clôture)
+     * Candidats sans note/mention et non marqués absents (bloquants pour la clôture)
      */
     public function candidatsSansNote()
     {
         return $this->candidats->filter(function ($c) {
-            return !$c->pivot->absent && is_null($c->pivot->note);
+            return !$this->pivotEstTraite($c->pivot);
         });
     }
 
     /**
-     * Point d'entrée UNIQUE pour appliquer des résultats (notes/absences/observations)
+     * Point d'entrée UNIQUE pour appliquer des résultats (notes/mentions/absences/observations)
      * à cette session, qu'ils viennent du formulaire de clôture classique OU du
      * module Évaluation. Met à jour le pivot, le statut de chaque candidat, et
      * clôture automatiquement la session si tous les candidats sont traités.
      *
-     * @param array $resultats [$candidatId => ['absent' => bool, 'note' => float|null, 'observation' => string|null]]
+     * @param array $resultats [$candidatId => ['absent' => bool, 'note' => float|null, 'mention' => string|null, 'observation' => string|null]]
      * @return bool true si la session a été clôturée à l'issue de cet appel
      */
     public function appliquerResultats(array $resultats): bool
@@ -116,23 +128,36 @@ class SessionFormation extends Model
                 continue;
             }
 
-            $absent = (bool) ($data['absent'] ?? false);
-            $note   = $absent ? null : ($data['note'] ?? null);
+            $absent  = (bool) ($data['absent'] ?? false);
+            $note    = $absent ? null : ($data['note'] ?? null);
+            $mention = $absent ? null : ($data['mention'] ?? null);
 
             $this->candidats()->updateExistingPivot($candidatId, [
                 'absent'      => $absent,
                 'note'        => $note,
+                'mention'     => $mention,
                 'observation' => $data['observation'] ?? null,
             ]);
 
-            if (!$absent && !is_null($note)) {
+            if (!$absent) {
                 $candidat = Candidat::find($candidatId);
                 if ($candidat) {
                     $nouveauStatut = match ($typeNom) {
-                        'code'     => ($note >= 14) ? 'code_admis' : 'ajourne',
-                        'creneau'  => ($note >= 14) ? 'creneau'    : 'ajourne',
-                        'conduite' => ($note >= 14) ? 'admis'      : 'ajourne',
-                        default    => $candidat->statut,
+                        // Code : validé selon note >= 14 (seuil interne candidat, distinct du seuil d'admission 25/30 de l'évaluation)
+                        'code' => !is_null($note)
+                            ? (($note >= 14) ? 'code_admis' : 'ajourne')
+                            : $candidat->statut,
+
+                        // Créneau/Conduite : validé selon la mention (bien/passable = ok, médiocre = échec)
+                        'creneau' => !is_null($mention)
+                            ? (in_array($mention, ['bien', 'passable']) ? 'creneau' : 'ajourne')
+                            : $candidat->statut,
+
+                        'conduite' => !is_null($mention)
+                            ? (in_array($mention, ['bien', 'passable']) ? 'admis' : 'ajourne')
+                            : $candidat->statut,
+
+                        default => $candidat->statut,
                     };
                     $candidat->update(['statut' => $nouveauStatut]);
                 }

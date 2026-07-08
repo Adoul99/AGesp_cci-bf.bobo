@@ -21,11 +21,17 @@ class ExamenController extends Controller
         $moniteurConnecte = Moniteur::pourUtilisateur(auth()->user());
 
         $moniteurs = Moniteur::all();
-        // Candidats admis (prêts pour l'examen) + tous les autres
-        $candidatsAdmis = Candidat::where('statut', 'admis')->orderBy('nom')->get();
-        $autresCandidats = Candidat::where('statut', '!=', 'admis')->orderBy('nom')->get();
+
+        // Candidats déjà programmés (via le module Programmations) et pas encore
+        // inscrits à un examen — ce sont eux que l'agent peut inscrire à l'examen.
+        $candidatsProgrammes = Candidat::whereHas('programmations')
+            ->whereDoesntHave('examens')
+            ->with('programmations.typeSession')
+            ->orderBy('nom')
+            ->get();
+
         return view('examens.create', compact(
-            'moniteurs', 'candidatsAdmis', 'autresCandidats', 'moniteurConnecte'
+            'moniteurs', 'candidatsProgrammes', 'moniteurConnecte'
         ));
     }
 
@@ -74,12 +80,19 @@ class ExamenController extends Controller
     public function edit(Examen $examen)
     {
         $moniteurs = Moniteur::all();
-        $candidatsAdmis = Candidat::where('statut', 'admis')->orderBy('nom')->get();
-        $autresCandidats = Candidat::where('statut', '!=', 'admis')->orderBy('nom')->get();
+
+        // Candidats déjà programmés, pas encore inscrits à CET examen précis
+        $idsDejaInscrits = $examen->candidats->pluck('id');
+        $candidatsProgrammes = Candidat::whereHas('programmations')
+            ->whereNotIn('id', $idsDejaInscrits)
+            ->with('programmations.typeSession')
+            ->orderBy('nom')
+            ->get();
+
         $candidatsSelectionnes = $examen->candidats->pluck('id')->toArray();
+
         return view('examens.edit', compact(
-            'examen', 'moniteurs', 'candidatsAdmis',
-            'autresCandidats', 'candidatsSelectionnes'
+            'examen', 'moniteurs', 'candidatsProgrammes', 'candidatsSelectionnes'
         ));
     }
 
