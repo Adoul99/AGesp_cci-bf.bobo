@@ -33,7 +33,8 @@ class InscriptionController extends Controller
     // ── Enregistrement : crée candidat + dossier + paiement + inscription ──
     public function store(Request $request)
     {
-        $dateLimitePermisC = Carbon::now()->subMonths(6)->format('Y-m-d');
+        $dateLimitePermisC  = Carbon::now()->subMonths(6)->format('Y-m-d');
+        $dateLimiteMajorite = Carbon::now()->subYears(21)->format('Y-m-d');
 
         $request->validate([
             // Identité du candidat
@@ -41,12 +42,13 @@ class InscriptionController extends Controller
             'prenom'                 => 'required|string|max:100',
             'telephone'              => 'required|string|max:20',
             'email'                  => 'nullable|email|max:100',
-            'dateNaissance'          => 'required|date',
+            // ✅ Âge minimum requis : 21 ans à la date d'inscription, et année de naissance plausible
+            'dateNaissance'          => "required|date|after:1920-01-01|before_or_equal:{$dateLimiteMajorite}",
             'lieuNaissance'          => 'required|string|max:100',
 
             // Permis C — obligatoire, avec règle des 6 mois minimum
             'numeroPermisC'          => 'required|string|max:50',
-            'dateDelivrancePermisC'  => "required|date|before_or_equal:{$dateLimitePermisC}",
+            'dateDelivrancePermisC'  => "required|date|after:1970-01-01|before_or_equal:{$dateLimitePermisC}",
             'lieuDelivrancePermisC'  => 'required|string|max:100',
 
             // Formation
@@ -63,6 +65,9 @@ class InscriptionController extends Controller
             // Paiement — encaissé en espèces au moment de l'inscription
             'montantPaiement'        => 'required|numeric|min:1',
         ], [
+            'dateNaissance.before_or_equal' =>
+                "Le candidat doit avoir au moins 21 ans (né avant le " .
+                Carbon::parse($dateLimiteMajorite)->format('d/m/Y') . ").",
             'dateDelivrancePermisC.before_or_equal' =>
                 "Le permis C doit avoir au moins 6 mois d'ancienneté (délivré avant le " .
                 Carbon::parse($dateLimitePermisC)->format('d/m/Y') . ").",

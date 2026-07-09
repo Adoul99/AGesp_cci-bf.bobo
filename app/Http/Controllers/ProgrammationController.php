@@ -26,17 +26,39 @@ class ProgrammationController extends Controller
     }
 
     /**
-     * AJAX : retourne les candidats classés par mérite (note décroissante)
-     * pour un type de session donné.
+     * Rang numérique d'une mention, pour le tri (plus haut = meilleur).
+     */
+    private function rangMention(?string $mention): int
+    {
+        return match ($mention) {
+            'bien'     => 2,
+            'passable' => 1,
+            'mediocre' => 0,
+            default    => -1,
+        };
+    }
+
+    /**
+     * AJAX : retourne les candidats classés par mérite pour un type de session donné.
      *
-     * Règle d'éligibilité UNIQUE : avoir une évaluation "Admis" (note ≥ 25)
-     * pour ce type de session précis (Code / Créneau / Conduite).
+     * Règle d'éligibilité :
+     * - Code           → meilleure note ≥ 25/30
+     * - Créneau/Conduite → mention "bien" ou "passable" (obtenue au moins une fois)
+     *
+     * Les candidats DÉJÀ programmés pour CE type de session précis sont exclus
+     * (on ne veut pas reprogrammer quelqu'un déjà inscrit à l'examen).
      */
     public function candidatsParType(Request $request, TypeSession $typeSession)
     {
         $type = strtolower($typeSession->type);
 
+        // Candidats déjà programmés pour ce type de session
+        $dejaProgrammesIds = Candidat::whereHas('programmations', function ($q) use ($typeSession) {
+            $q->where('typeSession_id', $typeSession->id);
+        })->pluck('id');
+
         $tousCandidats = Candidat::with('evaluations.typeSession')
+            ->whereNotIn('id', $dejaProgrammesIds)
             ->orderBy('nom')
             ->get();
 
@@ -46,30 +68,58 @@ class ProgrammationController extends Controller
 
         foreach ($tousCandidats as $c) {
             $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
-            $meilleureNote = $evalsType->whereNotNull('note')->max('note');
 
             $item = [
                 'id'           => $c->id,
                 'nom'          => $c->nom,
                 'prenom'       => $c->prenom,
-                'note'         => $meilleureNote,
                 'statut_label' => $c->statut_label,
             ];
 
-            if (!is_null($meilleureNote) && $meilleureNote >= 25) {
-                $eligibles->push($item);
-            } elseif (!is_null($meilleureNote)) {
-                $item['motif'] = "Note insuffisante : {$meilleureNote}/30 (seuil 25)";
-                $nonEligibles->push($item);
+            if ($type === 'code') {
+                // ── Session Code : logique par note chiffrée ──
+                $meilleureNote = $evalsType->whereNotNull('note')->max('note');
+                $item['note']    = $meilleureNote;
+                $item['mention'] = null;
+
+                if (!is_null($meilleureNote) && $meilleureNote >= 25) {
+                    $eligibles->push($item);
+                } elseif (!is_null($meilleureNote)) {
+                    $item['motif'] = "Note insuffisante : {$meilleureNote}/30 (seuil 25)";
+                    $nonEligibles->push($item);
+                } else {
+                    $item['motif'] = "Pas encore évalué en Code";
+                    $autres->push($item);
+                }
             } else {
-                $item['motif'] = "Pas encore évalué en " . $typeSession->type;
-                $autres->push($item);
+                // ── Créneau / Conduite : logique par mention ──
+                $meilleureMention = $evalsType->whereNotNull('mention')
+                    ->sortByDesc(fn($e) => $this->rangMention($e->mention))
+                    ->first()?->mention;
+
+                $item['note']    = null;
+                $item['mention'] = $meilleureMention;
+
+                if (in_array($meilleureMention, ['bien', 'passable'])) {
+                    $eligibles->push($item);
+                } elseif (!is_null($meilleureMention)) {
+                    $item['motif'] = "Mention insuffisante : " . ucfirst($meilleureMention);
+                    $nonEligibles->push($item);
+                } else {
+                    $libelle = $type === 'creneau' ? 'Créneau' : 'Conduite';
+                    $item['motif'] = "Pas encore évalué en {$libelle}";
+                    $autres->push($item);
+                }
             }
         }
 
-        $eligibles    = $eligibles->sortByDesc('note')->values();
+        if ($type === 'code') {
+            $eligibles = $eligibles->sortByDesc('note')->values();
+        } else {
+            $eligibles = $eligibles->sortByDesc(fn($e) => $this->rangMention($e['mention']))->values();
+        }
         $autres       = $autres->sortBy('nom')->values();
-        $nonEligibles = $nonEligibles->sortByDesc('note')->values();
+        $nonEligibles = $nonEligibles->sortBy('nom')->values();
 
         return response()->json([
             'eligibles'    => $eligibles,
@@ -116,9 +166,22 @@ class ProgrammationController extends Controller
         $candidats = $programmation->candidats->map(function ($c) use ($type) {
             $c->load('evaluations.typeSession');
             $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
-            $c->meilleure_note = $evalsType->whereNotNull('note')->max('note');
+
+            if ($type === 'code') {
+                $c->meilleure_note    = $evalsType->whereNotNull('note')->max('note');
+                $c->meilleure_mention = null;
+            } else {
+                $c->meilleure_note    = null;
+                $c->meilleure_mention = $evalsType->whereNotNull('mention')
+                    ->sortByDesc(fn($e) => $this->rangMention($e->mention))
+                    ->first()?->mention;
+            }
             return $c;
-        })->sortByDesc('meilleure_note')->values();
+        });
+
+        $candidats = $type === 'code'
+            ? $candidats->sortByDesc('meilleure_note')->values()
+            : $candidats->sortByDesc(fn($c) => $this->rangMention($c->meilleure_mention))->values();
 
         return view('programmations.show', compact('programmation', 'candidats'));
     }
@@ -135,9 +198,22 @@ class ProgrammationController extends Controller
         $candidatsActuels = $programmation->candidats->map(function ($c) use ($type) {
             $c->load('evaluations.typeSession');
             $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
-            $c->note = $evalsType->whereNotNull('note')->max('note');
+
+            if ($type === 'code') {
+                $c->note    = $evalsType->whereNotNull('note')->max('note');
+                $c->mention = null;
+            } else {
+                $c->note    = null;
+                $c->mention = $evalsType->whereNotNull('mention')
+                    ->sortByDesc(fn($e) => $this->rangMention($e->mention))
+                    ->first()?->mention;
+            }
             return $c;
-        })->sortByDesc('note')->values();
+        });
+
+        $candidatsActuels = $type === 'code'
+            ? $candidatsActuels->sortByDesc('note')->values()
+            : $candidatsActuels->sortByDesc(fn($c) => $this->rangMention($c->mention))->values();
 
         return view('programmations.edit', compact(
             'programmation', 'moniteurs', 'typeSessions',

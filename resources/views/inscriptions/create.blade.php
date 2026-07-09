@@ -118,8 +118,25 @@
             margin-right: 0.8rem; cursor: pointer;
         }
 
+        /* ── Libellé au-dessus de chaque champ de pièce jointe, pour indiquer quel document déposer ── */
+        .file-label {
+            font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            color: rgba(255,255,255,0.6); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem;
+        }
+        .file-label .req { color: var(--cci-gold-light); }
+        .file-label .opt { color: rgba(255,255,255,0.4); font-weight: 600; text-transform: none; letter-spacing: 0; }
+
         .hint-line { font-size: 0.8rem; color: rgba(255,255,255,0.55); margin-top: 0.65rem; display: flex; align-items: center; gap: 0.4rem; }
         .hint-line.warn { color: var(--cci-gold-light); font-weight: 700; }
+
+        /* ── Âge calculé automatiquement à partir de la date de naissance ── */
+        .age-tag {
+            display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.7rem;
+            padding: 0.35rem 0.9rem; background: rgba(255,255,255,0.1);
+            border-radius: 20px; font-size: 0.78rem; font-weight: 700; color: #fff;
+        }
+        .age-tag.ok { background: rgba(26,107,58,0.35); color: #c9f2d8; }
+        .age-tag.ko { background: rgba(192,40,30,0.35); color: #ffd6d1; }
 
         .amount-highlight {
             border-color: rgba(212,160,23,0.5);
@@ -189,19 +206,25 @@
                 @csrf
 
                 <div class="qgroup">
-                    <div class="qnum"><span class="n">1</span> Nom complet</div>
+                    <div class="qnum"><span class="n">1</span> Identité</div>
                     <div class="qrow">
-                        <div class="field-box"><input type="text" name="prenom" value="{{ old('prenom') }}" placeholder="Prénom" required></div>
                         <div class="field-box"><input type="text" name="nom" value="{{ old('nom') }}" placeholder="Nom de famille" required></div>
+                        <div class="field-box"><input type="text" name="prenom" value="{{ old('prenom') }}" placeholder="Prénom" required></div>
                     </div>
                 </div>
 
                 <div class="qgroup">
                     <div class="qnum"><span class="n">2</span> Naissance</div>
                     <div class="qrow">
-                        <div class="field-box"><input type="date" name="dateNaissance" value="{{ old('dateNaissance') }}" required></div>
+                        <div class="field-box"><input type="date" id="dateNaissance" name="dateNaissance" value="{{ old('dateNaissance') }}" min="{{ now()->subYears(90)->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}" required></div>
                         <div class="field-box"><input type="text" name="lieuNaissance" value="{{ old('lieuNaissance') }}" placeholder="Lieu de naissance" required></div>
                     </div>
+                    {{-- ✅ Rappel + âge calculé automatiquement --}}
+                    <div class="hint-line warn">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        Le candidat doit avoir au moins 21 ans à la date d'inscription.
+                    </div>
+                    <span id="ageTag" class="age-tag" style="display:none;"></span>
                 </div>
 
                 <div class="qgroup">
@@ -220,7 +243,7 @@
                         <div class="field-box"><input type="text" name="numeroPermisC" value="{{ old('numeroPermisC') }}" placeholder="Numéro du permis C" required></div>
                         <div class="field-box"><input type="text" name="lieuDelivrancePermisC" value="{{ old('lieuDelivrancePermisC') }}" placeholder="Lieu de délivrance" required></div>
                     </div>
-                    <div class="field-box"><input type="date" name="dateDelivrancePermisC" value="{{ old('dateDelivrancePermisC') }}" required></div>
+                    <div class="field-box"><input type="date" id="dateDelivrancePermisC" name="dateDelivrancePermisC" value="{{ old('dateDelivrancePermisC') }}" min="{{ now()->subYears(60)->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}" required></div>
                     <div class="hint-line warn">
                         <i class="bi bi-exclamation-circle-fill"></i>
                         Doit être antérieure au {{ \Carbon\Carbon::now()->subMonths(6)->format('d/m/Y') }}
@@ -252,18 +275,34 @@
                     <span class="amount-tag"><i class="bi bi-check-circle-fill"></i> Tarif standard : 135 000 FCFA</span>
                 </div>
 
+                {{-- ✅ Chaque champ indique maintenant clairement quelle pièce y déposer --}}
                 <div class="qgroup">
                     <div class="qnum"><span class="n">9</span> Pièces jointes</div>
                     <div class="qrow">
-                        <div class="field-box file-box"><i class="bi bi-file-earmark-text"></i><input type="file" name="cnib" required></div>
-                        <div class="field-box file-box"><i class="bi bi-person-badge"></i><input type="file" name="photo_identite" required></div>
+                        <div>
+                            <div class="file-label">CNIB <span class="req">*</span></div>
+                            <div class="field-box file-box"><i class="bi bi-file-earmark-text"></i><input type="file" name="cnib" required></div>
+                        </div>
+                        <div>
+                            <div class="file-label">Photo d'identité <span class="req">*</span></div>
+                            <div class="field-box file-box"><i class="bi bi-person-badge"></i><input type="file" name="photo_identite" required></div>
+                        </div>
                     </div>
                     <div class="qrow" style="margin-top: 1.25rem;">
-                        <div class="field-box file-box"><i class="bi bi-heart-pulse"></i><input type="file" name="certificat_medical" required></div>
-                        <div class="field-box file-box"><i class="bi bi-file-earmark-person"></i><input type="file" name="acte_naissance" required></div>
+                        <div>
+                            <div class="file-label">Certificat médical <span class="req">*</span></div>
+                            <div class="field-box file-box"><i class="bi bi-heart-pulse"></i><input type="file" name="certificat_medical" required></div>
+                        </div>
+                        <div>
+                            <div class="file-label">Acte de naissance <span class="req">*</span></div>
+                            <div class="field-box file-box"><i class="bi bi-file-earmark-person"></i><input type="file" name="acte_naissance" required></div>
+                        </div>
                     </div>
                     <div class="qrow" style="margin-top: 1.25rem;">
-                        <div class="field-box file-box"><i class="bi bi-card-checklist"></i><input type="file" name="permis_c"></div>
+                        <div>
+                            <div class="file-label">Copie du permis C <span class="opt">(optionnel)</span></div>
+                            <div class="field-box file-box"><i class="bi bi-card-checklist"></i><input type="file" name="permis_c"></div>
+                        </div>
                     </div>
                     <div class="hint-line">CNIB, Photo d'identité, Certificat médical et Acte de naissance sont obligatoires.</div>
                 </div>
@@ -275,4 +314,68 @@
             </form>
         </div>
     </div>
+
+    {{-- ✅ Empêche la saisie d'années invalides (ex: 5 chiffres) sur tous les champs date du formulaire --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('input[type="date"]').forEach(function (input) {
+                input.addEventListener('input', function () {
+                    if (!input.value) { input.setCustomValidity(''); return; }
+                    const annee = input.value.split('-')[0];
+                    const anneeCourante = new Date().getFullYear();
+                    if (annee.length !== 4 || Number(annee) > anneeCourante + 1 || Number(annee) < 1900) {
+                        input.setCustomValidity('Année invalide.');
+                    } else {
+                        input.setCustomValidity('');
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- ✅ Calcule et affiche l'âge du candidat dès qu'il saisit sa date de naissance --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dateInput = document.getElementById('dateNaissance');
+            const ageTag = document.getElementById('ageTag');
+            if (!dateInput || !ageTag) return;
+
+            function majAge() {
+                if (!dateInput.value) { ageTag.style.display = 'none'; return; }
+
+                // ✅ Garde-fou : rejette les années saisies avec un nombre de chiffres anormal
+                const anneeSaisie = dateInput.value.split('-')[0];
+                const anneeCourante = new Date().getFullYear();
+                if (anneeSaisie.length !== 4 || Number(anneeSaisie) > anneeCourante || Number(anneeSaisie) < anneeCourante - 90) {
+                    ageTag.style.display = 'inline-flex';
+                    ageTag.className = 'age-tag ko';
+                    ageTag.innerHTML = '<i class="bi bi-x-circle-fill"></i> Date de naissance invalide';
+                    dateInput.setCustomValidity('Date de naissance invalide.');
+                    return;
+                }
+                dateInput.setCustomValidity('');
+
+                const naissance = new Date(dateInput.value);
+                const aujourdHui = new Date();
+                let age = aujourdHui.getFullYear() - naissance.getFullYear();
+                const moisDiff = aujourdHui.getMonth() - naissance.getMonth();
+                if (moisDiff < 0 || (moisDiff === 0 && aujourdHui.getDate() < naissance.getDate())) {
+                    age--;
+                }
+
+                ageTag.style.display = 'inline-flex';
+                if (age >= 21) {
+                    ageTag.className = 'age-tag ok';
+                    ageTag.innerHTML = '<i class="bi bi-check-circle-fill"></i> Âge : ' + age + ' ans — condition remplie';
+                } else {
+                    ageTag.className = 'age-tag ko';
+                    ageTag.innerHTML = '<i class="bi bi-x-circle-fill"></i> Âge : ' + age + ' ans — le candidat doit avoir au moins 21 ans';
+                }
+            }
+
+            dateInput.addEventListener('change', majAge);
+            dateInput.addEventListener('input', majAge);
+            majAge();
+        });
+    </script>
 </x-layouts::app.sidebar>

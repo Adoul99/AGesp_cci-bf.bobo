@@ -144,6 +144,12 @@ Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () 
     Route::resource('type_sessions',      TypeSessionController::class);
 
     // ── Examens ──────────────────────────────────────────────
+    // Route AJAX (candidats programmés pour un type d'examen donné) : doit être
+    // déclarée AVANT le Route::resource pour éviter tout conflit avec
+    // examens/{examen} (sinon Laravel tenterait de résoudre "candidats-par-type"
+    // comme un identifiant d'examen).
+    Route::get('examens/candidats-par-type/{typeSession}', [ExamenController::class, 'candidatsParType'])
+         ->name('examens.candidats-par-type');
     Route::resource('examens',            ExamenController::class);
 
     // ── Évaluations ──────────────────────────────────────────

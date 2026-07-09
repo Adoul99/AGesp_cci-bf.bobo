@@ -8,6 +8,7 @@ class Examen extends Model
 {
     protected $fillable = [
         'libelle',
+        'typeSession_id',
         'dateDebut',
         'dateFin',
         'statutExamen',
@@ -17,6 +18,11 @@ class Examen extends Model
     public function moniteur()
     {
         return $this->belongsTo(Moniteur::class, 'moniteur_id');
+    }
+
+    public function typeSession()
+    {
+        return $this->belongsTo(TypeSession::class, 'typeSession_id');
     }
 
     /**

@@ -124,11 +124,13 @@
                 </div>
             </div>
 
+            @php $typeExamen = strtolower($programmation->typeSession->type ?? ''); @endphp
+
             <div class="info-grid">
                 <div class="info-item">
                     <div class="info-label">Type d'examen</div>
                     <div class="info-value">
-                        @switch($programmation->typeSession->type ?? '')
+                        @switch($typeExamen)
                             @case('code') 📋 Code @break
                             @case('creneau') 🔧 Créneau @break
                             @case('conduite') 🚗 Conduite @break
@@ -153,13 +155,27 @@
                 </div>
             </div>
 
+            {{--
+                Colonne "Note /30" pour le type Code, remplacée par "Mention"
+                pour Créneau/Conduite (qui n'ont pas de note chiffrée).
+                $typeExamen est déjà défini plus haut (en minuscule, cohérent
+                avec le contrôleur) pour éviter tout souci de casse.
+                Le contrôleur (ProgrammationController::show) fournit soit
+                $c->meilleure_note, soit $c->meilleure_mention selon le type.
+            --}}
             <table class="liste-candidats">
                 <thead>
                     <tr>
                         <th class="rank-cell">N°</th>
                         <th>Nom</th>
                         <th>Prénom</th>
-                        <th class="note-cell">Note /30</th>
+                        <th class="note-cell">
+                            @if($typeExamen === 'code')
+                                Note /30
+                            @else
+                                Mention
+                            @endif
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,7 +184,18 @@
                         <td class="rank-cell">{{ $i + 1 }}</td>
                         <td style="font-weight:700;">{{ $c->nom }}</td>
                         <td>{{ $c->prenom }}</td>
-                        <td class="note-cell">{{ $c->meilleure_note ?? '—' }}</td>
+                        <td class="note-cell">
+                            @if($typeExamen === 'code')
+                                {{ $c->meilleure_note ?? '—' }}
+                            @else
+                                @switch($c->meilleure_mention ?? null)
+                                    @case('bien') Bien @break
+                                    @case('passable') Passable @break
+                                    @case('mediocre') Médiocre @break
+                                    @default —
+                                @endswitch
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
