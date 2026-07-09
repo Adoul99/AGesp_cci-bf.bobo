@@ -21,10 +21,12 @@
     .wrap { max-width:850px; margin:30px auto; padding:0 20px; }
     .card { background:white; border-radius:14px; box-shadow:0 4px 20px rgba(26,107,58,0.12); padding:30px 32px; margin-bottom:20px; }
 
-    /* ===== DOCUMENT OFFICIEL — Format CFTRA ===== */
+    /* ===== DOCUMENT OFFICIEL — Format CFTRA / A4 ===== */
     .attestation-officielle {
         background:#fff; border:1.5px solid #000; padding:55px 65px 40px;
         color:#000; font-family:Georgia,'Times New Roman',serif; position:relative;
+        /* Aperçu écran calé sur les proportions A4 (21cm x 29.7cm) */
+        width:21cm; min-height:29.7cm; box-sizing:border-box; margin:0 auto;
     }
 
     .att-letterhead { text-align:left; margin-bottom:35px; }
@@ -55,10 +57,21 @@
     }
     .att-table th { background:#f3f3f3; }
 
-    .att-closing { font-size:1.02rem; line-height:1.8; margin-bottom:55px; }
+    .att-closing { font-size:1.02rem; line-height:1.8; margin-bottom:40px; }
 
     .att-signature-block {
-        margin-left:auto; width:fit-content; text-align:center; font-size:0.98rem; line-height:2.1;
+        margin-left:auto; width:fit-content; text-align:center; font-size:0.98rem; line-height:1.9;
+    }
+
+    /* Grand espace réservé à la signature et au cachet, entre la mention et le nom imprimé */
+    .att-signature-space {
+        height:110px;
+        border-bottom:1px dotted #999;
+        margin:6px 0 10px;
+    }
+    .att-signature-hint {
+        font-size:0.68rem; color:#999; font-style:italic; text-transform:uppercase; letter-spacing:0.5px;
+        margin-top:4px;
     }
 
     .att-doc-ref {
@@ -83,26 +96,35 @@
         .wrap { margin:0; padding:0; max-width:100%; width:100%; }
         .card { box-shadow:none; padding:0; margin:0; background:transparent; }
 
-        /* Compression du contenu pour tenir sur une seule page A4 */
+        /* Une seule page A4 — hauteur minimale (pas forcée) pour ne jamais déborder
+           sur une 2e page, avec un espacement fixe qui répartit le contenu */
         .attestation-officielle {
-            border:1.5px solid #000; margin:0; padding:22px 40px 18px; width:100%; box-sizing:border-box;
+            border:1.5px solid #000; margin:0; padding:24px 42px 18px;
+            width:100%; min-height:calc(297mm - 20mm); box-sizing:border-box;
+            page-break-after: avoid; page-break-inside: avoid;
         }
-        .att-letterhead { margin-bottom:18px; }
-        .att-letterhead .lh-line { font-size:0.85rem; padding-bottom:2px; margin-bottom:8px; }
+        .att-letterhead { margin-bottom:20px; }
+        .att-letterhead .lh-line { font-size:0.92rem; padding-bottom:3px; margin-bottom:10px; }
 
-        .att-title-box { margin:0 auto 20px; padding:9px 22px; font-size:0.95rem; }
+        .att-title-box { margin:0 auto 26px; padding:11px 26px; font-size:0.98rem; }
 
-        .att-body { font-size:0.86rem; line-height:1.55; margin-bottom:16px; }
+        .att-body { font-size:0.9rem; line-height:1.8; margin-bottom:20px; }
 
-        .att-table-intro { font-size:0.86rem; margin-bottom:8px; }
-        .att-table { margin-bottom:18px; }
-        .att-table th, .att-table td { padding:6px 12px; font-size:0.76rem; }
+        .att-table-intro { font-size:0.9rem; margin-bottom:10px; }
+        .att-table { margin-bottom:22px; }
+        .att-table th, .att-table td { padding:8px 14px; font-size:0.82rem; }
 
-        .att-closing { font-size:0.86rem; line-height:1.5; margin-bottom:22px; }
+        .att-closing { font-size:0.9rem; line-height:1.6; margin-bottom:0; }
 
-        .att-signature-block { font-size:0.82rem; line-height:1.6; }
+        /* Espacement fixe (et non "auto") avant la signature : répartit le contenu
+           sans jamais dépendre d'un calcul de hauteur qui pourrait déborder sur une 2e page */
+        .att-signature-block { font-size:0.9rem; line-height:1.8; margin-top:38mm; }
 
-        /* Référence document repositionnée en flux normal pour ne pas chevaucher */
+        /* Espace de signature */
+        .att-signature-space { height:28mm; margin:8px 0 8px; }
+        .att-signature-hint { font-size:0.65rem; }
+
+        /* Référence document en flux normal, sans chevauchement */
         .att-doc-ref { position:static; margin-top:14px; text-align:left; }
     }
     </style>
@@ -181,7 +203,11 @@
 
             <div class="att-signature-block">
                 Fait à Bobo-Dioulasso, {{ \Carbon\Carbon::parse($attestation->dateDelivrance)->format('d/m/Y') }}<br>
-                Le Directeur Régional<br><br>
+                Le Directeur Régional
+
+                <div class="att-signature-space"></div>
+                <div class="att-signature-hint">Signature et cachet</div>
+
                 <strong>{{ $attestation->directeurNom ?? 'François DRABO' }}</strong>
             </div>
 

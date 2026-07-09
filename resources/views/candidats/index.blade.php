@@ -96,16 +96,48 @@
         .badge-attente  { background: rgba(252,209,22,0.15); color: #7a5800; border: 1px solid rgba(252,209,22,0.4); }
         .badge-aucun    { background: rgba(102,102,102,0.1); color: #555;    border: 1px solid rgba(102,102,102,0.2); }
 
-        /* ── Carte tableau ── */
+        /* ── Carte tableau : fond et bordures harmonisés avec la palette verte ── */
         .table-card {
-            background: white; border-radius: var(--radius-lg); overflow: hidden;
-            box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100); position: relative;
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 10px 28px rgba(0,77,58,0.12);
+            border: 1px solid rgba(0,122,94,0.16);
+            position: relative;
         }
+
+        /* En-tête en dégradé (au lieu d'un vert uni) pour plus de profondeur */
+        .candidats-table thead {
+            background: linear-gradient(90deg, var(--color-green-dark) 0%, var(--color-green) 55%, var(--color-green-light) 100%);
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.82rem;
+            letter-spacing: 0.6px;
+        }
+        .candidats-table thead th {
+            padding: 1.05rem 1.5rem;
+            border-bottom: 3px solid var(--color-gold);
+            text-align: left;
+        }
+        .candidats-table thead th.th-num { text-align: center; }
+
+        /* Lignes zébrées, teintées de vert très clair, avec séparateurs doux */
+        .candidats-table tbody tr {
+            border-bottom: 1px solid rgba(0,122,94,0.12);
+            transition: background-color var(--transition-normal);
+        }
+        .candidats-table tbody tr:nth-child(even) { background-color: rgba(0,122,94,0.025); }
+        .candidats-table tbody tr:hover { background-color: rgba(0,122,94,0.07) !important; }
+        .candidats-table tbody tr:last-child { border-bottom: none; }
+        .candidats-table tbody td { padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem; }
+
         .row-num {
             display: flex; align-items: center; justify-content: center;
             width: 32px; height: 32px; border-radius: 8px;
             background: var(--color-green); color: #fff;
             font-weight: 800; font-size: 0.8rem; margin: 0 auto;
+            box-shadow: 0 2px 6px rgba(0,122,94,0.35);
         }
         .th-num { width: 54px; text-align: center; }
 
@@ -167,15 +199,15 @@
         <!-- Table -->
         <div class="table-card">
             <div style="overflow-x:auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: var(--color-green); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.5px;">
+            <table class="candidats-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
                     <tr>
-                        <th class="th-num" style="padding: 1rem 0.5rem; border-bottom: 3px solid var(--color-gold);">N°</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidat</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Téléphone</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Email</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Pièces Jointes</th>
-                        <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Actions</th>
+                        <th class="th-num">N°</th>
+                        <th>Candidat</th>
+                        <th>Téléphone</th>
+                        <th>Email</th>
+                        <th>Pièces Jointes</th>
+                        <th style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -210,14 +242,12 @@
                             default            => 'Aucun dossier',
                         };
                     @endphp
-                    <tr style="border-bottom: 1px solid var(--color-gray-100); transition: all var(--transition-normal);"
-                        onmouseover="this.style.backgroundColor='rgba(0, 122, 94, 0.04)'"
-                        onmouseout="this.style.backgroundColor='transparent'">
+                    <tr>
 
-                        <td class="th-num" style="padding: 1rem 0.5rem;"><span class="row-num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span></td>
+                        <td class="th-num"><span class="row-num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span></td>
 
                         {{-- ── Colonne Candidat : photo + nom + badge dossier ── --}}
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
+                        <td>
                             <div style="display:flex; align-items:center; gap:0.75rem;">
                                 {{-- Photo --}}
                                 @if($dossier && $dossier->photo_identite)
@@ -243,11 +273,11 @@
                             </div>
                         </td>
 
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">{{ $candidat->telephone }}</td>
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">{{ $candidat->email }}</td>
+                        <td>{{ $candidat->telephone }}</td>
+                        <td>{{ $candidat->email }}</td>
 
                         {{-- Pièces Jointes --}}
-                        <td style="padding: 1rem 1.5rem;">
+                        <td>
                             @if($dossier)
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                 @foreach($piecesJointes as $key => $label)
@@ -267,7 +297,7 @@
                         </td>
 
                         {{-- Actions --}}
-                        <td style="padding: 1rem 1.5rem; text-align: center;">
+                        <td style="text-align: center;">
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
 
                                 {{-- Voir son espace --}}

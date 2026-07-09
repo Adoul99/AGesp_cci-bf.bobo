@@ -1,170 +1,254 @@
 <x-layouts::app.sidebar title="Liste des Groupes">
     <style>
         :root {
-            /* Couleurs principales */
             --color-red: #CE1126;
-            --color-green: #007A5E;
-            --color-gold: #FCD116;
-            
-            /* Nuances */
-            --color-red-light: #E85040;
             --color-red-dark: #A00D20;
+            --color-green: #007A5E;
             --color-green-light: #00A572;
             --color-green-dark: #004D3A;
-            --color-gold-light: #FFE657;
+            --color-gold: #FCD116;
             --color-gold-dark: #E5B800;
-            
-            /* Neutres */
-            --color-dark: #1A1A1A;
-            --color-light: #F8F8F8;
-            --color-gray-100: #E8E8E8;
-            --color-gray-200: #D1D1D1;
-            --color-gray-500: #666666;
-            
-            /* Ombres */
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-            
-            /* Transitions & Bordures */
-            --transition-normal: 300ms ease-in-out;
-            --radius-md: 8px;
-            --radius-lg: 12px;
+
+            --bg-page-start: #0B0E14;
+            --bg-page-end: #171B26;
+            --bg-card: #12161F;
+            --border-subtle: rgba(255,255,255,0.08);
+            --text-main: #F2F3F5;
+            --text-dim: #9AA1AC;
+
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-card: 0 10px 30px rgba(0,0,0,0.35);
+            --transition-normal: 220ms ease;
         }
 
-        /* --- STYLE POUR L'EXPORTATION (IMPRESSION) --- */
+        .gp-page {
+            min-height: 100vh;
+            padding: 2.5rem;
+            background: radial-gradient(circle at 15% 0%, rgba(0,122,94,0.15), transparent 45%),
+                        radial-gradient(circle at 85% 10%, rgba(206,17,38,0.12), transparent 40%),
+                        linear-gradient(180deg, var(--bg-page-start) 0%, var(--bg-page-end) 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text-main);
+        }
+
+        .gp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .gp-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--color-gold);
+            margin-bottom: 0.75rem;
+        }
+        .gp-eyebrow::before {
+            content: '';
+            width: 8px; height: 8px;
+            background: var(--color-gold);
+            border-radius: 2px;
+        }
+        .gp-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(90deg, #FFFFFF 0%, #C9CDD4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .gp-header-actions { display: flex; gap: 0.75rem; }
+        .gp-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+        }
+        .gp-btn-primary {
+            background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%);
+            color: white;
+            box-shadow: 0 6px 16px rgba(206,17,38,0.25);
+        }
+        .gp-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(206,17,38,0.4); }
+        .gp-btn-gold {
+            background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
+            color: #1A1A1A;
+            box-shadow: 0 6px 16px rgba(252,209,22,0.2);
+        }
+        .gp-btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(252,209,22,0.35); }
+
+        .gp-table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead {
+            background: linear-gradient(90deg, rgba(0,122,94,0.35) 0%, rgba(0,77,58,0.35) 100%);
+            color: #E7FBF4;
+        }
+        th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border-bottom: 2px solid rgba(252,209,22,0.5);
+        }
+        td {
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        tbody tr { transition: background var(--transition-normal); }
+        tbody tr:hover { background: rgba(0,122,94,0.08); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .gp-nom-groupe { font-weight: 700; }
+        .gp-date-pill {
+            background: rgba(0,122,94,0.18);
+            color: var(--color-green-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .gp-candidat-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .gp-candidat-pill {
+            background: rgba(255,255,255,0.05);
+            color: #C9CDD4;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border-subtle);
+        }
+        .gp-empty-text { color: var(--text-dim); font-style: italic; font-size: 0.8rem; }
+
+        .gp-row-actions { display: flex; gap: 0.5rem; justify-content: center; }
+        .gp-icon-btn {
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-subtle);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-decoration: none;
+            padding: 0;
+            transition: all var(--transition-normal);
+        }
+        .gp-icon-btn.edit { color: var(--color-green-light); }
+        .gp-icon-btn.edit:hover { background: var(--color-green); color: white; transform: scale(1.08); }
+        .gp-icon-btn.delete { color: #FF6B6B; }
+        .gp-icon-btn.delete:hover { background: #D32F2F; color: white; transform: scale(1.08); }
+
+        .gp-summary {
+            margin-top: 1.5rem;
+            padding: 1rem 1.25rem;
+            background: rgba(0,122,94,0.12);
+            border-left: 3px solid var(--color-green-light);
+            border-radius: var(--radius-md);
+            color: #B9EBDD;
+            font-size: 0.875rem;
+        }
+
+        .gp-empty-state {
+            padding: 3.5rem 1rem;
+            text-align: center;
+            color: var(--text-dim);
+        }
+
         @media print {
-            .no-print, 
-            .header-section div:last-child, 
-            table th:last-child, 
-            table td:last-child,
-            nav, .sidebar {
-                display: none !important;
-            }
-            body { background: white !important; color: black !important; }
-            .content-wrapper { padding: 0 !important; margin: 0 !important; }
-            .header-section { 
-                box-shadow: none !important; 
-                border: 1px solid #ccc !important;
-                border-left: 4px solid var(--color-red) !important;
-                margin-bottom: 2rem !important;
-            }
-            table { border-collapse: collapse !important; border: 1px solid #000 !important; }
-            th { background: #f2f2f2 !important; color: black !important; border: 1px solid #000 !important; }
-            td { border: 1px solid #ccc !important; }
+            .no-print, .gp-header-actions, table th:last-child, table td:last-child { display: none !important; }
+            .gp-page { background: white; color: black; padding: 0; }
+            .gp-table-card { box-shadow: none; border: 1px solid #ccc; }
         }
     </style>
 
-    <div class="content-wrapper" style="padding: 2rem;">
-        
-        <!-- En-tête de la section -->
-        <div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
+    <div class="gp-page">
+        <div class="gp-header">
             <div>
-                <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-dark); margin: 0; display: flex; align-items: center;">
-                    <span style="width: 5px; height: 35px; background: linear-gradient(180deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%); margin-right: 1rem; border-radius: 2px;"></span>
-                    Liste des Groupes
-                </h1>
+                <div class="gp-eyebrow">CCI-BF — Bobo-Dioulasso</div>
+                <h1 class="gp-title">Liste des Groupes</h1>
             </div>
-            
-            <!-- Boutons d'action rapides -->
-            <div style="display: flex; gap: 1rem;">
-                <a href="{{ route('groupes.create') }}" 
-                   style="background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-md); text-decoration: none; font-weight: 600; border: 2px solid var(--color-red); cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.8rem;"
-                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(206, 17, 38, 0.3)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    + Nouveau Groupe
-                </a>
-                
-                <button onclick="window.print()"
-                   style="background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%); color: var(--color-dark); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); border: 2px solid var(--color-gold); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.8rem;"
-                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(252, 209, 22, 0.3)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ⬇️ Exporter en PDF
-                </button>
+
+            <div class="gp-header-actions no-print">
+                <a href="{{ route('groupes.create') }}" class="gp-btn gp-btn-primary">+ Nouveau Groupe</a>
+                <button onclick="window.print()" class="gp-btn gp-btn-gold">⬇️ Exporter en PDF</button>
             </div>
         </div>
 
-        <!-- Table container -->
-        <div style="background: white; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: linear-gradient(90deg, var(--color-green) 0%, var(--color-green-light) 100%); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.5px;">
+        <div class="gp-table-card">
+            <table>
+                <thead>
                     <tr>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Nom Groupe</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Date Début Formation</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidats</th>
-                        <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Actions</th>
+                        <th>Nom Groupe</th>
+                        <th>Date Début Formation</th>
+                        <th>Candidats</th>
+                        <th style="text-align:center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($groupes as $groupe)
-                    <tr style="border-bottom: 1px solid var(--color-gray-100); transition: all var(--transition-normal);"
-                        onmouseover="this.style.backgroundColor='rgba(0, 122, 94, 0.04)'"
-                        onmouseout="this.style.backgroundColor='transparent'">
-                        
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem; font-weight: 600;">
-                            👥 {{ $groupe->nomGroupe }}
-                        </td>
-                        
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
-                            <span style="background: rgba(0, 122, 94, 0.15); color: var(--color-green); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 500;">
-                                {{ \Carbon\Carbon::parse($groupe->dateDebutFormation)->format('d/m/Y') }}
-                            </span>
-                        </td>
-                        
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
-                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <tr>
+                        <td class="gp-nom-groupe">👥 {{ $groupe->nomGroupe }}</td>
+                        <td><span class="gp-date-pill">{{ \Carbon\Carbon::parse($groupe->dateDebutFormation)->format('d/m/Y') }}</span></td>
+                        <td>
+                            <div class="gp-candidat-pills">
                                 @forelse($groupe->candidats as $candidat)
-                                    <span style="background: rgba(0, 122, 94, 0.08); color: var(--color-green-dark); padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(0, 122, 94, 0.2);">
-                                        👨‍🎓 {{ $candidat->nom }} {{ $candidat->prenom }}
-                                    </span>
+                                    <span class="gp-candidat-pill">👨‍🎓 {{ $candidat->nom }} {{ $candidat->prenom }}</span>
                                 @empty
-                                    <span style="color: var(--color-gray-500); font-style: italic; font-size: 0.8rem;">Aucun candidat</span>
+                                    <span class="gp-empty-text">Aucun candidat</span>
                                 @endforelse
                             </div>
                         </td>
-                        
-                        <td style="padding: 1rem 1.5rem; text-align: center;">
-                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <!-- Bouton Éditer -->
-                                <a href="{{ route('groupes.edit', $groupe->id) }}" 
-                                   style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: var(--color-green); border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; text-decoration: none; font-size: 1.2rem;"
-                                   onmouseover="this.style.backgroundColor='var(--color-green)'; this.style.color='white'; this.style.transform='scale(1.1)'"
-                                   onmouseout="this.style.backgroundColor='var(--color-gray-100)'; this.style.color='var(--color-green)'; this.style.transform='scale(1)'"
-                                   title="Éditer">
-                                    ✎
-                                </a>
-                                
-                                <!-- Bouton Supprimer -->
-                                <form method="POST" action="{{ route('groupes.destroy', $groupe->id) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce groupe ?');">
+                        <td>
+                            <div class="gp-row-actions">
+                                <a href="{{ route('groupes.edit', $groupe->id) }}" class="gp-icon-btn edit" title="Éditer">✎</a>
+                                <form method="POST" action="{{ route('groupes.destroy', $groupe->id) }}" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce groupe ?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
-                                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: #D32F2F; border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; font-size: 1.2rem; padding: 0;"
-                                            onmouseover="this.style.backgroundColor='#D32F2F'; this.style.color='white'; this.style.transform='scale(1.1)'"
-                                            onmouseout="this.style.backgroundColor='var(--color-gray-100)'; this.style.color='#D32F2F'; this.style.transform='scale(1)'"
-                                            title="Supprimer">
-                                        ✕
-                                    </button>
+                                    <button type="submit" class="gp-icon-btn delete" title="Supprimer">✕</button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" style="padding: 3rem; text-align: center; color: var(--color-gray-500);">
-                            <p style="margin: 0; font-size: 1rem;">📭 Aucun groupe trouvé</p>
-                        </td>
+                        <td colspan="4" class="gp-empty-state">📭 Aucun groupe trouvé</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <!-- Message de résumé -->
         @if($groupes->count() > 0)
-        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 122, 94, 0.1); border-left: 4px solid var(--color-green); border-radius: var(--radius-md); color: var(--color-green-dark);">
-            <strong>Total :</strong> {{ $groupes->count() }} groupe(s) actif(s)
-        </div>
+        <div class="gp-summary"><strong>Total :</strong> {{ $groupes->count() }} groupe(s) actif(s)</div>
         @endif
     </div>
 </x-layouts::app.sidebar>

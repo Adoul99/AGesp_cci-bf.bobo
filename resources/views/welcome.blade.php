@@ -32,7 +32,6 @@
             var(--v) 66%,var(--v) 100%);
     }
 
-    /* ── Bandeau de navigation (logo + liens + boutons) ── */
     .top-bar {
         background : var(--v);
         box-shadow : 0 2px 10px rgba(0,0,0,0.15);
@@ -127,7 +126,6 @@
     .btn-pill-outline-light { background:rgba(255,255,255,0.06); color:white; border-color:rgba(255,255,255,0.65); }
     .btn-pill-outline-light:hover { background:rgba(255,255,255,0.18); }
 
-    /* ── Bouton désactivé (inscriptions temporairement fermées) ── */
     .btn-pill-disabled {
         opacity     : 0.5;
         cursor      : not-allowed;
@@ -135,7 +133,6 @@
     }
     .btn-pill-disabled:hover { background:inherit; }
 
-    /* ── Hero plein écran avec photo de fond ── */
     .hero-banner {
         background-size    : cover;
         background-position: center;
@@ -145,7 +142,14 @@
         padding            : 40px 24px;
     }
 
-    .hero-banner-inner { max-width:900px; margin:0 auto; }
+    .hero-banner-inner {
+        max-width: 900px;
+        margin: 0 auto;
+        background: rgba(11,47,29,0.28);
+        backdrop-filter: blur(2px);
+        border-radius: 16px;
+        padding: 28px 32px;
+    }
 
     .hero-banner-title {
         font-family: 'Nunito',sans-serif;
@@ -154,21 +158,22 @@
         line-height: 1.25;
         color      : white;
         margin-bottom: 20px;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.35);
     }
 
-    .hero-banner-title span { color:var(--vc); }
+    .hero-banner-title span { color:var(--o); }
 
     .hero-banner-sub {
-        color      : rgba(255,255,255,0.88);
+        color      : rgba(255,255,255,0.95);
         font-size  : 1rem;
         line-height: 1.7;
         max-width  : 680px;
         margin-bottom: 30px;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.3);
     }
 
     .hero-banner-actions { display:flex; gap:14px; flex-wrap:wrap; }
 
-    /* ── Bandeau 3 étapes (chevauche le bas du hero) ── */
     .steps-strip {
         max-width : 1100px;
         margin    : -34px auto 0;
@@ -201,7 +206,6 @@
 
     .step-label { font-size:0.85rem; color:#3a4a40; font-weight:600; }
 
-    /* ── FAQ (accordéon) ── */
     .faq-item {
         border       : 1px solid rgba(26,107,58,0.15);
         border-radius: 8px;
@@ -236,7 +240,6 @@
         color     : #5a6b60;
     }
 
-    /* ── Bandeau Besoin d'aide ── */
     .help-banner {
         max-width : 1180px;
         margin    : 24px auto 0;
@@ -459,7 +462,6 @@
 
     html, body { overflow-x: hidden; }
 
-    /* ── Galerie photos : candidats en formation (créneau / conduite) ── */
     .col-center, .main-card, .main-card-body { min-width: 0; }
 
     .gallery-frame {
@@ -536,7 +538,6 @@
         to   { transform: translateX(-50%); }
     }
 
-    /* ── Cartes de contact (adresse, téléphone, e-mail, WhatsApp) ── */
     .contact-cards {
         display              : grid;
         grid-template-columns: repeat(2, 1fr);
@@ -602,6 +603,7 @@
         .btn-pill { padding:7px 14px; font-size:0.7rem; }
 
         .hero-banner { min-height:420px; padding:32px 18px; }
+        .hero-banner-inner { padding:20px 22px; }
         .hero-banner-title { font-size:1.7rem; }
         .hero-banner-sub { font-size:0.88rem; }
         .btn-pill-lg { padding:11px 18px; font-size:0.78rem; }
@@ -646,7 +648,6 @@
         </div>
 
         <div class="top-actions">
-            {{-- Inscriptions temporairement fermées : le lien ne mène nulle part --}}
             <a href="#" onclick="return false;" class="btn-pill btn-pill-outline btn-pill-disabled"
                title="Les inscriptions sont temporairement fermées">S'INSCRIRE</a>
             <a href="{{ route('login') }}" class="btn-pill btn-pill-solid">CONNEXION</a>
@@ -655,7 +656,18 @@
 </div>
 
 {{-- ══ HERO ══ --}}
-<div class="hero-banner" style="background-image:linear-gradient(180deg, rgba(10,20,15,0.55) 0%, rgba(10,20,15,0.72) 55%, rgba(10,20,15,0.88) 100%), url('{{ $heroImage }}');">
+{{--
+    Overlay allégé : dégradé teinté vert CCI-BF (au lieu de noir), concentré
+    surtout à gauche/en bas là où le texte se trouve, pour laisser le reste
+    de la photo (le camion, le décor) bien visible et lumineux.
+    Le bloc de texte a en plus son propre fond semi-transparent avec léger
+    flou (backdrop-filter) pour rester parfaitement lisible sans assombrir
+    toute l'image.
+--}}
+<div class="hero-banner" style="background-image:
+    linear-gradient(100deg, rgba(11,47,29,0.55) 0%, rgba(11,47,29,0.32) 40%, rgba(11,47,29,0.08) 65%, rgba(11,47,29,0.02) 85%),
+    linear-gradient(0deg, rgba(11,47,29,0.25) 0%, rgba(11,47,29,0.02) 40%),
+    url('{{ $heroImage }}');">
     <div class="hero-banner-inner">
         <h1 class="hero-banner-title">
             AGesP — la plateforme de gestion de
@@ -667,7 +679,6 @@
             et d'Industrie du Burkina Faso (CCI-BF).
         </p>
         <div class="hero-banner-actions">
-            {{-- Inscriptions temporairement fermées : le lien ne mène nulle part --}}
             <a href="#" onclick="return false;" class="btn-pill btn-pill-solid btn-pill-lg btn-pill-disabled"
                title="Les inscriptions sont temporairement fermées">
                 S'inscrire maintenant <i class="bi bi-arrow-right"></i>
@@ -734,7 +745,6 @@
                     <div class="gallery-frame">
                         <div class="gallery-viewport">
                             <div class="gallery-track">
-                                {{-- La liste est dupliquée pour un défilement continu et fluide --}}
                                 @foreach ([...$galleryImages, ...$galleryImages] as $photo)
                                     <div class="gallery-item">
                                         <img src="{{ $photo['url'] }}" alt="{{ $photo['caption'] }}" loading="lazy">
