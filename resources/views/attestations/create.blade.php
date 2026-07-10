@@ -28,6 +28,12 @@
     </div>
     @endif
 
+    @if(isset($candidatPreselectionne) && $candidatPreselectionne)
+    <div style="margin-bottom:1.5rem; padding:1rem 1.5rem; background:rgba(0,122,94,0.1); border-left:4px solid var(--color-green); border-radius:var(--radius-md); color:var(--color-green-dark); font-weight:600;">
+        🎓 Candidat présélectionné automatiquement depuis l'examen — vérifiez les informations avant validation.
+    </div>
+    @endif
+
     @if($candidats->isEmpty())
     <div style="padding:2rem; text-align:center; background:white; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); color:var(--color-gray-500);">
         📭 Aucun candidat admis disponible. Tous les candidats admis ont déjà une attestation, ou aucun candidat n'a encore validé le permis (code + créneau + conduite).
@@ -66,7 +72,8 @@
                     <option value="">-- Choisir un candidat admis --</option>
                     @foreach($candidats as $c)
                         @php $sug = $suggestions[$c->id] ?? []; @endphp
-                        <option value="{{ $c->id }}" {{ old('candidat_id') == $c->id ? 'selected' : '' }}
+                        <option value="{{ $c->id }}"
+                                {{ old('candidat_id', $candidatPreselectionne ?? null) == $c->id ? 'selected' : '' }}
                                 data-formation-debut="{{ $sug['formationDateDebut'] ? \Carbon\Carbon::parse($sug['formationDateDebut'])->format('Y-m-d') : '' }}"
                                 data-formation-fin="{{ $sug['formationDateFin'] ? \Carbon\Carbon::parse($sug['formationDateFin'])->format('Y-m-d') : '' }}"
                                 data-admission-code="{{ $sug['dateAdmissionCode'] ? \Carbon\Carbon::parse($sug['dateAdmissionCode'])->format('Y-m-d') : '' }}"
@@ -225,5 +232,14 @@ function appliquerSuggestions(select) {
         document.getElementById('categorieObtenue').value = categorie;
     }
 }
+
+// Si un candidat est présélectionné (via ?candidat_id=... depuis le module Examens),
+// on applique immédiatement ses suggestions au chargement de la page.
+document.addEventListener('DOMContentLoaded', function () {
+    const select = document.getElementById('candidat_id');
+    if (select && select.value) {
+        appliquerSuggestions(select);
+    }
+});
 </script>
 </x-layouts::app.sidebar>

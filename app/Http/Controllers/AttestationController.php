@@ -15,7 +15,7 @@ class AttestationController extends Controller
         return view('attestations.index', compact('attestations'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         // Seuls les candidats admis (code + créneau + conduite) peuvent recevoir une attestation
         // et qui n'ont pas déjà d'attestation existante
@@ -35,7 +35,17 @@ class AttestationController extends Controller
         // Suggestions de dates + catégorie par candidat (auto-remplissage JS, modifiable)
         $suggestions = $candidats->mapWithKeys(fn($c) => [$c->id => $this->calculerSuggestions($c)]);
 
-        return view('attestations.create', compact('candidats', 'examens', 'numeroAuto', 'suggestions'));
+        // Candidat présélectionné depuis le lien "🎓 Attestation" du module Examens
+        // (?candidat_id=...). On vérifie qu'il fait bien partie des candidats
+        // éligibles avant de l'imposer, sinon on l'ignore silencieusement.
+        $candidatPreselectionne = $request->query('candidat_id');
+        if ($candidatPreselectionne && !$candidats->contains('id', (int) $candidatPreselectionne)) {
+            $candidatPreselectionne = null;
+        }
+
+        return view('attestations.create', compact(
+            'candidats', 'examens', 'numeroAuto', 'suggestions', 'candidatPreselectionne'
+        ));
     }
 
     public function store(Request $request)

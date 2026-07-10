@@ -12,7 +12,9 @@ class ExamenController extends Controller
 {
     public function index()
     {
-        $examens = Examen::with(['moniteur', 'candidats', 'typeSession'])->latest()->get();
+        // "candidats.attestations" chargé en avance pour éviter une requête
+        // supplémentaire par candidat dans la vue (bouton "Établir l'attestation").
+        $examens = Examen::with(['moniteur', 'candidats.attestations', 'typeSession'])->latest()->get();
         return view('examens.index', compact('examens'));
     }
 
@@ -150,8 +152,25 @@ class ExamenController extends Controller
             $examen->candidats()->detach();
         }
 
-        return redirect()->route('examens.index')
-            ->with('success', '✅ Examen mis à jour.');
+        // --- Recalcul du statut "admis" ---
+        // C'est ICI, et UNIQUEMENT ici, juste après la saisie des résultats
+        // officiels de l'examen (venant du ministère), que le passage au
+        // statut "admis" peut se produire. Un candidat n'est jamais rendu
+        // "admis" par la progression interne (formation, évaluations).
+        $nouveauxAdmis = [];
+        foreach ($examen->candidats as $candidat) {
+            if ($candidat->mettreAJourStatutApresExamen()) {
+                $nouveauxAdmis[] = $candidat->nom . ' ' . $candidat->prenom;
+            }
+        }
+
+        $message = '✅ Examen mis à jour.';
+        if (!empty($nouveauxAdmis)) {
+            $message .= ' 🎓 Candidat(s) admis : ' . implode(', ', $nouveauxAdmis)
+                . '. Vous pouvez maintenant établir leur(s) attestation(s).';
+        }
+
+        return redirect()->route('examens.index')->with('success', $message);
     }
 
     public function destroy(Examen $examen)

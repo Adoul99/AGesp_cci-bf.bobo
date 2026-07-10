@@ -86,6 +86,12 @@
             </div>
         </div>
 
+        @if(session('success'))
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(0, 122, 94, 0.1); border-left: 4px solid var(--color-green); border-radius: var(--radius-md); color: var(--color-green-dark); font-weight: 600;">
+                {!! session('success') !!}
+            </div>
+        @endif
+
         <!-- Table container -->
         <div style="background: white; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
             <table style="width: 100%; border-collapse: collapse;">
@@ -159,9 +165,24 @@
                             @if($examen->candidats->isNotEmpty())
                                 <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
                                     @foreach($examen->candidats as $c)
-                                    <span style="background:rgba(0,122,94,0.1); color:var(--color-green-dark); padding:0.2rem 0.6rem; border-radius:50px; font-size:0.72rem; font-weight:700; border:1px solid rgba(0,122,94,0.2);">
-                                        🏆 {{ $c->nom }} {{ $c->prenom }}
-                                    </span>
+                                        <span style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(0,122,94,0.1); color:var(--color-green-dark); padding:0.2rem 0.6rem; border-radius:50px; font-size:0.72rem; font-weight:700; border:1px solid rgba(0,122,94,0.2);">
+                                            🏆 {{ $c->nom }} {{ $c->prenom }}
+                                            @if($c->statut === 'admis')
+                                                @if($c->attestations->isEmpty())
+                                                    {{-- Admis officiellement + pas encore d'attestation → action directe --}}
+                                                    <a href="{{ route('attestations.create', ['candidat_id' => $c->id]) }}"
+                                                       title="Établir l'attestation de {{ $c->nom }} {{ $c->prenom }}"
+                                                       style="display:inline-flex; align-items:center; gap:0.2rem; margin-left:0.25rem; background:var(--color-gold); color:var(--color-dark); padding:0.1rem 0.5rem; border-radius:50px; font-size:0.68rem; font-weight:800; text-decoration:none; text-transform:uppercase; letter-spacing:0.02em; box-shadow:0 2px 6px rgba(252,209,22,0.4);">
+                                                        🎓 Attestation
+                                                    </a>
+                                                @else
+                                                    {{-- Déjà une attestation délivrée --}}
+                                                    <span style="display:inline-flex; align-items:center; margin-left:0.25rem; color: var(--color-green); font-size:0.68rem; font-weight:800;" title="Attestation déjà délivrée">
+                                                        ✅
+                                                    </span>
+                                                @endif
+                                            @endif
+                                        </span>
                                     @endforeach
                                 </div>
                             @else
@@ -206,7 +227,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" style="padding: 3rem; text-align: center; color: var(--color-gray-500);">
+                        <td colspan="7" style="padding: 3rem; text-align: center; color: var(--color-gray-500);">
                             <p style="margin: 0; font-size: 1rem;">📭 Aucun examen trouvé</p>
                         </td>
                     </tr>

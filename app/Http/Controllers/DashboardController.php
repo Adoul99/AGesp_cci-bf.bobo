@@ -40,12 +40,28 @@ class DashboardController extends Controller
 
         $base = Candidat::whereIn('id', $candidatIds);
 
+        // Code / Créneau / Conduite : progression INTERNE (évaluations saisies
+        // par les moniteurs). On se base sur le champ statut de l'évaluation
+        // ('reussi'), PAS sur resultat qui contient un texte libre du type
+        // "Validé la session de Créneau" et ne vaut jamais littéralement "Admis"
+        // (voir EvaluationController::calculerResultat()).
+        $aValideType = function ($ids, string $type) {
+            return Candidat::whereIn('id', $ids)
+                ->whereHas('evaluations', function ($q) use ($type) {
+                    $q->where('statut', 'reussi')
+                      ->whereHas('typeSession', fn($qq) => $qq->where('type', $type));
+                })
+                ->count();
+        };
+
         return [
             'total'    => (clone $base)->count(), // candidats uniques de cette catégorie
             'inscrits' => (clone $base)->where('statut', 'inscrit')->count(),
-            'code'     => (clone $base)->where('statut', 'code_admis')->count(),
-            'creneau'  => 0, // ⚠️ aucun statut "creneau" n'existe en base actuellement
-            'conduite' => (clone $base)->where('statut', 'en_formation')->count(),
+            'code'     => $aValideType($candidatIds, 'code'),
+            'creneau'  => $aValideType($candidatIds, 'creneau'),
+            'conduite' => $aValideType($candidatIds, 'conduite'),
+            // Admis : UNIQUEMENT via le résultat OFFICIEL de l'examen (ministère),
+            // cf. Candidat::mettreAJourStatutApresExamen() dans ExamenController::update().
             'admis'    => (clone $base)->where('statut', 'admis')->count(),
         ];
     }

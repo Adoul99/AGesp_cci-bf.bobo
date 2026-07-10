@@ -105,10 +105,21 @@ class Candidat extends Model
     }
 
     /**
-     * Met à jour automatiquement le statut selon les évaluations
+     * Met à jour la progression du candidat selon ses évaluations INTERNES
+     * (formation : code, conduite, créneau évalués en interne par les
+     * moniteurs). Cette méthode ne déclenche JAMAIS le statut "admis" :
+     * ce statut final est réservé exclusivement aux résultats OFFICIELS
+     * de l'examen du ministère (voir mettreAJourStatutApresExamen() plus
+     * bas, appelée depuis ExamenController::update()).
      */
     public function mettreAJourStatut(): void
     {
+        // Statut définitif : une fois admis officiellement, la progression
+        // interne ne doit plus jamais le faire régresser ou le recalculer.
+        if ($this->statut === 'admis') {
+            return;
+        }
+
         $evaluations = $this->evaluations()->with('typeSession')->orderBy('dateEvaluation', 'desc')->get();
 
         if ($evaluations->isEmpty()) {
@@ -116,18 +127,59 @@ class Candidat extends Model
             return;
         }
 
-        $aCode     = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'code')->count() > 0;
-        $aConduite = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'conduite')->count() > 0;
-        $aCreneau  = $evaluations->where('resultat', 'Admis')->filter(fn($e) => $e->typeSession?->type === 'creneau')->count() > 0;
+        $aCode = $evaluations->where('resultat', 'Admis')
+            ->filter(fn($e) => $e->typeSession?->type === 'code')
+            ->count() > 0;
 
-        if ($aConduite && $aCreneau) {
-            $this->update(['statut' => 'admis']);
-        } elseif ($aCode) {
+        if ($aCode) {
             $this->update(['statut' => 'code_admis']);
         } elseif ($evaluations->where('resultat', 'Ajourné')->count() > 0) {
             $this->update(['statut' => 'ajourne']);
         } else {
             $this->update(['statut' => 'en_formation']);
         }
+    }
+
+    /**
+     * Vérifie si le candidat a réussi les DEUX examens OFFICIELS requis
+     * (conduite + créneau), tels que saisis dans le module Examens à
+     * partir des résultats transmis par le ministère.
+     */
+    public function estAdmisAuxExamensOfficiels(): bool
+    {
+        $conduiteAdmis = $this->examens()
+            ->wherePivot('resultat', 'Admis')
+            ->whereHas('typeSession', fn($q) => $q->where('type', 'conduite'))
+            ->exists();
+
+        $creneauAdmis = $this->examens()
+            ->wherePivot('resultat', 'Admis')
+            ->whereHas('typeSession', fn($q) => $q->where('type', 'creneau'))
+            ->exists();
+
+        return $conduiteAdmis && $creneauAdmis;
+    }
+
+    /**
+     * SEUL point d'entrée autorisé à faire passer un candidat au statut
+     * "admis". À appeler juste après la saisie/mise à jour d'un résultat
+     * d'examen officiel (ExamenController::update()).
+     *
+     * @return bool true si le candidat vient JUSTE de devenir admis
+     *              (utile pour déclencher une notification/redirection
+     *              vers la création d'attestation).
+     */
+    public function mettreAJourStatutApresExamen(): bool
+    {
+        if ($this->statut === 'admis') {
+            return false;
+        }
+
+        if ($this->estAdmisAuxExamensOfficiels()) {
+            $this->update(['statut' => 'admis']);
+            return true;
+        }
+
+        return false;
     }
 }
