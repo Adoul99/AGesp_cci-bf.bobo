@@ -1,125 +1,160 @@
 <x-layouts::app.sidebar title="Nouvelle Catégorie de Permis">
-    <style>
-        :root {
-            --color-red: #CE1126;
-            --color-green: #007A5E;
-            --color-gold: #FCD116;
-            --color-red-light: #E85040;
-            --color-red-dark: #A00D20;
-            --color-green-light: #00A572;
-            --color-green-dark: #004D3A;
-            --color-gold-light: #FFE657;
-            --color-gold-dark: #E5B800;
-            --color-dark: #1A1A1A;
-            --color-light: #F8F8F8;
-            --color-gray-100: #E8E8E8;
-            --color-gray-200: #D1D1D1;
-            --color-gray-500: #666666;
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-            --transition-normal: 300ms ease-in-out;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-        }
-    </style>
+<style>
+:root {
+    --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
+    --color-red-light: #E85040; --color-red-dark: #A00D20;
+    --color-green-light: #00A572; --color-green-dark: #004D3A;
+    --color-gold-dark: #E5B800;
 
-    <div class="content-wrapper" style="padding: 2rem;">
+    --bg-page: linear-gradient(160deg, #0B2F1D 0%, #0F3D24 45%, #123F26 100%);
+    --card-bg: rgba(255,255,255,0.05);
+    --card-border: rgba(255,255,255,0.14);
+    --input-bg: rgba(0,0,0,0.22);
+    --input-border: rgba(255,255,255,0.22);
+    --text-light: #F4F9F6;
+    --text-muted: #A9C4B4;
+    --radius-md: 10px; --radius-lg: 16px;
+    --shadow-md: 0 10px 30px rgba(0,0,0,0.35);
+}
 
-        <!-- En-tête -->
-        <div class="header-section" style="margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
-            <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-dark); margin: 0; display: flex; align-items: center;">
-                <span style="width: 5px; height: 35px; background: linear-gradient(180deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%); margin-right: 1rem; border-radius: 2px;"></span>
-                Nouvelle Catégorie de Permis
-            </h1>
-        </div>
+.content-wrapper { background: var(--bg-page); min-height: 100vh; padding: 2.5rem; font-family: inherit; }
 
-        <!-- Formulaire -->
-        <form method="POST" action="{{ route('categorie_permis.store') }}" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
-            @csrf
+.cp-pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(206,17,38,0.18); border: 1px solid rgba(206,17,38,0.4);
+    color: #FFD6D0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 0.4rem 0.9rem; border-radius: 50px; margin-bottom: 1.25rem;
+}
+.cp-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-red); box-shadow: 0 0 6px var(--color-red); }
 
-            <!-- Section : Informations de la catégorie -->
-            <div style="margin-bottom: 2.5rem;">
-                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--color-gold); display: flex; align-items: center;">
-                    <span style="width: 4px; height: 20px; background: var(--color-green); margin-right: 0.75rem; border-radius: 2px;"></span>
-                    Informations de la Catégorie
-                </h2>
+.cp-title { font-size: 2.1rem; font-weight: 800; color: var(--text-light); margin: 0 0 2rem 0; letter-spacing: -0.5px; }
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+.cp-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg); padding: 1.75rem 2rem; margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-md); backdrop-filter: blur(6px);
+}
+.cp-section-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.5rem; }
+.cp-section-num {
+    width: 32px; height: 32px; border-radius: 9px; background: var(--color-red);
+    color: white; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(206,17,38,0.4);
+}
+.cp-section-title { font-size: 1.1rem; font-weight: 700; color: var(--text-light); margin: 0; }
 
-                    <!-- Nom Catégorie -->
-                    <div class="form-group">
-                        <label for="nomCategorie" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Nom de la Catégorie <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="text"
-                               id="nomCategorie"
-                               name="nomCategorie"
-                               value="{{ old('nomCategorie') }}"
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               placeholder="Ex: Catégorie B, Catégorie C..."
-                               required>
-                        @error('nomCategorie')
-                            <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
+.cp-label {
+    display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+}
+.cp-input {
+    width: 100%; padding: 0.85rem 1.1rem; border: 1.5px solid var(--input-border);
+    border-radius: var(--radius-md); font-size: 0.9rem; color: var(--text-light);
+    background: var(--input-bg); transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.cp-input::placeholder { color: rgba(244,249,246,0.35); }
+.cp-input:focus { outline: none; border-color: var(--color-gold); box-shadow: 0 0 0 3px rgba(252,209,22,0.18); }
 
-                    <!-- Description -->
-                    <div class="form-group">
-                        <label for="description" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Description <span style="color: var(--color-gray-500); font-weight: 400; font-size: 0.75rem;">(Facultatif)</span>
-                        </label>
-                        <input type="text"
-                               id="description"
-                               name="description"
-                               value="{{ old('description') }}"
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; font-family: inherit; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               placeholder="Ex: Véhicules légers, Poids lourds...">
-                        @error('description')
-                            <span style="color: var(--color-red); font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
+/* États de validation (valide / invalide), façon référence */
+.cp-input.is-valid { border-color: var(--color-green-light); background: rgba(0,122,94,0.1); }
+.cp-input.is-invalid { border-color: var(--color-red-light); background: rgba(206,17,38,0.1); }
+.cp-feedback { font-size: 0.78rem; margin-top: 0.4rem; display: flex; align-items: center; gap: 0.35rem; }
+.cp-feedback.valid { color: #6EE7C0; }
+.cp-feedback.invalid { color: #FF8A80; }
 
-                </div>
-            </div>
+.cp-btn-primary {
+    background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%);
+    color: white; padding: 0.9rem 2.2rem; border-radius: var(--radius-md); border: 2px solid var(--color-red);
+    font-weight: 700; cursor: pointer; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.cp-btn-secondary {
+    background: transparent; color: var(--text-light); padding: 0.9rem 2.2rem; border-radius: var(--radius-md);
+    border: 2px solid var(--input-border); font-weight: 600; text-decoration: none; font-size: 0.875rem;
+    text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center;
+}
 
-            <!-- Erreurs générales -->
-            @if ($errors->any())
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(206, 17, 38, 0.1); border-left: 4px solid var(--color-red); border-radius: var(--radius-md); color: var(--color-red-dark);">
-                    <strong>⚠️ Erreurs de validation :</strong>
-                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
-                        @foreach ($errors->all() as $error)
-                            <li style="margin: 0.25rem 0;">{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+.cp-info {
+    margin-top: 1.5rem; padding: 1rem 1.25rem; background: rgba(0,122,94,0.15);
+    border-left: 4px solid var(--color-green-light); border-radius: var(--radius-md);
+    color: #D7F5E8; font-size: 0.85rem;
+}
+</style>
 
-            <!-- Boutons d'action -->
-            <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--color-gray-100);">
-                <button type="submit"
-                        style="background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-red); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.875rem;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(206, 17, 38, 0.3)'"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ✓ Enregistrer
-                </button>
+<div class="content-wrapper">
 
-                <a href="{{ route('categorie_permis.index') }}"
-                   style="background: linear-gradient(135deg, var(--color-gray-200) 0%, var(--color-gray-100) 100%); color: var(--color-dark); padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-gray-200); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); text-decoration: none; font-size: 0.875rem;"
-                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.1)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ✕ Annuler
-                </a>
-            </div>
-        </form>
+    <span class="cp-pill"><span class="dot"></span> CCI-BF — BOBO-DIOULASSO</span>
+    <h1 class="cp-title">Nouvelle Catégorie de Permis</h1>
 
-        <!-- Info contextuelle -->
-        <div style="margin-top: 2rem; padding: 1rem; background: rgba(0, 122, 94, 0.1); border-left: 4px solid var(--color-green); border-radius: var(--radius-md); color: var(--color-green-dark); font-size: 0.875rem;">
-            <strong>ℹ️ Information :</strong> Les champs marqués avec un <span style="color: var(--color-red); font-weight: bold;">*</span> sont obligatoires.
-        </div>
+    @if($errors->any())
+    <div class="cp-card" style="border-color: rgba(206,17,38,0.4); background: rgba(206,17,38,0.1);">
+        <strong style="color:#FFD6D0;">⚠️ Erreurs :</strong>
+        <ul style="margin:0.5rem 0 0 1.5rem; color:#FFD6D0;">
+            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+        </ul>
     </div>
+    @endif
+
+    <form method="POST" action="{{ route('categorie_permis.store') }}">
+        @csrf
+
+        <div class="cp-card">
+            <div class="cp-section-head">
+                <span class="cp-section-num">1</span>
+                <h2 class="cp-section-title">Informations de la Catégorie</h2>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:1.75rem;">
+                <div>
+                    <label class="cp-label">Nom de la Catégorie <span style="color:var(--color-red-light);">*</span></label>
+                    <input type="text" id="nomCategorie" name="nomCategorie" value="{{ old('nomCategorie') }}"
+                           class="cp-input @error('nomCategorie') is-invalid @enderror"
+                           placeholder="Ex: Catégorie B, Catégorie C..." required>
+                    @error('nomCategorie')
+                        <span class="cp-feedback invalid">⚠ {{ $message }}</span>
+                    @else
+                        <span class="cp-feedback valid" style="display:none;" id="nom-feedback">✓ Nom valide</span>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="cp-label">Description <span style="color:var(--text-muted); font-weight:400; text-transform:none;">(facultatif)</span></label>
+                    <input type="text" id="description" name="description" value="{{ old('description') }}"
+                           class="cp-input @error('description') is-invalid @enderror"
+                           placeholder="Ex: Véhicules légers, Poids lourds...">
+                    @error('description')
+                        <span class="cp-feedback invalid">⚠ {{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:1rem;">
+            <button type="submit" class="cp-btn-primary">✓ Enregistrer</button>
+            <a href="{{ route('categorie_permis.index') }}" class="cp-btn-secondary">✕ Annuler</a>
+        </div>
+    </form>
+
+    <div class="cp-info">
+        ℹ️ Les champs marqués avec un <strong style="color:#FF8A80;">*</strong> sont obligatoires.
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const nomInput = document.getElementById('nomCategorie');
+    const feedback = document.getElementById('nom-feedback');
+    if (!nomInput) return;
+
+    nomInput.addEventListener('input', function () {
+        if (nomInput.value.trim().length > 0) {
+            nomInput.classList.remove('is-invalid');
+            nomInput.classList.add('is-valid');
+            if (feedback) feedback.style.display = 'flex';
+        } else {
+            nomInput.classList.remove('is-valid');
+            if (feedback) feedback.style.display = 'none';
+        }
+    });
+});
+</script>
+
 </x-layouts::app.sidebar>

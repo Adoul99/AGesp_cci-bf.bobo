@@ -1,176 +1,176 @@
 <x-layouts::app.sidebar title="Nouvelle Formation">
-    <style>
-        :root {
-            /* Couleurs principales */
-            --color-red: #CE1126;
-            --color-green: #007A5E;
-            --color-gold: #FCD116;
-            
-            /* Nuances */
-            --color-red-light: #E85040;
-            --color-red-dark: #A00D20;
-            --color-green-light: #00A572;
-            --color-green-dark: #004D3A;
-            --color-gold-light: #FFE657;
-            --color-gold-dark: #E5B800;
-            
-            /* Neutres */
-            --color-dark: #1A1A1A;
-            --color-light: #F8F8F8;
-            --color-gray-100: #E8E8E8;
-            --color-gray-200: #D1D1D1;
-            --color-gray-500: #666666;
-            
-            /* Ombres */
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-            
-            /* Transitions & Bordures */
-            --transition-normal: 300ms ease-in-out;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-        }
-    </style>
+<style>
+:root {
+    --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
+    --color-red-light: #E85040; --color-red-dark: #A00D20;
+    --color-green-light: #00A572; --color-green-dark: #004D3A;
+    --color-gold-dark: #E5B800;
 
-    <div class="content-wrapper" style="padding: 2rem;">
-        
-        <!-- En-tête avec titre -->
-        <div class="header-section" style="margin-bottom: 2rem; background: white; padding: 1.5rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-red);">
-            <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--color-dark); margin: 0; display: flex; align-items: center;">
-                <span style="width: 5px; height: 35px; background: linear-gradient(180deg, var(--color-red) 0%, var(--color-green) 50%, var(--color-gold) 100%); margin-right: 1rem; border-radius: 2px;"></span>
-                Nouvelle Formation
-            </h1>
+    --bg-page: linear-gradient(160deg, #0B2F1D 0%, #0F3D24 45%, #123F26 100%);
+    --card-bg: rgba(255,255,255,0.05);
+    --card-border: rgba(255,255,255,0.14);
+    --input-bg: rgba(0,0,0,0.22);
+    --input-border: rgba(255,255,255,0.22);
+    --text-light: #F4F9F6;
+    --text-muted: #A9C4B4;
+    --radius-md: 10px; --radius-lg: 16px;
+    --shadow-md: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.content-wrapper { background: var(--bg-page); min-height: 100vh; padding: 2.5rem; font-family: inherit; }
+
+.cp-pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(206,17,38,0.18); border: 1px solid rgba(206,17,38,0.4);
+    color: #FFD6D0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 0.4rem 0.9rem; border-radius: 50px; margin-bottom: 1.25rem;
+}
+.cp-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-red); box-shadow: 0 0 6px var(--color-red); }
+
+.cp-title { font-size: 2.1rem; font-weight: 800; color: var(--text-light); margin: 0 0 2rem 0; letter-spacing: -0.5px; }
+
+.cp-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg); padding: 1.75rem 2rem; margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-md); backdrop-filter: blur(6px);
+}
+.cp-section-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.5rem; }
+.cp-section-num {
+    width: 32px; height: 32px; border-radius: 9px; background: var(--color-red);
+    color: white; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(206,17,38,0.4);
+}
+.cp-section-title { font-size: 1.1rem; font-weight: 700; color: var(--text-light); margin: 0; }
+
+.cp-label {
+    display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+}
+.cp-input, .cp-select {
+    width: 100%; padding: 0.85rem 1.1rem; border: 1.5px solid var(--input-border);
+    border-radius: var(--radius-md); font-size: 0.9rem; color: var(--text-light);
+    background: var(--input-bg); transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.cp-select { color-scheme: dark; }
+.cp-input::placeholder { color: rgba(244,249,246,0.35); }
+.cp-input:focus, .cp-select:focus { outline: none; border-color: var(--color-gold); box-shadow: 0 0 0 3px rgba(252,209,22,0.18); }
+
+.cp-input.is-invalid, .cp-select.is-invalid { border-color: var(--color-red-light); background: rgba(206,17,38,0.1); }
+.cp-feedback { font-size: 0.78rem; margin-top: 0.4rem; display: flex; align-items: center; gap: 0.35rem; }
+.cp-feedback.invalid { color: #FF8A80; }
+
+.cp-btn-primary {
+    background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%);
+    color: white; padding: 0.9rem 2.2rem; border-radius: var(--radius-md); border: 2px solid var(--color-green);
+    font-weight: 700; cursor: pointer; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.cp-btn-secondary {
+    background: transparent; color: var(--text-light); padding: 0.9rem 2.2rem; border-radius: var(--radius-md);
+    border: 2px solid var(--input-border); font-weight: 600; text-decoration: none; font-size: 0.875rem;
+    text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center;
+}
+
+.cp-info {
+    margin-top: 1.5rem; padding: 1rem 1.25rem; background: rgba(0,122,94,0.15);
+    border-left: 4px solid var(--color-green-light); border-radius: var(--radius-md);
+    color: #D7F5E8; font-size: 0.85rem;
+}
+</style>
+
+<div class="content-wrapper">
+
+    <span class="cp-pill"><span class="dot"></span> CCI-BF — BOBO-DIOULASSO</span>
+    <h1 class="cp-title">Nouvelle Formation</h1>
+
+    @if($errors->any())
+    <div class="cp-card" style="border-color: rgba(206,17,38,0.4); background: rgba(206,17,38,0.1);">
+        <strong style="color:#FFD6D0;">⚠️ Erreurs :</strong>
+        <ul style="margin:0.5rem 0 0 1.5rem; color:#FFD6D0;">
+            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+        </ul>
+    </div>
+    @endif
+
+    <form method="POST" action="{{ route('formations.store') }}">
+        @csrf
+
+        <div class="cp-card">
+            <div class="cp-section-head">
+                <span class="cp-section-num">1</span>
+                <h2 class="cp-section-title">Détails du Programme</h2>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:1.75rem;">
+
+                <div>
+                    <label class="cp-label">Type Formation <span style="color:var(--color-red-light);">*</span></label>
+                    <select id="typeFormation" name="typeFormation" class="cp-select @error('typeFormation') is-invalid @enderror" required>
+                        <option value="theorique">📚 Théorique</option>
+                        <option value="pratique">🚗 Pratique</option>
+                        <option value="mixte">🔄 Mixte</option>
+                    </select>
+                    @error('typeFormation')<span class="cp-feedback invalid">⚠️ {{ $message }}</span>@enderror
+                </div>
+
+                <div>
+                    <label class="cp-label">Lieu <span style="color:var(--color-red-light);">*</span></label>
+                    <input type="text" id="lieu" name="lieu" value="{{ old('lieu') }}"
+                           class="cp-input @error('lieu') is-invalid @enderror"
+                           placeholder="Ex: Salle de code centrale ou Circuit A" required>
+                    @error('lieu')<span class="cp-feedback invalid">⚠️ {{ $message }}</span>@enderror
+                </div>
+
+                <div>
+                    <label class="cp-label">Date Début <span style="color:var(--color-red-light);">*</span></label>
+                    <input type="date" id="dateDebut" name="dateDebut" value="{{ old('dateDebut') }}"
+                           class="cp-input @error('dateDebut') is-invalid @enderror" required>
+                    @error('dateDebut')<span class="cp-feedback invalid">⚠️ {{ $message }}</span>@enderror
+                </div>
+
+                <div>
+                    <label class="cp-label">Date Fin <span style="color:var(--color-red-light);">*</span></label>
+                    <input type="date" id="dateFin" name="dateFin" value="{{ old('dateFin') }}"
+                           class="cp-input @error('dateFin') is-invalid @enderror" required>
+                    @error('dateFin')<span class="cp-feedback invalid">⚠️ {{ $message }}</span>@enderror
+                </div>
+
+                <div>
+                    <label class="cp-label">Moniteur <span style="color:var(--text-muted); font-weight:400; text-transform:none;">(facultatif)</span></label>
+                    <select id="moniteur_id" name="moniteur_id" class="cp-select @error('moniteur_id') is-invalid @enderror">
+                        <option value="">-- Choisir un moniteur --</option>
+                        @foreach($moniteurs as $moniteur)
+                            <option value="{{ $moniteur->id }}" {{ old('moniteur_id') == $moniteur->id ? 'selected' : '' }}>
+                                {{ $moniteur->nom }} {{ $moniteur->prenom }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('moniteur_id')<span class="cp-feedback invalid">⚠️ {{ $message }}</span>@enderror
+                </div>
+
+                <div>
+                    <label class="cp-label">Véhicule <span style="color:var(--text-muted); font-weight:400; text-transform:none;">(facultatif)</span></label>
+                    <select id="vehicule_id" name="vehicule_id" class="cp-select @error('vehicule_id') is-invalid @enderror">
+                        <option value="">-- Choisir un véhicule --</option>
+                        @foreach($vehicules as $vehicule)
+                            <option value="{{ $vehicule->id }}" {{ old('vehicule_id') == $vehicule->id ? 'selected' : '' }}>
+                                {{ $vehicule->nomVehicule }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('vehicule_id')<span class="cp-feedback invalid">⚠️ {{ $message }}</span>@enderror
+                </div>
+
+            </div>
         </div>
 
-        <!-- Formulaire -->
-        <form method="POST" action="{{ route('formations.store') }}" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-gray-100);">
-            @csrf
-            
-            <!-- Section: Informations de l'examen -->
-            <div style="margin-bottom: 2rem;">
-                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--color-gold); display: flex; align-items: center;">
-                    <span style="width: 4px; height: 20px; background: var(--color-green); margin-right: 0.75rem; border-radius: 2px;"></span>
-                    Détails du Programme
-                </h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    
-                    <!-- Type de formation -->
-                    <div class="form-group">
-                        <label for="typeFormation" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Type Formation <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <select id="typeFormation"
-                                name="typeFormation" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                                required>
-                            <option value="theorique">📚 Théorique</option>
-                            <option value="pratique">🚗 Pratique</option>
-                            <option value="mixte">🔄 Mixte</option>
-                        </select>
-                    </div>
+        <div style="display:flex; gap:1rem;">
+            <button type="submit" class="cp-btn-primary">✓ Enregistrer</button>
+            <a href="{{ route('formations.index') }}" class="cp-btn-secondary">✕ Annuler</a>
+        </div>
+    </form>
 
-                    <!-- Lieu -->
-                    <div class="form-group">
-                        <label for="lieu" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Lieu <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="text" 
-                               id="lieu"
-                               name="lieu" 
-                               placeholder="Ex: Salle de code centrale ou Circuit A"
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               required>
-                    </div>
-
-                    <!-- Date Début -->
-                    <div class="form-group">
-                        <label for="dateDebut" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Date Début <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="date" 
-                               id="dateDebut"
-                               name="dateDebut" 
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               required>
-                    </div>
-
-                    <!-- Date Fin -->
-                    <div class="form-group">
-                        <label for="dateFin" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Date Fin <span style="color: var(--color-red);">*</span>
-                        </label>
-                        <input type="date" 
-                               id="dateFin"
-                               name="dateFin" 
-                               style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark);"
-                               onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                               onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'"
-                               required>
-                    </div>
-
-                    <!-- Moniteur -->
-                    <div class="form-group">
-                        <label for="moniteur_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Moniteur
-                        </label>
-                        <select id="moniteur_id"
-                                name="moniteur_id" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'">
-                            <option value="">-- Choisir un moniteur --</option>
-                            @foreach($moniteurs as $moniteur)
-                                <option value="{{ $moniteur->id }}">{{ $moniteur->nom }} {{ $moniteur->prenom }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Véhicule -->
-                    <div class="form-group">
-                        <label for="vehicule_id" style="display: block; margin-bottom: 0.5rem; color: var(--color-dark); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Véhicule
-                        </label>
-                        <select id="vehicule_id"
-                                name="vehicule_id" 
-                                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all var(--transition-normal); color: var(--color-dark); background-color: white;"
-                                onfocus="this.style.borderColor='var(--color-green)'; this.style.boxShadow='0 0 0 3px rgba(0, 122, 94, 0.1)'"
-                                onblur="this.style.borderColor='var(--color-gray-200)'; this.style.boxShadow='none'">
-                            <option value="">-- Choisir un véhicule --</option>
-                            @foreach($vehicules as $vehicule)
-                                <option value="{{ $vehicule->id }}">{{ $vehicule->nomVehicule }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Boutons d'action -->
-            <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--color-gray-100);">
-                <!-- Bouton Enregistrer (Vert) -->
-                <button type="submit" 
-                        style="background: linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color: white; padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-green); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); font-size: 0.875rem;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 122, 94, 0.3)'"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ✓ Enregistrer
-                </button>
-
-                <!-- Bouton Annuler (Gris) -->
-                <a href="{{ route('formations.index') }}" 
-                   style="background: linear-gradient(135deg, var(--color-gray-200) 0%, var(--color-gray-100) 100%); color: var(--color-dark); padding: 0.875rem 2rem; border-radius: var(--radius-md); border: 2px solid var(--color-gray-200); font-weight: 600; cursor: pointer; transition: all var(--transition-normal); display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); text-decoration: none; font-size: 0.875rem;"
-                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.1)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
-                    ✕ Annuler
-                </a>
-            </div>
-        </form>
+    <div class="cp-info">
+        ℹ️ Les champs marqués avec un <strong style="color:#FF8A80;">*</strong> sont obligatoires.
     </div>
+</div>
 </x-layouts::app.sidebar>
