@@ -36,15 +36,12 @@
 
         /* --- CONFIGURATION POUR L'EXPORTATION PDF (IMPRESSION) --- */
         @media print {
-            /* Masquer les éléments inutiles sur le document final */
             .header-section div:last-child, 
             table th:last-child, 
             table td:last-child,
             nav, .sidebar { 
                 display: none !important; 
             }
-            
-            /* Mise en page plein écran pour le PDF */
             body { background: white !important; color: black !important; }
             .content-wrapper { padding: 0 !important; margin: 0 !important; }
             .header-section { 
@@ -98,8 +95,8 @@
                 <thead style="background: linear-gradient(90deg, var(--color-green) 0%, var(--color-green-light) 100%); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.5px;">
                     <tr>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Libellé</th>
+                        <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Phase</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Date Début</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Date Fin</th>
                         <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Statut</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Moniteur</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidats inscrits</th>
@@ -115,16 +112,29 @@
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem; font-weight: 600;">
                             {{ $examen->libelle }}
                         </td>
-                        
-                        <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
-                            <span style="background: rgba(0, 122, 94, 0.1); color: var(--color-green); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 500;">
-                                {{ \Carbon\Carbon::parse($examen->dateDebut)->format('d/m/Y') }}
+
+                        {{-- Colonne Phase : distingue clairement Code / Créneau / Conduite,
+                             pour éviter toute confusion avec un doublon visuel quand les
+                             mêmes candidats apparaissent sur plusieurs examens de phases
+                             différentes. --}}
+                        <td style="padding: 1rem 1.5rem; text-align: center;">
+                            @php
+                                $typePhase = $examen->typeSession->type ?? null;
+                                $phases = [
+                                    'code'     => ['📘 Code', '#c0281e', 'rgba(192,40,30,0.1)'],
+                                    'creneau'  => ['🅿️ Créneau', '#a87c10', 'rgba(168,124,16,0.1)'],
+                                    'conduite' => ['🚗 Conduite', '#0e4525', 'rgba(14,69,37,0.1)'],
+                                ];
+                                [$phaseLabel, $phaseColor, $phaseBg] = $phases[$typePhase] ?? ['—', '#666', '#eee'];
+                            @endphp
+                            <span style="background:{{ $phaseBg }}; color:{{ $phaseColor }}; padding:0.3rem 0.75rem; border-radius:50px; font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.03em;">
+                                {{ $phaseLabel }}
                             </span>
                         </td>
                         
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
-                            <span style="background: rgba(206, 17, 38, 0.1); color: var(--color-red); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 500;">
-                                {{ \Carbon\Carbon::parse($examen->dateFin)->format('d/m/Y') }}
+                            <span style="background: rgba(0, 122, 94, 0.1); color: var(--color-green); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 500;">
+                                {{ \Carbon\Carbon::parse($examen->dateDebut)->format('d/m/Y') }}
                             </span>
                         </td>
                         
@@ -160,27 +170,31 @@
                             @endif
                         </td>
 
-                        {{-- Candidats inscrits --}}
+                        {{--
+                            Candidats inscrits — chaque candidat affiche son résultat À CET
+                            EXAMEN précis (pivot candidat_examen.resultat). Le fait que le
+                            même candidat apparaisse sur plusieurs lignes du tableau est
+                            normal : chaque ligne = une phase différente (Code/Créneau/
+                            Conduite), pas un doublon (voir colonne "Phase").
+                        --}}
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
                             @if($examen->candidats->isNotEmpty())
                                 <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
                                     @foreach($examen->candidats as $c)
-                                        <span style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(0,122,94,0.1); color:var(--color-green-dark); padding:0.2rem 0.6rem; border-radius:50px; font-size:0.72rem; font-weight:700; border:1px solid rgba(0,122,94,0.2);">
-                                            🏆 {{ $c->nom }} {{ $c->prenom }}
-                                            @if($c->statut === 'admis')
-                                                @if($c->attestations->isEmpty())
-                                                    {{-- Admis officiellement + pas encore d'attestation → action directe --}}
-                                                    <a href="{{ route('attestations.create', ['candidat_id' => $c->id]) }}"
-                                                       title="Établir l'attestation de {{ $c->nom }} {{ $c->prenom }}"
-                                                       style="display:inline-flex; align-items:center; gap:0.2rem; margin-left:0.25rem; background:var(--color-gold); color:var(--color-dark); padding:0.1rem 0.5rem; border-radius:50px; font-size:0.68rem; font-weight:800; text-decoration:none; text-transform:uppercase; letter-spacing:0.02em; box-shadow:0 2px 6px rgba(252,209,22,0.4);">
-                                                        🎓 Attestation
-                                                    </a>
-                                                @else
-                                                    {{-- Déjà une attestation délivrée --}}
-                                                    <span style="display:inline-flex; align-items:center; margin-left:0.25rem; color: var(--color-green); font-size:0.68rem; font-weight:800;" title="Attestation déjà délivrée">
-                                                        ✅
-                                                    </span>
-                                                @endif
+                                        @php
+                                            $resultatCet = $c->pivot->resultat ?? 'En attente';
+                                            $aReussiCet = $resultatCet === 'Admis';
+                                        @endphp
+                                        <span style="display:inline-flex; align-items:center; gap:0.35rem; background:{{ $aReussiCet ? 'rgba(0,122,94,0.1)' : 'rgba(206,17,38,0.08)' }}; color:{{ $aReussiCet ? 'var(--color-green-dark)' : 'var(--color-red-dark)' }}; padding:0.2rem 0.6rem; border-radius:50px; font-size:0.72rem; font-weight:700; border:1px solid {{ $aReussiCet ? 'rgba(0,122,94,0.2)' : 'rgba(206,17,38,0.25)' }};">
+                                            {{ $aReussiCet ? '✅' : '❌' }} {{ $c->nom }} {{ $c->prenom }}
+
+                                            @if(!$aReussiCet)
+                                                {{-- Échec à cet examen : proposer la reprogrammation --}}
+                                                <a href="{{ route('programmations.create') }}"
+                                                   title="Reprogrammer {{ $c->nom }} {{ $c->prenom }} pour ce type d'examen"
+                                                   style="display:inline-flex; align-items:center; gap:0.2rem; margin-left:0.25rem; background:var(--color-red-dark); color:white; padding:0.1rem 0.5rem; border-radius:50px; font-size:0.68rem; font-weight:800; text-decoration:none; text-transform:uppercase; letter-spacing:0.02em;">
+                                                    🔁 Reprogrammer
+                                                </a>
                                             @endif
                                         </span>
                                     @endforeach

@@ -47,7 +47,7 @@ class Candidat extends Model
     public function sessions()
     {
         return $this->belongsToMany(SessionFormation::class, 'session_candidat')
-                    ->withPivot('absent', 'note', 'observation')
+                    ->withPivot('absent', 'note', 'mention', 'observation')
                     ->withTimestamps();
     }
 
@@ -127,13 +127,13 @@ class Candidat extends Model
             return;
         }
 
-        $aCode = $evaluations->where('resultat', 'Admis')
-            ->filter(fn($e) => $e->typeSession?->type === 'code')
-            ->count() > 0;
+        $reussies = $evaluations->where('statut', 'reussi');
+
+        $aCode = $reussies->filter(fn($e) => strtolower($e->typeSession?->type ?? '') === 'code')->count() > 0;
 
         if ($aCode) {
             $this->update(['statut' => 'code_admis']);
-        } elseif ($evaluations->where('resultat', 'Ajourné')->count() > 0) {
+        } elseif ($evaluations->where('statut', 'echoue')->count() > 0) {
             $this->update(['statut' => 'ajourne']);
         } else {
             $this->update(['statut' => 'en_formation']);
@@ -141,33 +141,32 @@ class Candidat extends Model
     }
 
     /**
-     * Vérifie si le candidat a réussi les DEUX examens OFFICIELS requis
-     * (conduite + créneau), tels que saisis dans le module Examens à
+     * Vérifie si le candidat a réussi les TROIS examens OFFICIELS requis —
+     * Code, Créneau ET Conduite — tels que saisis dans le module Examens à
      * partir des résultats transmis par le ministère.
      */
     public function estAdmisAuxExamensOfficiels(): bool
     {
-        $conduiteAdmis = $this->examens()
-            ->wherePivot('resultat', 'Admis')
-            ->whereHas('typeSession', fn($q) => $q->where('type', 'conduite'))
-            ->exists();
+        $aResultatAdmis = function (string $type): bool {
+            return $this->examens()
+                ->wherePivot('resultat', 'Admis')
+                ->whereHas('typeSession', fn($q) => $q->whereRaw('LOWER(type) = ?', [$type]))
+                ->exists();
+        };
 
-        $creneauAdmis = $this->examens()
-            ->wherePivot('resultat', 'Admis')
-            ->whereHas('typeSession', fn($q) => $q->where('type', 'creneau'))
-            ->exists();
-
-        return $conduiteAdmis && $creneauAdmis;
+        return $aResultatAdmis('code')
+            && $aResultatAdmis('creneau')
+            && $aResultatAdmis('conduite');
     }
 
     /**
      * SEUL point d'entrée autorisé à faire passer un candidat au statut
-     * "admis". À appeler juste après la saisie/mise à jour d'un résultat
-     * d'examen officiel (ExamenController::update()).
+     * "admis" DEPUIS le circuit normal (saisie d'un résultat d'examen
+     * officiel). À appeler juste après la saisie/mise à jour d'un résultat
+     * d'examen officiel (ExamenController::update()). Ne fait rien si le
+     * candidat est déjà admis (évite les recalculs inutiles).
      *
-     * @return bool true si le candidat vient JUSTE de devenir admis
-     *              (utile pour déclencher une notification/redirection
-     *              vers la création d'attestation).
+     * @return bool true si le candidat vient JUSTE de devenir admis.
      */
     public function mettreAJourStatutApresExamen(): bool
     {
@@ -181,5 +180,56 @@ class Candidat extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Recalcul COMPLET et AUTORITAIRE du statut, à utiliser pour corriger
+     * les anomalies (ex: statut "admis" resté en base après un ancien bug,
+     * alors que les 3 examens officiels ne sont pas tous validés) ou pour
+     * une resynchronisation générale. Contrairement à mettreAJourStatut()
+     * et mettreAJourStatutApresExamen(), cette méthode ne s'arrête PAS
+     * prématurément si le statut actuel est "admis" — elle vérifie toujours
+     * la réalité des examens officiels avant de décider, ce qui lui permet
+     * de corriger automatiquement une anomalie sans manipulation SQL manuelle.
+     *
+     * Utilisée par la commande Artisan php artisan candidats:recalculer-statuts.
+     *
+     * @return string Le statut final après recalcul.
+     */
+    public function recalculerStatutComplet(): string
+    {
+        // Priorité absolue : les 3 examens officiels validés = admis, un point c'est tout.
+        if ($this->estAdmisAuxExamensOfficiels()) {
+            if ($this->statut !== 'admis') {
+                $this->update(['statut' => 'admis']);
+            }
+            return 'admis';
+        }
+
+        // Pas encore admis officiellement : on recalcule la progression
+        // interne, MÊME si le statut actuel est (à tort) "admis" — c'est
+        // précisément ce qui permet de corriger une anomalie automatiquement.
+        $evaluations = $this->evaluations()->with('typeSession')->orderBy('dateEvaluation', 'desc')->get();
+
+        if ($evaluations->isEmpty()) {
+            $nouveauStatut = 'inscrit';
+        } else {
+            $reussies = $evaluations->where('statut', 'reussi');
+            $aCode = $reussies->filter(fn($e) => strtolower($e->typeSession?->type ?? '') === 'code')->count() > 0;
+
+            if ($aCode) {
+                $nouveauStatut = 'code_admis';
+            } elseif ($evaluations->where('statut', 'echoue')->count() > 0) {
+                $nouveauStatut = 'ajourne';
+            } else {
+                $nouveauStatut = 'en_formation';
+            }
+        }
+
+        if ($this->statut !== $nouveauStatut) {
+            $this->update(['statut' => $nouveauStatut]);
+        }
+
+        return $nouveauStatut;
     }
 }

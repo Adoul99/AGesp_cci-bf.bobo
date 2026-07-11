@@ -142,24 +142,36 @@ class SessionFormation extends Model
             if (!$absent) {
                 $candidat = Candidat::find($candidatId);
                 if ($candidat) {
+                    // ⚠️ Statut "admis" INTERDIT depuis une évaluation INTERNE
+                    // (formation, moniteur). Ce statut est réservé exclusivement
+                    // au résultat OFFICIEL de l'examen du ministère, saisi via
+                    // ExamenController::update() → Candidat::mettreAJourStatutApresExamen().
+                    // Ici, on ne fait que suivre la progression interne : une
+                    // réussite avance vers "code_admis" (statut d'attente le plus
+                    // avancé disponible avant l'admission officielle), un échec
+                    // marque "ajourne". Rien ici ne peut jamais produire "admis".
                     $nouveauStatut = match ($typeNom) {
-                        // Code : validé selon note >= 14 (seuil interne candidat, distinct du seuil d'admission 25/30 de l'évaluation)
+                        // Code : validé selon note >= 14 (seuil interne, distinct du seuil d'admission 25/30 de l'évaluation)
                         'code' => !is_null($note)
                             ? (($note >= 14) ? 'code_admis' : 'ajourne')
                             : $candidat->statut,
 
-                        // Créneau/Conduite : validé selon la mention (bien/passable = ok, médiocre = échec)
-                        'creneau' => !is_null($mention)
-                            ? (in_array($mention, ['bien', 'passable']) ? 'creneau' : 'ajourne')
-                            : $candidat->statut,
-
-                        'conduite' => !is_null($mention)
-                            ? (in_array($mention, ['bien', 'passable']) ? 'admis' : 'ajourne')
+                        // Créneau/Conduite : validé selon la mention (bien/passable = ok, médiocre = échec).
+                        // Succès interne = simple maintien/avancée vers "code_admis",
+                        // JAMAIS "admis" — l'admission finale exige le passage par
+                        // l'examen officiel (Code + Créneau + Conduite tous "Admis").
+                        'creneau', 'conduite' => !is_null($mention)
+                            ? (in_array($mention, ['bien', 'passable']) ? 'code_admis' : 'ajourne')
                             : $candidat->statut,
 
                         default => $candidat->statut,
                     };
-                    $candidat->update(['statut' => $nouveauStatut]);
+
+                    // Garde-fou supplémentaire : ne jamais toucher un candidat déjà
+                    // admis officiellement (cohérent avec Candidat::mettreAJourStatut()).
+                    if ($candidat->statut !== 'admis') {
+                        $candidat->update(['statut' => $nouveauStatut]);
+                    }
                 }
             }
         }

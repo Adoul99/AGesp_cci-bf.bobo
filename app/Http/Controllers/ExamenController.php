@@ -12,9 +12,7 @@ class ExamenController extends Controller
 {
     public function index()
     {
-        // "candidats.attestations" chargé en avance pour éviter une requête
-        // supplémentaire par candidat dans la vue (bouton "Établir l'attestation").
-        $examens = Examen::with(['moniteur', 'candidats.attestations', 'typeSession'])->latest()->get();
+        $examens = Examen::with(['moniteur', 'candidats', 'typeSession'])->latest()->get();
         return view('examens.index', compact('examens'));
     }
 
@@ -29,8 +27,10 @@ class ExamenController extends Controller
 
     /**
      * AJAX : candidats programmés pour un type d'examen donné, et pas encore
-     * inscrits à un examen de CE MÊME TYPE (un candidat déjà examiné en Code
-     * peut très bien être encore éligible pour l'examen Conduite).
+     * ADMIS à un examen de CE MÊME TYPE.
+     *
+     * Seuls ceux ayant RÉUSSI (résultat = 'Admis') ce type précis sont
+     * exclus ; un candidat ajourné reste éligible pour une nouvelle tentative.
      */
     public function candidatsParType(TypeSession $typeSession)
     {
@@ -38,7 +38,8 @@ class ExamenController extends Controller
                 $q->where('typeSession_id', $typeSession->id);
             })
             ->whereDoesntHave('examens', function ($q) use ($typeSession) {
-                $q->where('typeSession_id', $typeSession->id);
+                $q->where('typeSession_id', $typeSession->id)
+                  ->where('candidat_examen.resultat', 'Admis');
             })
             ->orderBy('nom')
             ->get(['id', 'nom', 'prenom']);
@@ -152,11 +153,15 @@ class ExamenController extends Controller
             $examen->candidats()->detach();
         }
 
-        // --- Recalcul du statut "admis" ---
-        // C'est ICI, et UNIQUEMENT ici, juste après la saisie des résultats
-        // officiels de l'examen (venant du ministère), que le passage au
-        // statut "admis" peut se produire. Un candidat n'est jamais rendu
-        // "admis" par la progression interne (formation, évaluations).
+        // ── Recalcul du statut "admis" ──────────────────────────────
+        // C'est ICI, et UNIQUEMENT ici (juste après la saisie des résultats
+        // officiels de l'examen), que le passage au statut "admis" peut se
+        // produire. mettreAJourStatutApresExamen() vérifie que les 3 phases
+        // (Code + Créneau + Conduite) sont TOUTES "Admis" avant de basculer
+        // le candidat. Sans cet appel, le statut ne se met jamais à jour
+        // automatiquement, même si le résultat "Admis" est bien enregistré
+        // en base — c'est exactement ce qui manquait jusqu'ici.
+        $examen->load('candidats'); // recharge le pivot fraîchement mis à jour
         $nouveauxAdmis = [];
         foreach ($examen->candidats as $candidat) {
             if ($candidat->mettreAJourStatutApresExamen()) {
