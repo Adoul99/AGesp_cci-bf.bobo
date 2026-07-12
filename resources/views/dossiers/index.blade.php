@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Liste des Dossiers">
+<x-layouts::app title="Liste des Dossiers">
     <style>
         :root {
             /* Couleurs principales */
@@ -214,4 +214,4 @@
         </div>
         @endif
     </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

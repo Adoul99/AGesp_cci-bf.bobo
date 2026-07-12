@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Examen">
+<x-layouts::app title="Modifier Examen">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -222,4 +222,4 @@ function filterTable(inputId, tbodyId, noResultsId) {
     document.getElementById(noResultsId).style.display = visibleCount === 0 ? 'block' : 'none';
 }
 </script>
-</x-layouts::app.sidebar>
+</x-layouts::app>

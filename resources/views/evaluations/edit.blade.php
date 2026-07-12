@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Évaluation">
+<x-layouts::app title="Modifier Évaluation">
     <style>
         :root {
             --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -261,4 +261,4 @@
             if (f && f.value) updatePreview(f.value);
         });
     </script>
-</x-layouts::app.sidebar>
+</x-layouts::app>

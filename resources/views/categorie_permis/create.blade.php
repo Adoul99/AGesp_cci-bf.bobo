@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Nouvelle Catégorie de Permis">
+<x-layouts::app title="Nouvelle Catégorie de Permis">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -157,4 +157,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-</x-layouts::app.sidebar>
+</x-layouts::app>

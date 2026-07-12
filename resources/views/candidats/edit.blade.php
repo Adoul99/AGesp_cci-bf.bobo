@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Candidat">
+<x-layouts::app title="Modifier Candidat">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
@@ -369,4 +369,4 @@
             majAge();
         });
     </script>
-</x-layouts::app.sidebar>
+</x-layouts::app>

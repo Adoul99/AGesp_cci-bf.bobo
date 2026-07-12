@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Lieu de Formation">
+<x-layouts::app title="Modifier Lieu de Formation">
     <style>
         :root {
             --color-red: #CE1126; --color-green: #007A5E; --color-green-dark: #005A42; --color-gold: #FCD116;
@@ -48,4 +48,4 @@
             </div>
         </form>
     </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

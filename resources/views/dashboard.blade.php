@@ -5,7 +5,7 @@
     $permisE = ['total'=>0,'inscrits'=>0,'code'=>0,'creneau'=>0,'conduite'=>0,'admis'=>0]
     $totalCandidats = 0
 --}}
-<x-layouts::app.sidebar :title="'Tableau de bord'">
+<x-layouts::app :title="'Tableau de bord'">
 
     @php
         $permisD = $permisD ?? ['total'=>7,'inscrits'=>0,'code'=>1,'creneau'=>0,'conduite'=>2,'admis'=>2];
@@ -254,4 +254,4 @@
 
     </div>{{-- /.dash-bg --}}
 
-</x-layouts::app.sidebar>
+</x-layouts::app>

@@ -33,6 +33,10 @@ class MoniteurOnly
             return redirect()->route('candidat.espace');
         }
 
+        if ($user->role === 'secretaire') {
+            return redirect()->route('dashboard');
+        }
+
         abort(403, 'Accès non autorisé.');
     }
 }

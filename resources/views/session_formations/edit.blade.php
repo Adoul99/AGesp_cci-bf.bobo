@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Session de Formation">
+<x-layouts::app title="Modifier Session de Formation">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -180,4 +180,4 @@ function toggleNote(checkbox, candidatId) {
     }
 }
 </script>
-</x-layouts::app.sidebar>
+</x-layouts::app>

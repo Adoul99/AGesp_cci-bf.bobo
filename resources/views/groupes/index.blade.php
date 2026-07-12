@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Liste des Groupes">
+<x-layouts::app title="Liste des Groupes">
     <style>
         :root {
             --color-red: #CE1126;
@@ -251,4 +251,4 @@
         <div class="gp-summary"><strong>Total :</strong> {{ $groupes->count() }} groupe(s) actif(s)</div>
         @endif
     </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

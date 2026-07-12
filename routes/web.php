@@ -31,7 +31,7 @@ Route::get('/', function () {
         if ($user->role === 'candidat') {
             return redirect()->route('candidat.espace');
         }
-        if (in_array($user->role, ['admin', 'superadmin'])) {
+        if (in_array($user->role, ['admin', 'superadmin', 'secretaire'])) {
             return redirect()->route('dashboard');
         }
         if ($user->role === 'moniteur') {
@@ -114,11 +114,11 @@ Route::middleware(['auth', 'verified', 'moniteur.only'])->prefix('moniteur')->na
 });
 
 // ══════════════════════════════════════════════════════════════
-// MODULES PARTAGÉS : ADMIN + MONITEUR
+// PAGES COMMUNES AU PERSONNEL : ADMIN + MONITEUR + SECRÉTAIRE
 // ══════════════════════════════════════════════════════════════
-Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () {
+Route::middleware(['auth', 'verified', 'staff'])->group(function () {
 
-    // ── Tableau de bord admin ─────────────────────────────────
+    // ── Tableau de bord ───────────────────────────────────────
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
          ->name('dashboard');
 
@@ -126,22 +126,24 @@ Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () 
     Route::get('alertes', [App\Http\Controllers\AlerteController::class, 'index'])
          ->name('alertes.index');
 
+});
+
+// ══════════════════════════════════════════════════════════════
+// MODULES PARTAGÉS : ADMIN + MONITEUR
+// (formation, planification et évaluation des candidats)
+// ══════════════════════════════════════════════════════════════
+Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () {
+
     // ── Formations ───────────────────────────────────────────
     Route::resource('formations',         FormationController::class);
 
     // ── Lieux de formation ───────────────────────────────────
     Route::resource('lieu_formations',    LieuFormationController::class);
 
-    // ── Groupes ──────────────────────────────────────────────
-    Route::resource('groupes',            GroupeController::class);
-
     // ── Sessions de formation ────────────────────────────────
     Route::resource('session_formations', SessionFormationController::class);
     Route::get ('session_formations/{sessionFormation}/cloture',  [SessionFormationController::class, 'cloture'])  ->name('session_formations.cloture');
     Route::post('session_formations/{sessionFormation}/cloturer', [SessionFormationController::class, 'cloturer']) ->name('session_formations.cloturer');
-
-    // ── Types de session ─────────────────────────────────────
-    Route::resource('type_sessions',      TypeSessionController::class);
 
     // ── Examens ──────────────────────────────────────────────
     // Route AJAX (candidats programmés pour un type d'examen donné) : doit être
@@ -167,16 +169,10 @@ Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () 
 });
 
 // ══════════════════════════════════════════════════════════════
-// ESPACE ADMIN UNIQUEMENT
+// MODULES PARTAGÉS : ADMIN + SECRÉTAIRE
+// (accueil / dossier administratif des candidats)
 // ══════════════════════════════════════════════════════════════
-Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
-
-    // ── Gestion des utilisateurs & rôles ─────────────────────
-    Route::get   ('users',             [UserController::class, 'index'])      ->name('users.index');
-    Route::get   ('users/create',      [UserController::class, 'create'])     ->name('users.create');
-    Route::post  ('users',             [UserController::class, 'store'])      ->name('users.store');
-    Route::patch ('users/{user}/role', [UserController::class, 'updateRole']) ->name('users.role');
-    Route::delete('users/{user}',      [UserController::class, 'destroy'])    ->name('users.destroy');
+Route::middleware(['auth', 'verified', 'admin.or.secretaire'])->group(function () {
 
     // ── Gestion des candidats ────────────────────────────────
     Route::resource('candidats',          CandidatController::class);
@@ -191,11 +187,35 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
     Route::get('candidats/{candidat}/remplacements', [CandidatController::class, 'remplacementsHistorique'])
          ->name('candidats.remplacements.historique');
 
-    // ── Dossiers ─────────────────────────────────────────────
-    Route::resource('dossiers',           DossierController::class);
-
     // ── Inscriptions ─────────────────────────────────────────
     Route::resource('inscriptions',       InscriptionController::class);
+
+    // ── Catégories de permis ─────────────────────────────────
+    Route::resource('categorie_permis', CategoriePermisController::class)
+         ->parameters(['categorie_permis' => 'categoriePermis']);
+
+    // ── Groupes ──────────────────────────────────────────────
+    Route::resource('groupes',            GroupeController::class);
+
+});
+
+// ══════════════════════════════════════════════════════════════
+// ESPACE ADMIN UNIQUEMENT
+// ══════════════════════════════════════════════════════════════
+Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
+
+    // ── Gestion des utilisateurs & rôles ─────────────────────
+    Route::get   ('users',             [UserController::class, 'index'])      ->name('users.index');
+    Route::get   ('users/create',      [UserController::class, 'create'])     ->name('users.create');
+    Route::post  ('users',             [UserController::class, 'store'])      ->name('users.store');
+    Route::patch ('users/{user}/role', [UserController::class, 'updateRole']) ->name('users.role');
+    Route::delete('users/{user}',      [UserController::class, 'destroy'])    ->name('users.destroy');
+
+    // ── Types de session (paramétrage) ───────────────────────
+    Route::resource('type_sessions',      TypeSessionController::class);
+
+    // ── Dossiers ─────────────────────────────────────────────
+    Route::resource('dossiers',           DossierController::class);
 
     // ── Paiements ────────────────────────────────────────────
     Route::resource('paiements',          PaiementController::class);
@@ -208,10 +228,6 @@ Route::middleware(['auth', 'verified', 'admin.only'])->group(function () {
 
     // ── Attestations ─────────────────────────────────────────
     Route::resource('attestations',       AttestationController::class);
-
-    // ── Catégories de permis ─────────────────────────────────
-    Route::resource('categorie_permis', CategoriePermisController::class)
-         ->parameters(['categorie_permis' => 'categoriePermis']);
 
     // ── Reçus ────────────────────────────────────────────────
     Route::resource('recus',              RecusController::class);

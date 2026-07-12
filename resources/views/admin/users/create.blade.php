@@ -31,7 +31,7 @@
 .phone-prefix { padding:9px 11px; background:var(--v); color:var(--o); border-radius:7px 0 0 7px; font-family:'Nunito',sans-serif; font-weight:700; font-size:.82rem; border:1.5px solid var(--v); white-space:nowrap; display:flex; align-items:center; flex-shrink:0; }
 .phone-wrap .inp { border-radius:0 7px 7px 0; border-left:none; }
 
-.role-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.role-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .role-option { border:2px solid var(--brd); border-radius:9px; padding:13px 10px; text-align:center; cursor:pointer; transition:all .2s; position:relative; }
 .role-option input[type="radio"] { position:absolute; opacity:0; }
 .role-option:has(input:checked) { border-color:var(--v); background:var(--vp); }
@@ -126,6 +126,12 @@
                         <span class="role-icon">🚗</span>
                         <span class="role-name">Moniteur</span>
                         <span class="role-desc">Gestion formations & candidats</span>
+                    </label>
+                    <label class="role-option">
+                        <input type="radio" name="role" value="secretaire" {{ old('role')==='secretaire' ? 'checked' : '' }}>
+                        <span class="role-icon">🗂️</span>
+                        <span class="role-name">Secrétaire</span>
+                        <span class="role-desc">Candidats, inscriptions & groupes</span>
                     </label>
                     <label class="role-option">
                         <input type="radio" name="role" value="candidat" {{ old('role')==='candidat' ? 'checked' : '' }}>

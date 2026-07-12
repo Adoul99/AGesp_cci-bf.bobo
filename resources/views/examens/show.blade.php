@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Détail Examen">
+<x-layouts::app title="Détail Examen">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -126,4 +126,4 @@
         @endif
     </div>
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

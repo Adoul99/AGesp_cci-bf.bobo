@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Nouveau Candidat">
+<x-layouts::app title="Nouveau Candidat">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <style>
 :root {
@@ -497,4 +497,4 @@ function goToStep(step) {
     window.scrollTo({top:0,behavior:'instant'});
 }
 </script>
-</x-layouts::app.sidebar>
+</x-layouts::app>

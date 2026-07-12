@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Formation">
+<x-layouts::app title="Modifier Formation">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -172,4 +172,4 @@
         ℹ️ Les champs marqués avec un <strong style="color:#FF8A80;">*</strong> sont obligatoires.
     </div>
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Liste des Paiements">
+<x-layouts::app title="Liste des Paiements">
 <style>
     .paiements-page {
         font-family: 'Segoe UI', sans-serif;
@@ -259,4 +259,4 @@
     </div>
     @endif
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

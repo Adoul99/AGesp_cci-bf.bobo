@@ -68,6 +68,11 @@ class User extends Authenticatable
         return $this->role === 'moniteur';
     }
 
+    public function isSecretaire(): bool
+    {
+        return $this->role === 'secretaire';
+    }
+
     /**
      * Fiche Moniteur liée à ce compte utilisateur (si le rôle est moniteur)
      */

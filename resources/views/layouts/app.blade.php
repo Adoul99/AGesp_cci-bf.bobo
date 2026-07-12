@@ -52,7 +52,7 @@
     /* ══ SIDEBAR ══ */
     .as {
         width         : var(--sw);
-        min-height    : 100vh;
+        height        : 100vh;   /* ← FIX : était "min-height", empêchait le scroll interne */
         background    : var(--sb);
         display       : flex;
         flex-direction: column;
@@ -509,14 +509,8 @@
                 <a href="{{ route('lieu_formations.index') }}" class="as-lnk {{ request()->routeIs('lieu_formations.*') ? 'active' : '' }}">
                     <i class="bi bi-geo-alt"></i> Lieux Formation
                 </a>
-                <a href="{{ route('groupes.index') }}" class="as-lnk {{ request()->routeIs('groupes.*') ? 'active' : '' }}">
-                    <i class="bi bi-diagram-3"></i> Groupes
-                </a>
                 <a href="{{ route('session_formations.index') }}" class="as-lnk {{ request()->routeIs('session_formations.*') ? 'active' : '' }}">
                     <i class="bi bi-calendar-week"></i> Sessions Formation
-                </a>
-                <a href="{{ route('type_sessions.index') }}" class="as-lnk {{ request()->routeIs('type_sessions.*') ? 'active' : '' }}">
-                    <i class="bi bi-stack"></i> Types Session
                 </a>
             </div>
 
@@ -530,6 +524,39 @@
                 </a>
                 <a href="{{ route('programmations.index') }}" class="as-lnk {{ request()->routeIs('programmations.*') ? 'active' : '' }}">
                     <i class="bi bi-calendar-check"></i> Programmations
+                </a>
+            </div>
+
+        {{-- ══ MENU SECRÉTAIRE ══ --}}
+        @elseif($role === 'secretaire')
+
+            <div class="as-grp">
+                <span class="as-lbl">Mon espace</span>
+                <a href="{{ route('dashboard') }}" class="as-lnk {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-speedometer2"></i> Tableau de bord
+                </a>
+                @php $nbAlertes = \App\Http\Controllers\AlerteController::compterAlertes(); @endphp
+                <a href="{{ route('alertes.index') }}" class="as-lnk {{ request()->routeIs('alertes.*') ? 'active' : '' }}" style="display:flex; align-items:center; justify-content:space-between;">
+                    <span><i class="bi bi-bell-fill"></i> Alertes</span>
+                    @if($nbAlertes > 0)
+                        <span style="background:#CE1126; color:white; font-size:0.65rem; font-weight:800; padding:0.1rem 0.5rem; border-radius:50px; min-width:18px; text-align:center;">{{ $nbAlertes }}</span>
+                    @endif
+                </a>
+            </div>
+
+            <div class="as-grp">
+                <span class="as-lbl">Candidats</span>
+                <a href="{{ route('candidats.index') }}" class="as-lnk {{ request()->routeIs('candidats.*') ? 'active' : '' }}">
+                    <i class="bi bi-people"></i> Candidats
+                </a>
+                <a href="{{ route('inscriptions.index') }}" class="as-lnk {{ request()->routeIs('inscriptions.*') ? 'active' : '' }}">
+                    <i class="bi bi-check2-circle"></i> Inscriptions
+                </a>
+                <a href="{{ route('categorie_permis.index') }}" class="as-lnk {{ request()->routeIs('categorie_permis.*') ? 'active' : '' }}">
+                    <i class="bi bi-card-list"></i> Catégories Permis
+                </a>
+                <a href="{{ route('groupes.index') }}" class="as-lnk {{ request()->routeIs('groupes.*') ? 'active' : '' }}">
+                    <i class="bi bi-diagram-3"></i> Groupes
                 </a>
             </div>
 
@@ -547,6 +574,8 @@
                 <div class="as-uemail">{{ auth()->user()->email ?? '' }}</div>
                 @if(auth()->user()->role === 'moniteur')
                     <span class="role-badge"><i class="bi bi-person-badge"></i> Moniteur</span>
+                @elseif(auth()->user()->role === 'secretaire')
+                    <span class="role-badge"><i class="bi bi-person-workspace"></i> Secrétaire</span>
                 @endif
             </div>
         </div>

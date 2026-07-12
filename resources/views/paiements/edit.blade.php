@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Paiement">
+<x-layouts::app title="Modifier Paiement">
 <style>
     .form-page {
         font-family: 'Segoe UI', sans-serif;
@@ -237,4 +237,4 @@
         <span><strong>Information :</strong> Les champs marqués avec un <strong>*</strong> sont obligatoires.</span>
     </div>
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

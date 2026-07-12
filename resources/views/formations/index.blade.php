@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Liste des Formations">
+<x-layouts::app title="Liste des Formations">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -202,4 +202,4 @@
     @endif
 
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

@@ -29,15 +29,17 @@ tbody tr:last-child td { border-bottom:none; }
 tbody tr:hover td { background:#f9fbfa; }
 .user-info { display:flex; align-items:center; gap:9px; }
 .user-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-weight:800; font-size:.82rem; flex-shrink:0; }
-.avatar-admin    { background:rgba(26,107,58,.15); color:var(--v); }
-.avatar-moniteur { background:rgba(212,160,23,.15); color:#9a7010; }
-.avatar-candidat { background:rgba(192,40,30,.1); color:var(--r); }
+.avatar-admin      { background:rgba(26,107,58,.15); color:var(--v); }
+.avatar-moniteur   { background:rgba(212,160,23,.15); color:#9a7010; }
+.avatar-secretaire { background:rgba(59,130,180,.15); color:#2563a6; }
+.avatar-candidat   { background:rgba(192,40,30,.1); color:var(--r); }
 .user-name  { font-weight:700; color:var(--dk); display:block; font-size:.8rem; }
 .user-email { font-size:.68rem; color:var(--sub); }
 .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-family:'Nunito',sans-serif; font-weight:700; font-size:.68rem; }
-.badge-admin    { background:rgba(26,107,58,.12); color:var(--v); }
-.badge-moniteur { background:rgba(212,160,23,.15); color:#9a7010; }
-.badge-candidat { background:rgba(192,40,30,.1); color:var(--r); }
+.badge-admin      { background:rgba(26,107,58,.12); color:var(--v); }
+.badge-moniteur   { background:rgba(212,160,23,.15); color:#9a7010; }
+.badge-secretaire { background:rgba(59,130,180,.15); color:#2563a6; }
+.badge-candidat   { background:rgba(192,40,30,.1); color:var(--r); }
 .role-form { display:flex; align-items:center; gap:5px; }
 .role-select { border:1.5px solid var(--brd); border-radius:5px; padding:4px 7px; font-size:.75rem; background:#f9fbfa; color:var(--dk); outline:none; cursor:pointer; }
 .role-select:focus { border-color:var(--v); }
@@ -80,6 +82,10 @@ tbody tr:hover td { background:#f9fbfa; }
             <div><strong style="color:#9a7010;">{{ $users->where('role','moniteur')->count() }}</strong><br><span style="color:var(--sub);font-size:.68rem;">Moniteur(s)</span></div>
         </div>
         <div class="stat-pill">
+            <i class="bi bi-person-workspace" style="color:#2563a6;font-size:1.1rem;"></i>
+            <div><strong style="color:#2563a6;">{{ $users->where('role','secretaire')->count() }}</strong><br><span style="color:var(--sub);font-size:.68rem;">Secrétaire(s)</span></div>
+        </div>
+        <div class="stat-pill">
             <i class="bi bi-person-fill" style="color:var(--r);font-size:1.1rem;"></i>
             <div><strong style="color:var(--r);">{{ $users->where('role','candidat')->count() }}</strong><br><span style="color:var(--sub);font-size:.68rem;">Candidat(s)</span></div>
         </div>
@@ -99,9 +105,10 @@ tbody tr:hover td { background:#f9fbfa; }
                 <label>Rôle</label>
                 <select name="role" class="filter-inp">
                     <option value="">Tous les rôles</option>
-                    <option value="admin"    {{ request('role')==='admin'    ? 'selected' : '' }}>Admin</option>
-                    <option value="moniteur" {{ request('role')==='moniteur' ? 'selected' : '' }}>Moniteur</option>
-                    <option value="candidat" {{ request('role')==='candidat' ? 'selected' : '' }}>Candidat</option>
+                    <option value="admin"      {{ request('role')==='admin'      ? 'selected' : '' }}>Admin</option>
+                    <option value="moniteur"   {{ request('role')==='moniteur'   ? 'selected' : '' }}>Moniteur</option>
+                    <option value="secretaire" {{ request('role')==='secretaire' ? 'selected' : '' }}>Secrétaire</option>
+                    <option value="candidat"   {{ request('role')==='candidat'   ? 'selected' : '' }}>Candidat</option>
                 </select>
             </div>
             <button type="submit" class="btn-filter"><i class="bi bi-search"></i> Filtrer</button>
@@ -146,7 +153,7 @@ tbody tr:hover td { background:#f9fbfa; }
                         <td>{{ $user->telephone ? '+226 '.$user->telephone : '—' }}</td>
                         <td>
                             <span class="badge badge-{{ $user->role }}">
-                                <i class="bi {{ $user->role === 'admin' ? 'bi-shield-fill-check' : ($user->role === 'moniteur' ? 'bi-person-badge-fill' : 'bi-person-fill') }}"></i>
+                                <i class="bi {{ $user->role === 'admin' ? 'bi-shield-fill-check' : ($user->role === 'moniteur' ? 'bi-person-badge-fill' : ($user->role === 'secretaire' ? 'bi-person-workspace' : 'bi-person-fill')) }}"></i>
                                 {{ ucfirst($user->role) }}
                             </span>
                         </td>
@@ -156,9 +163,10 @@ tbody tr:hover td { background:#f9fbfa; }
                                     @csrf
                                     @method('PATCH')
                                     <select name="role" class="role-select">
-                                        <option value="admin"    {{ $user->role === 'admin'    ? 'selected' : '' }}>Admin</option>
-                                        <option value="moniteur" {{ $user->role === 'moniteur' ? 'selected' : '' }}>Moniteur</option>
-                                        <option value="candidat" {{ $user->role === 'candidat' ? 'selected' : '' }}>Candidat</option>
+                                        <option value="admin"      {{ $user->role === 'admin'      ? 'selected' : '' }}>Admin</option>
+                                        <option value="moniteur"   {{ $user->role === 'moniteur'   ? 'selected' : '' }}>Moniteur</option>
+                                        <option value="secretaire" {{ $user->role === 'secretaire' ? 'selected' : '' }}>Secrétaire</option>
+                                        <option value="candidat"   {{ $user->role === 'candidat'   ? 'selected' : '' }}>Candidat</option>
                                     </select>
                                     <button type="submit" class="btn-save">
                                         <i class="bi bi-check"></i> Sauver

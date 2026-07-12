@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Liste des Moniteurs">
+<x-layouts::app title="Liste des Moniteurs">
 <style>
     .moniteurs-page {
         font-family: 'Segoe UI', sans-serif;
@@ -252,4 +252,4 @@
     </div>
     @endif
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

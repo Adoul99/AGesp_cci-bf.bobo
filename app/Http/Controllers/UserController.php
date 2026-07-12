@@ -42,7 +42,7 @@ class UserController extends Controller
             'prenom'    => ['required', 'string', 'max:100'],
             'email'     => ['required', 'email', 'unique:users,email'],
             'telephone' => ['nullable', 'string', 'max:20', 'unique:users,telephone'],
-            'role'      => ['required', 'in:admin,moniteur,candidat'],
+            'role'      => ['required', 'in:admin,moniteur,secretaire,candidat'],
             'password'  => ['required', 'min:8', 'confirmed'],
         ], [
             'name.required'      => 'Le nom est obligatoire.',
@@ -72,7 +72,7 @@ class UserController extends Controller
     public function updateRole(Request $request, User $user)
     {
         $request->validate([
-            'role' => ['required', 'in:admin,moniteur,candidat'],
+            'role' => ['required', 'in:admin,moniteur,secretaire,candidat'],
         ]);
 
         if ($user->id === auth()->user()->id) {

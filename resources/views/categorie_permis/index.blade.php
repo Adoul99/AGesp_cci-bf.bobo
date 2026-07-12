@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Liste des Catégories de Permis">
+<x-layouts::app title="Liste des Catégories de Permis">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -149,4 +149,4 @@
     @endif
 
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

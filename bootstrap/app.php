@@ -14,11 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // ── Middlewares de rôles AGesP ────────────────────────
         $middleware->alias([
-            'admin.only'         => \App\Http\Middleware\AdminOnly::class,
-            'candidat.only'      => \App\Http\Middleware\CandidatOnly::class,
-            'moniteur.only'      => \App\Http\Middleware\MoniteurOnly::class,
-            'admin-or-moniteur'  => \App\Http\Middleware\AdminOrMoniteur::class,
-            'admin.or.moniteur' => \App\Http\Middleware\AdminOrMoniteur::class,
+            'admin.only'          => \App\Http\Middleware\AdminOnly::class,
+            'candidat.only'       => \App\Http\Middleware\CandidatOnly::class,
+            'moniteur.only'       => \App\Http\Middleware\MoniteurOnly::class,
+            'admin-or-moniteur'   => \App\Http\Middleware\AdminOrMoniteur::class,
+            'admin.or.moniteur'   => \App\Http\Middleware\AdminOrMoniteur::class,
+            'admin.or.secretaire' => \App\Http\Middleware\AdminOrSecretaire::class,
+            'staff'               => \App\Http\Middleware\Staff::class,
         ]);
 
     })

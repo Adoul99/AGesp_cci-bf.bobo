@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Liste des Inscriptions">
+<x-layouts::app title="Liste des Inscriptions">
     <style>
         :root {
             --color-red: #CE1126;
@@ -235,4 +235,4 @@
             </div>
         </div>
     </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

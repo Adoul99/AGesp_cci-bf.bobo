@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Nouveau Moniteur">
+<x-layouts::app title="Nouveau Moniteur">
 <style>
     .form-page {
         font-family: 'Segoe UI', sans-serif;
@@ -219,4 +219,4 @@
         <span><strong>Information :</strong> Les champs marqués avec un <strong>*</strong> sont obligatoires.</span>
     </div>
 </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

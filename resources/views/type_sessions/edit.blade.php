@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier Type de Session">
+<x-layouts::app title="Modifier Type de Session">
     <style>
         :root {
             --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -156,4 +156,4 @@
             });
         });
     </script>
-</x-layouts::app.sidebar>
+</x-layouts::app>

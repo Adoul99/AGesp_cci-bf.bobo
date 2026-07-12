@@ -1,7 +1,9 @@
 <?php
 
 // ══════════════════════════════════════════════════════════════
-// app/Http/Middleware/CandidatOnly.php
+// app/Http/Middleware/Staff.php
+// Regroupe tout le personnel back-office (admin, moniteur, secrétaire)
+// pour les pages communes : tableau de bord, alertes.
 // ══════════════════════════════════════════════════════════════
 
 namespace App\Http\Middleware;
@@ -10,7 +12,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CandidatOnly
+class Staff
 {
     public function handle(Request $request, Closure $next): Response
     {
@@ -20,11 +22,14 @@ class CandidatOnly
             return redirect()->route('login');
         }
 
-        // Si admin → redirige vers le dashboard
-        if (in_array($user->role, ['admin', 'moniteur', 'superadmin', 'secretaire'])) {
-            return redirect()->route('dashboard');
+        if (in_array($user->role, ['admin', 'superadmin', 'moniteur', 'secretaire'])) {
+            return $next($request);
         }
 
-        return $next($request);
+        if ($user->role === 'candidat') {
+            return redirect()->route('candidat.espace');
+        }
+
+        abort(403, 'Accès non autorisé.');
     }
 }

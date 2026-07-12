@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Clôturer la Session">
+<x-layouts::app title="Clôturer la Session">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -223,4 +223,4 @@ function confirmerCloture() {
 // Init au chargement
 document.addEventListener('DOMContentLoaded', updateProgress);
 </script>
-</x-layouts::app.sidebar>
+</x-layouts::app>

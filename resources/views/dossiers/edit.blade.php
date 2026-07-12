@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Modifier le Dossier">
+<x-layouts::app title="Modifier le Dossier">
     <style>
         :root {
             --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -256,4 +256,4 @@
 
         </form>
     </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

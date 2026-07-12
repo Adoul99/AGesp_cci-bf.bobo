@@ -1,4 +1,4 @@
-<x-layouts::app.sidebar title="Rapport des Notes d'Évaluation">
+<x-layouts::app title="Rapport des Notes d'Évaluation">
     <style>
         :root {
             --color-red: #CE1126;
@@ -265,4 +265,4 @@
             </table>
         </div>
     </div>
-</x-layouts::app.sidebar>
+</x-layouts::app>

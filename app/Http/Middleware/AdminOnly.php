@@ -36,6 +36,11 @@ class AdminOnly
             return redirect()->route('moniteur.espace');
         }
 
+        // Si secrétaire → redirige vers le dashboard (elle n'a pas accès à cette section admin-only)
+        if ($user->role === 'secretaire') {
+            return redirect()->route('dashboard');
+        }
+
         // Tout autre cas → accès refusé
         abort(403, 'Accès non autorisé.');
     }
