@@ -128,9 +128,9 @@
                         <span class="role-desc">Gestion formations & candidats</span>
                     </label>
                     <label class="role-option">
-                        <input type="radio" name="role" value="secretaire" {{ old('role')==='secretaire' ? 'checked' : '' }}>
-                        <span class="role-icon">🗂️</span>
-                        <span class="role-name">Secrétaire</span>
+                        <input type="radio" name="role" value="superviseur" {{ old('role')==='superviseur' ? 'checked' : '' }}>
+                        <span class="role-icon">🧭</span>
+                        <span class="role-name">Superviseur</span>
                         <span class="role-desc">Candidats, inscriptions & groupes</span>
                     </label>
                     <label class="role-option">

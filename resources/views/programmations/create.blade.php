@@ -45,16 +45,6 @@
     font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:50px; font-weight:700;
 }
 
-.pg-btn-toggle {
-    padding:0.5rem 1rem; border-radius:var(--radius-md); font-size:0.8rem; font-weight:600; cursor:pointer;
-    border:1.5px solid var(--border-input); background: rgba(255,255,255,0.05); color: var(--text-light);
-}
-
-.pg-candidate-row {
-    display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; border-radius:8px;
-    background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.06); cursor: pointer;
-}
-
 .pg-empty-msg { padding:1.5rem; text-align:center; color: var(--text-muted); font-size:0.85rem; }
 
 .pg-btn-primary {
@@ -84,6 +74,27 @@
     border:1.5px solid var(--color-gold); color:var(--color-gold-dark); padding:0.4rem 0.75rem;
     border-radius:50px; font-size:0.8rem; font-weight:600;
 }
+
+/* --- Dropdown custom (remplace le grand tableau multi-select) --- */
+.pg-dropdown { position: relative; }
+.pg-dropdown-field {
+    display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;
+}
+.pg-dropdown-panel {
+    display:none; position:absolute; top:100%; left:0; right:0; margin-top:6px;
+    background:#fff; border:2px solid var(--border-input); border-radius:12px;
+    max-height:320px; overflow-y:auto; z-index:20; box-shadow:var(--shadow-md);
+}
+.pg-dropdown-panel.open { display:block; }
+.pg-dropdown-search { padding:0.6rem; position:sticky; top:0; background:#fff; border-bottom:1px solid #eee; }
+.pg-dropdown-item {
+    padding:0.6rem 1rem; display:flex; align-items:center; gap:0.6rem;
+    cursor:pointer; font-size:0.85rem; color:#1A1A1A;
+}
+.pg-dropdown-item:hover { background: rgba(0,122,94,0.08); }
+.pg-dropdown-item input[type=checkbox] { width:16px; height:16px; accent-color:var(--color-green); }
+.pg-dropdown-arrow { transition: transform 200ms ease; flex-shrink:0; }
+.pg-dropdown-arrow.open { transform: rotate(180deg); }
 </style>
 
 <div class="content-wrapper">
@@ -141,26 +152,40 @@
         </div>
 
         <div id="placeholder-empty" class="pg-card" style="text-align:center; color:var(--text-muted); padding:3rem;">
-            👆 Choisissez un <strong style="color:var(--text-light);">type d'examen</strong> ci-dessus pour afficher la liste des candidats ayant validé cette étape.
+            👆 Choisissez un <strong style="color:var(--text-light);">type d'examen</strong> ci-dessus pour afficher la liste des candidats aptes (ayant validé cette étape ou à reprogrammer suite à un échec).
         </div>
 
         <div id="resultats-container" style="display:none;">
 
-            {{-- Éligibles --}}
+            {{-- Candidats aptes : validés + à reprogrammer après échec --}}
             <div class="pg-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-green-light);">
                     <h2 class="pg-section-title" style="color:#6EE7C0;">
-                        🏆 <span id="titre-eligibles">Candidats ayant validé</span>
+                        🏆 <span id="titre-eligibles">Candidats aptes à être programmés</span>
                         <span id="count-eligibles" class="pg-count-badge" style="background:rgba(0,122,94,0.3); color:#6EE7C0;">0</span>
                     </h2>
-                    <div style="display:flex; gap:0.75rem;">
-                        <button type="button" onclick="toutSelectionner(true)" class="pg-btn-toggle" style="border-color:var(--color-green-light); color:#6EE7C0;">✓ Tous</button>
-                        <button type="button" onclick="toutSelectionner(false)" class="pg-btn-toggle">✕ Aucun</button>
-                    </div>
                 </div>
-                <div id="eligibles-container" style="display:flex; flex-direction:column; gap:0.5rem; max-height:420px; overflow-y:auto; padding:0.25rem;"></div>
-                <div id="selection-info" style="display:none; margin-top:1rem; padding:0.75rem 1rem; background:rgba(0,122,94,0.15); border-radius:var(--radius-md); font-size:0.85rem; color:#6EE7C0; font-weight:600;">
-                    ✓ <span id="selection-count">0</span> candidat(s) sélectionné(s) pour l'examen
+                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem;">
+                    Cette liste regroupe, tous groupes confondus, les candidats ayant validé cette étape ET ceux ayant
+                    échoué à un examen de ce type (à reprogrammer). Cliquez sur le champ ci-dessous pour ouvrir la liste
+                    et cochez un ou plusieurs candidats.
+                </p>
+
+                {{-- Champ compact type "GROUPE" : ouvre/ferme la liste au clic, plus de gros tableau visible --}}
+                <div class="pg-dropdown" id="eligiblesDropdown">
+                    <div class="pg-input pg-dropdown-field" onclick="toggleEligiblesDropdown()">
+                        <span id="eligiblesFieldLabel">-- Choisir un ou plusieurs candidats --</span>
+                        <svg id="eligiblesArrow" class="pg-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                    <div id="eligiblesPanel" class="pg-dropdown-panel">
+                        <div class="pg-dropdown-search">
+                            <input type="text" id="eligiblesSearch" onkeyup="filterEligibles()"
+                                   placeholder="🔍 Rechercher un candidat par nom ou prénom..." class="pg-input" style="margin:0;">
+                        </div>
+                        <div id="eligiblesList"></div>
+                    </div>
                 </div>
             </div>
 
@@ -178,22 +203,8 @@
                 <div id="ajoutes-manuellement" style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.5rem;"></div>
             </div>
 
-            {{-- Note/Mention insuffisante --}}
-            <div class="pg-card">
-                <h2 class="pg-section-title" style="color:#FF8A80; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-red-light);">
-                    🚫 <span id="titre-non-eligibles">Note/Mention insuffisante</span>
-                    <span id="count-non-eligibles" class="pg-count-badge" style="background:rgba(206,17,38,0.25); color:#FF8A80;">0</span>
-                </h2>
-                <div id="non-eligibles-container" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:0.75rem; max-height:250px; overflow-y:auto; padding:0.25rem;"></div>
-            </div>
-
-            {{-- Pas encore évalués --}}
-            <div class="pg-card">
-                <h2 class="pg-section-title" style="color:var(--text-muted); margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:2px solid var(--border-input);">
-                    ⏳ <span id="titre-autres">Pas encore évalués</span>
-                    <span id="count-autres" class="pg-count-badge" style="background:rgba(255,255,255,0.08); color:var(--text-muted);">0</span>
-                </h2>
-                <div id="autres-container" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:0.75rem; max-height:250px; overflow-y:auto; padding:0.25rem;"></div>
+            <div id="selection-info" style="display:none; margin:0 0 1.5rem 0; padding:0.75rem 1rem; background:rgba(0,122,94,0.15); border-radius:var(--radius-md); font-size:0.85rem; color:#6EE7C0; font-weight:600;">
+                ✓ <span id="selection-count">0</span> candidat(s) sélectionné(s) pour l'examen
             </div>
         </div>
 
@@ -209,13 +220,14 @@
 <script>
 let ajoutesManuellement = new Set();
 let typeActuel = null;
+let candidatsCourants = [];
 
 function chargerCandidatsParType(typeSessionId) {
-    const placeholder = document.getElementById('placeholder-empty');
-    const container   = document.getElementById('resultats-container');
-    const select      = document.getElementById('typeSession_id');
-    const opt         = select.options[select.selectedIndex];
-    typeActuel        = opt ? opt.dataset.type : null;
+    var placeholder = document.getElementById('placeholder-empty');
+    var container   = document.getElementById('resultats-container');
+    var select      = document.getElementById('typeSession_id');
+    var opt         = select.options[select.selectedIndex];
+    typeActuel      = opt ? opt.dataset.type : null;
 
     if (!typeSessionId) {
         placeholder.style.display = 'block';
@@ -223,101 +235,82 @@ function chargerCandidatsParType(typeSessionId) {
         return;
     }
 
-    const libelles = { code: 'Code', creneau: 'Créneau', conduite: 'Conduite' };
-    const libelle = libelles[typeActuel] || typeActuel;
+    var libelles = { code: 'Code', creneau: 'Créneau', conduite: 'Conduite' };
+    var libelle = libelles[typeActuel] || typeActuel;
 
-    document.getElementById('titre-eligibles').textContent     = `Candidats ayant validé ${libelle}`;
-    document.getElementById('titre-non-eligibles').textContent = typeActuel === 'code' ? 'Note insuffisante (< 25)' : 'Mention insuffisante (Médiocre)';
-    document.getElementById('titre-autres').textContent        = `Pas encore évalués en ${libelle}`;
+    document.getElementById('titre-eligibles').textContent = 'Candidats aptes pour ' + libelle;
 
     placeholder.style.display = 'none';
     container.style.display   = 'block';
-    document.getElementById('eligibles-container').innerHTML     = '<div class="pg-empty-msg">Chargement...</div>';
-    document.getElementById('non-eligibles-container').innerHTML = '';
-    document.getElementById('autres-container').innerHTML        = '';
+    document.getElementById('eligiblesList').innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">Chargement...</div>';
 
-    fetch(`/programmations/candidats-par-type/${typeSessionId}`)
-        .then(r => r.json())
-        .then(data => {
-            renderEligibles(data.eligibles);
-            renderMotifList('non-eligibles-container', data.nonEligibles);
-            renderMotifList('autres-container', data.autres);
-            document.getElementById('count-eligibles').textContent     = data.eligibles.length;
-            document.getElementById('count-non-eligibles').textContent = data.nonEligibles.length;
-            document.getElementById('count-autres').textContent        = data.autres.length;
+    fetch('/programmations/candidats-par-type/' + typeSessionId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            candidatsCourants = data.eligibles;
+            renderEligibles(candidatsCourants);
+            document.getElementById('count-eligibles').textContent = candidatsCourants.length;
             updateSelection();
         });
 }
 
 function renderEligibles(list) {
-    const container = document.getElementById('eligibles-container');
+    var container = document.getElementById('eligiblesList');
     if (!list.length) {
-        container.innerHTML = `<div class="pg-empty-msg">Aucun candidat n'a encore validé cette étape. Utilisez l'ajout manuel si besoin.</div>`;
+        container.innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">Aucun candidat apte pour le moment. Utilisez l\u2019ajout manuel si besoin.</div>';
         return;
     }
 
-    container.innerHTML = list.map((c, idx) => {
-        const medaille = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : ''));
-        const valeur = typeActuel === 'code'
-            ? `<div style="font-weight:800; font-size:1.1rem; color:#6EE7C0;">${c.note}<span style="font-size:0.7rem; color:var(--text-muted);">/30</span></div>`
-            : `<div style="font-weight:800; font-size:0.85rem; color:#6EE7C0; text-transform:uppercase;">${c.mention === 'bien' ? '🟢 Bien' : '🟡 Passable'}</div>`;
-
-        return `
-        <label data-id="${c.id}" class="pg-candidate-row" style="border-color:${idx === 0 ? 'var(--color-gold)' : 'rgba(255,255,255,0.06)'}; background:${idx === 0 ? 'rgba(252,209,22,0.06)' : 'rgba(255,255,255,0.03)'};">
-            <span style="font-weight:800; font-size:0.9rem; color:var(--text-muted); width:24px; text-align:center;">${idx + 1}</span>
-            <input type="checkbox" class="candidat-checkbox" value="${c.id}" checked style="width:16px;height:16px;accent-color:var(--color-green);flex-shrink:0;" onchange="updateSelection()">
-            <div style="flex:1; min-width:0;">
-                <div style="font-weight:700; font-size:0.875rem; color:var(--text-light);">${c.nom} ${c.prenom} ${medaille}</div>
-            </div>
-            ${valeur}
-        </label>`;
+    container.innerHTML = list.map(function(c) {
+        var valeur = '';
+        if (typeActuel === 'code') {
+            valeur = (c.note !== null) ? (c.note + '/30') : '';
+        } else {
+            valeur = c.mention ? (c.mention === 'bien' ? 'Bien' : 'Passable') : '';
+        }
+        var tag = c.reprogrammation ? ' — ↻ à reprogrammer (échec)' : (valeur ? ' — ' + valeur : '');
+        var search = (c.nom + ' ' + c.prenom).toLowerCase();
+        return '<label class="pg-dropdown-item" data-search="' + search + '">'
+            + '<input type="checkbox" value="' + c.id + '" onchange="updateSelection()">'
+            + c.nom + ' ' + c.prenom + tag
+            + '</label>';
     }).join('');
 }
 
-function renderMotifList(containerId, list) {
-    const container = document.getElementById(containerId);
-    if (!list.length) {
-        container.innerHTML = `<div class="pg-empty-msg" style="grid-column:1/-1;">Aucun candidat dans cette catégorie.</div>`;
-        return;
-    }
-    container.innerHTML = list.map(c => `
-        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; border-radius:8px; background:rgba(255,255,255,0.03); border:2px solid rgba(255,255,255,0.06); opacity:0.9;">
-            <span style="font-size:1.1rem;">🚫</span>
-            <div style="flex:1; min-width:0;">
-                <div style="font-weight:700; font-size:0.875rem; color:var(--text-light);">${c.nom} ${c.prenom}</div>
-                <div style="font-size:0.72rem; color:#FF8A80; margin-top:0.15rem;">${c.motif}</div>
-            </div>
-        </div>
-    `).join('');
+function filterEligibles() {
+    var query = document.getElementById('eligiblesSearch').value.toLowerCase().trim();
+    document.querySelectorAll('#eligiblesList .pg-dropdown-item').forEach(function(item) {
+        item.style.display = (item.dataset.search || '').indexOf(query) !== -1 ? '' : 'none';
+    });
 }
 
-function toutSelectionner(val) {
-    document.querySelectorAll('#eligibles-container .candidat-checkbox').forEach(cb => cb.checked = val);
-    updateSelection();
+function toggleEligiblesDropdown() {
+    document.getElementById('eligiblesPanel').classList.toggle('open');
+    document.getElementById('eligiblesArrow').classList.toggle('open');
 }
 
 function rechercherCandidat(q) {
-    const resultsBox = document.getElementById('search-results');
+    var resultsBox = document.getElementById('search-results');
     if (!q || q.length < 2) { resultsBox.style.display = 'none'; return; }
 
-    fetch(`/programmations/rechercher-candidat?q=${encodeURIComponent(q)}`)
-        .then(r => r.json())
-        .then(candidats => {
+    fetch('/programmations/rechercher-candidat?q=' + encodeURIComponent(q))
+        .then(function(r) { return r.json(); })
+        .then(function(candidats) {
             if (!candidats.length) {
                 resultsBox.innerHTML = '<div style="padding:0.75rem; color:#888; font-size:0.85rem;">Aucun candidat trouvé.</div>';
             } else {
-                resultsBox.innerHTML = candidats.map(c => `
-                    <div class="item" onclick="ajouterManuel(${c.id}, '${c.nom} ${c.prenom}')">
-                        👤 ${c.nom} ${c.prenom} <span style="color:#888; font-size:0.75rem;">(${c.statut})</span>
-                    </div>
-                `).join('');
+                resultsBox.innerHTML = candidats.map(function(c) {
+                    return '<div class="item" onclick="ajouterManuel(' + c.id + ', \'' + c.nom + ' ' + c.prenom + '\')">'
+                        + '👤 ' + c.nom + ' ' + c.prenom + ' <span style="color:#888; font-size:0.75rem;">(' + c.statut + ')</span>'
+                        + '</div>';
+                }).join('');
             }
             resultsBox.style.display = 'block';
         });
 }
 
 function ajouterManuel(id, nom) {
-    ajoutesManuellement.add(JSON.stringify({id, nom}));
+    ajoutesManuellement.add(JSON.stringify({id: id, nom: nom}));
     renderAjoutesManuellement();
     document.getElementById('search-results').style.display = 'none';
     document.getElementById('search-candidat').value = '';
@@ -325,8 +318,8 @@ function ajouterManuel(id, nom) {
 }
 
 function retirerManuel(id) {
-    ajoutesManuellement.forEach(item => {
-        const parsed = JSON.parse(item);
+    ajoutesManuellement.forEach(function(item) {
+        var parsed = JSON.parse(item);
         if (parsed.id === id) ajoutesManuellement.delete(item);
     });
     renderAjoutesManuellement();
@@ -334,29 +327,33 @@ function retirerManuel(id) {
 }
 
 function renderAjoutesManuellement() {
-    const container = document.getElementById('ajoutes-manuellement');
-    container.innerHTML = Array.from(ajoutesManuellement).map(item => {
-        const c = JSON.parse(item);
-        return `<span class="pg-manual-tag">
-            ➕ ${c.nom}
-            <button type="button" onclick="retirerManuel(${c.id})" style="background:none;border:none;color:var(--color-red-light);cursor:pointer;font-weight:800;padding:0;margin-left:4px;">✕</button>
-        </span>`;
+    var container = document.getElementById('ajoutes-manuellement');
+    container.innerHTML = Array.from(ajoutesManuellement).map(function(item) {
+        var c = JSON.parse(item);
+        return '<span class="pg-manual-tag">'
+            + '➕ ' + c.nom
+            + ' <button type="button" onclick="retirerManuel(' + c.id + ')" style="background:none;border:none;color:var(--color-red-light);cursor:pointer;font-weight:800;padding:0;margin-left:4px;">✕</button>'
+            + '</span>';
     }).join('');
 }
 
 function updateSelection() {
-    const checkedEligibles = Array.from(document.querySelectorAll('#eligibles-container .candidat-checkbox:checked')).map(cb => cb.value);
-    const manuels = Array.from(ajoutesManuellement).map(item => String(JSON.parse(item).id));
-    const allIds = [...new Set([...checkedEligibles, ...manuels])];
+    var checkedEligibles = Array.from(document.querySelectorAll('#eligiblesList input[type=checkbox]:checked')).map(function(cb) { return cb.value; });
+    var manuels = Array.from(ajoutesManuellement).map(function(item) { return String(JSON.parse(item).id); });
+    var allIds = Array.from(new Set(checkedEligibles.concat(manuels)));
 
-    const info = document.getElementById('selection-info');
+    var info = document.getElementById('selection-info');
     document.getElementById('selection-count').textContent = allIds.length;
     info.style.display = allIds.length > 0 ? 'block' : 'none';
 
-    const hiddenContainer = document.getElementById('candidats-hidden-inputs');
+    document.getElementById('eligiblesFieldLabel').textContent = allIds.length > 0
+        ? (allIds.length + ' candidat(s) sélectionné(s)')
+        : '-- Choisir un ou plusieurs candidats --';
+
+    var hiddenContainer = document.getElementById('candidats-hidden-inputs');
     hiddenContainer.innerHTML = '';
-    allIds.forEach(id => {
-        const input = document.createElement('input');
+    allIds.forEach(function(id) {
+        var input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'candidat_ids[]';
         input.value = id;
@@ -365,6 +362,10 @@ function updateSelection() {
 }
 
 document.addEventListener('click', function(e) {
+    if (!e.target.closest('#eligiblesDropdown')) {
+        document.getElementById('eligiblesPanel').classList.remove('open');
+        document.getElementById('eligiblesArrow').classList.remove('open');
+    }
     if (!e.target.closest('#search-candidat') && !e.target.closest('#search-results')) {
         document.getElementById('search-results').style.display = 'none';
     }

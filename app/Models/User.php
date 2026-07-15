@@ -68,9 +68,9 @@ class User extends Authenticatable
         return $this->role === 'moniteur';
     }
 
-    public function isSecretaire(): bool
+    public function isSuperviseur(): bool
     {
-        return $this->role === 'secretaire';
+        return $this->role === 'superviseur';
     }
 
     /**

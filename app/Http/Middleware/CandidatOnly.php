@@ -21,7 +21,7 @@ class CandidatOnly
         }
 
         // Si admin → redirige vers le dashboard
-        if (in_array($user->role, ['admin', 'moniteur', 'superadmin', 'secretaire'])) {
+        if (in_array($user->role, ['admin', 'moniteur', 'superadmin', 'superviseur'])) {
             return redirect()->route('dashboard');
         }
 

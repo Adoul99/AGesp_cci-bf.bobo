@@ -528,7 +528,7 @@
             </div>
 
         {{-- ══ MENU SECRÉTAIRE ══ --}}
-        @elseif($role === 'secretaire')
+        @elseif($role === 'superviseur')
 
             <div class="as-grp">
                 <span class="as-lbl">Mon espace</span>
@@ -574,8 +574,8 @@
                 <div class="as-uemail">{{ auth()->user()->email ?? '' }}</div>
                 @if(auth()->user()->role === 'moniteur')
                     <span class="role-badge"><i class="bi bi-person-badge"></i> Moniteur</span>
-                @elseif(auth()->user()->role === 'secretaire')
-                    <span class="role-badge"><i class="bi bi-person-workspace"></i> Secrétaire</span>
+                @elseif(auth()->user()->role === 'superviseur')
+                    <span class="role-badge"><i class="bi bi-eye-fill"></i> Superviseur</span>
                 @endif
             </div>
         </div>

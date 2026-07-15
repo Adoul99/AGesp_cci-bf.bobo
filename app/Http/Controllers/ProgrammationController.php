@@ -39,60 +39,79 @@ class ProgrammationController extends Controller
     }
 
     /**
-     * AJAX : retourne les candidats classés par mérite pour un type de session donné.
+     * AJAX : retourne, pour un type de session donné, la liste UNIQUE des
+     * candidats à proposer dans le champ de sélection multiple de la
+     * programmation.
      *
-     * Règle d'éligibilité :
-     * - Code           → meilleure note ≥ 25/30
-     * - Créneau/Conduite → mention "bien" ou "passable" (obtenue au moins une fois)
+     * Cette liste regroupe, SANS distinction de groupe et même si la
+     * session de formation correspondante est déjà clôturée :
+     *   1. les candidats ayant VALIDÉ la session de formation
+     *      (Code : meilleure note ≥ 25/30 — Créneau/Conduite : mention
+     *      "bien" ou "passable"),
+     *   2. les candidats ayant ÉCHOUÉ à un examen de ce même type
+     *      (résultat "Ajourné") et qui doivent donc être reprogrammés.
      *
-     * Les candidats DÉJÀ programmés pour CE type de session précis sont exclus
-     * (on ne veut pas reprogrammer quelqu'un déjà inscrit à l'examen).
+     * Les candidats pas encore évalués ne sont PAS affichés ici (leurs
+     * notes restent enregistrées en base, simplement non montrées dans
+     * cette liste). Un candidat déjà admis à ce type précis, ou déjà
+     * programmé et en attente de son examen, est exclu (pas de doublon).
      */
     public function candidatsParType(Request $request, TypeSession $typeSession)
     {
         $type = strtolower($typeSession->type);
 
-        // Candidats déjà programmés pour ce type de session
-        $dejaProgrammesIds = Candidat::whereHas('programmations', function ($q) use ($typeSession) {
-            $q->where('typeSession_id', $typeSession->id);
+        // Déjà admis à ce type → plus besoin d'être (re)programmé
+        $dejaAdmisIds = Candidat::whereHas('examens', function ($q) use ($typeSession) {
+            $q->where('typeSession_id', $typeSession->id)
+              ->where('candidat_examen.resultat', 'Admis');
         })->pluck('id');
 
-        $tousCandidats = Candidat::with('evaluations.typeSession')
-            ->whereNotIn('id', $dejaProgrammesIds)
+        // Déjà programmé pour ce type et toujours en attente de son examen
+        // (ni admis, ni ajourné pour l'instant) → on évite de le proposer deux fois
+        $dejaEnAttenteIds = Candidat::whereHas('programmations', function ($q) use ($typeSession) {
+                $q->where('typeSession_id', $typeSession->id);
+            })
+            ->whereDoesntHave('examens', function ($q) use ($typeSession) {
+                $q->where('typeSession_id', $typeSession->id)
+                  ->whereIn('candidat_examen.resultat', ['Admis', 'Ajourné']);
+            })
+            ->pluck('id');
+
+        $exclusIds = $dejaAdmisIds->merge($dejaEnAttenteIds)->unique();
+
+        $candidats = Candidat::with(['evaluations.typeSession', 'examens'])
+            ->whereNotIn('id', $exclusIds)
             ->orderBy('nom')
             ->get();
 
-        $eligibles    = collect();
-        $nonEligibles = collect();
-        $autres       = collect();
+        $eligibles = collect();
 
-        foreach ($tousCandidats as $c) {
+        foreach ($candidats as $c) {
             $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
 
             $item = [
-                'id'           => $c->id,
-                'nom'          => $c->nom,
-                'prenom'       => $c->prenom,
-                'statut_label' => $c->statut_label,
+                'id'     => $c->id,
+                'nom'    => $c->nom,
+                'prenom' => $c->prenom,
             ];
 
+            $aEchoueExamen = $c->examens->contains(function ($examen) use ($typeSession) {
+                return $examen->typeSession_id === $typeSession->id
+                    && $examen->pivot->resultat === 'Ajourné';
+            });
+
             if ($type === 'code') {
-                // ── Session Code : logique par note chiffrée ──
                 $meilleureNote = $evalsType->whereNotNull('note')->max('note');
                 $item['note']    = $meilleureNote;
                 $item['mention'] = null;
 
-                if (!is_null($meilleureNote) && $meilleureNote >= 25) {
+                $aValide = !is_null($meilleureNote) && $meilleureNote >= 25;
+
+                if ($aValide || $aEchoueExamen) {
+                    $item['reprogrammation'] = $aEchoueExamen && !$aValide;
                     $eligibles->push($item);
-                } elseif (!is_null($meilleureNote)) {
-                    $item['motif'] = "Note insuffisante : {$meilleureNote}/30 (seuil 25)";
-                    $nonEligibles->push($item);
-                } else {
-                    $item['motif'] = "Pas encore évalué en Code";
-                    $autres->push($item);
                 }
             } else {
-                // ── Créneau / Conduite : logique par mention ──
                 $meilleureMention = $evalsType->whereNotNull('mention')
                     ->sortByDesc(fn($e) => $this->rangMention($e->mention))
                     ->first()?->mention;
@@ -100,15 +119,11 @@ class ProgrammationController extends Controller
                 $item['note']    = null;
                 $item['mention'] = $meilleureMention;
 
-                if (in_array($meilleureMention, ['bien', 'passable'])) {
+                $aValide = in_array($meilleureMention, ['bien', 'passable']);
+
+                if ($aValide || $aEchoueExamen) {
+                    $item['reprogrammation'] = $aEchoueExamen && !$aValide;
                     $eligibles->push($item);
-                } elseif (!is_null($meilleureMention)) {
-                    $item['motif'] = "Mention insuffisante : " . ucfirst($meilleureMention);
-                    $nonEligibles->push($item);
-                } else {
-                    $libelle = $type === 'creneau' ? 'Créneau' : 'Conduite';
-                    $item['motif'] = "Pas encore évalué en {$libelle}";
-                    $autres->push($item);
                 }
             }
         }
@@ -118,13 +133,9 @@ class ProgrammationController extends Controller
         } else {
             $eligibles = $eligibles->sortByDesc(fn($e) => $this->rangMention($e['mention']))->values();
         }
-        $autres       = $autres->sortBy('nom')->values();
-        $nonEligibles = $nonEligibles->sortBy('nom')->values();
 
         return response()->json([
-            'eligibles'    => $eligibles,
-            'nonEligibles' => $nonEligibles,
-            'autres'       => $autres,
+            'eligibles' => $eligibles,
         ]);
     }
 

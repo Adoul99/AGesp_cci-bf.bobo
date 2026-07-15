@@ -2,7 +2,7 @@
 
 // ══════════════════════════════════════════════════════════════
 // app/Http/Middleware/Staff.php
-// Regroupe tout le personnel back-office (admin, moniteur, secrétaire)
+// Regroupe tout le personnel back-office (admin, moniteur, superviseur)
 // pour les pages communes : tableau de bord, alertes.
 // ══════════════════════════════════════════════════════════════
 
@@ -22,7 +22,7 @@ class Staff
             return redirect()->route('login');
         }
 
-        if (in_array($user->role, ['admin', 'superadmin', 'moniteur', 'secretaire'])) {
+        if (in_array($user->role, ['admin', 'superadmin', 'moniteur', 'superviseur'])) {
             return $next($request);
         }
 

@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminOrSecretaire
+class AdminOrSuperviseur
 {
     public function handle(Request $request, Closure $next): Response
     {
@@ -16,7 +16,7 @@ class AdminOrSecretaire
             return redirect()->route('login');
         }
 
-        if (in_array($user->role, ['admin', 'superadmin', 'secretaire'])) {
+        if (in_array($user->role, ['admin', 'superadmin', 'superviseur'])) {
             return $next($request);
         }
 

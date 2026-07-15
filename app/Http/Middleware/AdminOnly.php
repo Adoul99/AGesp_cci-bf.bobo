@@ -36,8 +36,8 @@ class AdminOnly
             return redirect()->route('moniteur.espace');
         }
 
-        // Si secrétaire → redirige vers le dashboard (elle n'a pas accès à cette section admin-only)
-        if ($user->role === 'secretaire') {
+        // Si superviseur → redirige vers le dashboard (elle n'a pas accès à cette section admin-only)
+        if ($user->role === 'superviseur') {
             return redirect()->route('dashboard');
         }
 

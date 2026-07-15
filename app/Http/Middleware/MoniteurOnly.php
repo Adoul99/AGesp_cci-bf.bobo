@@ -33,7 +33,7 @@ class MoniteurOnly
             return redirect()->route('candidat.espace');
         }
 
-        if ($user->role === 'secretaire') {
+        if ($user->role === 'superviseur') {
             return redirect()->route('dashboard');
         }
 

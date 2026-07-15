@@ -8,6 +8,7 @@
     --color-dark: #1A1A1A; --color-light: #F8F8F8;
     --color-gray-100: #E8E8E8; --color-gray-200: #D1D1D1; --color-gray-500: #666666;
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
     --transition-normal: 300ms ease-in-out; --radius-md: 8px; --radius-lg: 12px;
 }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
@@ -15,6 +16,34 @@
     .no-print, nav, .sidebar { display: none !important; }
     body { background: white !important; }
 }
+
+/* --- Boîte de dialogue custom de confirmation de suppression (identique à examens/index) --- */
+.del-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(26,26,26,0.6);
+    z-index: 1000; align-items: center; justify-content: center; padding: 1rem;
+}
+.del-modal-overlay.open { display: flex; }
+.del-modal-box {
+    background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+    max-width: 420px; width: 100%; padding: 2rem; text-align: center;
+    border-top: 5px solid var(--color-red);
+}
+.del-modal-icon {
+    width: 56px; height: 56px; border-radius: 50%; background: rgba(206,17,38,0.1);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+    font-size: 1.6rem;
+}
+.del-modal-title { font-size: 1.1rem; font-weight: 800; color: var(--color-dark); margin: 0 0 0.5rem; }
+.del-modal-text { font-size: 0.875rem; color: var(--color-gray-500); margin: 0 0 1.5rem; line-height: 1.5; }
+.del-modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
+.del-modal-btn {
+    padding: 0.7rem 1.5rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; border: 2px solid transparent; transition: all var(--transition-normal);
+}
+.del-modal-btn-cancel { background: var(--color-gray-100); color: var(--color-dark); }
+.del-modal-btn-cancel:hover { background: var(--color-gray-200); }
+.del-modal-btn-confirm { background: var(--color-red); color: white; border-color: var(--color-red); }
+.del-modal-btn-confirm:hover { background: var(--color-red-dark); }
 </style>
 
 <div class="content-wrapper" style="padding: 2rem;">
@@ -174,10 +203,14 @@
                             @else
                                 <span style="color:var(--color-gray-500); font-size:0.75rem; font-style:italic;">Archivée</span>
                             @endif
-                            <form method="POST" action="{{ route('session_formations.destroy', $session->id) }}" style="display:inline;" onsubmit="return confirm('Supprimer cette session ?');">
+
+                            {{-- Bouton Supprimer : ouvre la boîte de dialogue custom au lieu du confirm() natif --}}
+                            <form id="delete-session-form-{{ $session->id }}" method="POST" action="{{ route('session_formations.destroy', $session->id) }}" style="display:inline;">
                                 @csrf @method('DELETE')
-                                <button type="submit" style="padding:0.4rem 0.7rem; background:rgba(206,17,38,0.08); color:#D32F2F; border:1.5px solid #D32F2F; border-radius:var(--radius-md); cursor:pointer; font-size:0.75rem;" title="Supprimer">✕</button>
                             </form>
+                            <button type="button"
+                                    onclick="openDeleteModal('delete-session-form-{{ $session->id }}', '{{ addslashes(($session->typeSession->type ?? 'session') . ' du ' . \Carbon\Carbon::parse($session->dateDebut)->format('d/m/Y')) }}')"
+                                    style="padding:0.4rem 0.7rem; background:rgba(206,17,38,0.08); color:#D32F2F; border:1.5px solid #D32F2F; border-radius:var(--radius-md); cursor:pointer; font-size:0.75rem;" title="Supprimer">✕</button>
                         </div>
                     </td>
                 </tr>
@@ -201,4 +234,45 @@
     @endif
 
 </div>
+
+{{-- Boîte de dialogue de confirmation de suppression --}}
+<div id="deleteModalOverlay" class="del-modal-overlay">
+    <div class="del-modal-box">
+        <div class="del-modal-icon">🗑️</div>
+        <h3 class="del-modal-title">Supprimer cette session ?</h3>
+        <p class="del-modal-text">
+            Vous êtes sur le point de supprimer <strong id="deleteModalSessionName">cette session</strong>.
+            Cette action est <strong>irréversible</strong>.
+        </p>
+        <div class="del-modal-actions">
+            <button type="button" class="del-modal-btn del-modal-btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+            <button type="button" class="del-modal-btn del-modal-btn-confirm" id="deleteModalConfirmBtn">✕ Supprimer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var formIdASupprimer = null;
+
+    function openDeleteModal(formId, libelle) {
+        formIdASupprimer = formId;
+        document.getElementById('deleteModalSessionName').textContent = libelle;
+        document.getElementById('deleteModalOverlay').classList.add('open');
+    }
+
+    function closeDeleteModal() {
+        formIdASupprimer = null;
+        document.getElementById('deleteModalOverlay').classList.remove('open');
+    }
+
+    document.getElementById('deleteModalConfirmBtn').addEventListener('click', function() {
+        if (formIdASupprimer) {
+            document.getElementById(formIdASupprimer).submit();
+        }
+    });
+
+    document.getElementById('deleteModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
 </x-layouts::app>

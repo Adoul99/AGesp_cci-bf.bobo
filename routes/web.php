@@ -31,7 +31,7 @@ Route::get('/', function () {
         if ($user->role === 'candidat') {
             return redirect()->route('candidat.espace');
         }
-        if (in_array($user->role, ['admin', 'superadmin', 'secretaire'])) {
+        if (in_array($user->role, ['admin', 'superadmin', 'superviseur'])) {
             return redirect()->route('dashboard');
         }
         if ($user->role === 'moniteur') {
@@ -172,7 +172,7 @@ Route::middleware(['auth', 'verified', 'admin.or.moniteur'])->group(function () 
 // MODULES PARTAGÉS : ADMIN + SECRÉTAIRE
 // (accueil / dossier administratif des candidats)
 // ══════════════════════════════════════════════════════════════
-Route::middleware(['auth', 'verified', 'admin.or.secretaire'])->group(function () {
+Route::middleware(['auth', 'verified', 'admin.or.superviseur'])->group(function () {
 
     // ── Gestion des candidats ────────────────────────────────
     Route::resource('candidats',          CandidatController::class);

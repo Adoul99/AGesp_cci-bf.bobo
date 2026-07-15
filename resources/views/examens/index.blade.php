@@ -53,6 +53,34 @@
             th { background: #f2f2f2 !important; color: black !important; border: 1px solid #000 !important; }
             td { border: 1px solid #ccc !important; }
         }
+
+        /* --- Boîte de dialogue custom de confirmation de suppression --- */
+        .del-modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(26,26,26,0.6);
+            z-index: 1000; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .del-modal-overlay.open { display: flex; }
+        .del-modal-box {
+            background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+            max-width: 420px; width: 100%; padding: 2rem; text-align: center;
+            border-top: 5px solid var(--color-red);
+        }
+        .del-modal-icon {
+            width: 56px; height: 56px; border-radius: 50%; background: rgba(206,17,38,0.1);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+            font-size: 1.6rem;
+        }
+        .del-modal-title { font-size: 1.1rem; font-weight: 800; color: var(--color-dark); margin: 0 0 0.5rem; }
+        .del-modal-text { font-size: 0.875rem; color: var(--color-gray-500); margin: 0 0 1.5rem; line-height: 1.5; }
+        .del-modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
+        .del-modal-btn {
+            padding: 0.7rem 1.5rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; border: 2px solid transparent; transition: all var(--transition-normal);
+        }
+        .del-modal-btn-cancel { background: var(--color-gray-100); color: var(--color-dark); }
+        .del-modal-btn-cancel:hover { background: var(--color-gray-200); }
+        .del-modal-btn-confirm { background: var(--color-red); color: white; border-color: var(--color-red); }
+        .del-modal-btn-confirm:hover { background: var(--color-red-dark); }
     </style>
 
     <div class="content-wrapper" style="padding: 2rem;">
@@ -99,7 +127,7 @@
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Date Début</th>
                         <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Statut</th>
                         <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Moniteur</th>
-                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Candidats inscrits</th>
+                        <th style="padding: 1rem 1.5rem; text-align: left; border-bottom: 3px solid var(--color-gold);">Lieu de l'examen</th>
                         <th style="padding: 1rem 1.5rem; text-align: center; border-bottom: 3px solid var(--color-gold);">Actions</th>
                     </tr>
                 </thead>
@@ -170,37 +198,15 @@
                             @endif
                         </td>
 
-                        {{--
-                            Candidats inscrits — chaque candidat affiche son résultat À CET
-                            EXAMEN précis (pivot candidat_examen.resultat). Le fait que le
-                            même candidat apparaisse sur plusieurs lignes du tableau est
-                            normal : chaque ligne = une phase différente (Code/Créneau/
-                            Conduite), pas un doublon (voir colonne "Phase").
-                        --}}
+                        {{-- Lieu de l'examen : colonne simple, alimentée par la colonne "lieu"
+                             de la table examens (voir migration add_lieu_to_examens_table). --}}
                         <td style="padding: 1rem 1.5rem; color: var(--color-dark); font-size: 0.875rem;">
-                            @if($examen->candidats->isNotEmpty())
-                                <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
-                                    @foreach($examen->candidats as $c)
-                                        @php
-                                            $resultatCet = $c->pivot->resultat ?? 'En attente';
-                                            $aReussiCet = $resultatCet === 'Admis';
-                                        @endphp
-                                        <span style="display:inline-flex; align-items:center; gap:0.35rem; background:{{ $aReussiCet ? 'rgba(0,122,94,0.1)' : 'rgba(206,17,38,0.08)' }}; color:{{ $aReussiCet ? 'var(--color-green-dark)' : 'var(--color-red-dark)' }}; padding:0.2rem 0.6rem; border-radius:50px; font-size:0.72rem; font-weight:700; border:1px solid {{ $aReussiCet ? 'rgba(0,122,94,0.2)' : 'rgba(206,17,38,0.25)' }};">
-                                            {{ $aReussiCet ? '✅' : '❌' }} {{ $c->nom }} {{ $c->prenom }}
-
-                                            @if(!$aReussiCet)
-                                                {{-- Échec à cet examen : proposer la reprogrammation --}}
-                                                <a href="{{ route('programmations.create') }}"
-                                                   title="Reprogrammer {{ $c->nom }} {{ $c->prenom }} pour ce type d'examen"
-                                                   style="display:inline-flex; align-items:center; gap:0.2rem; margin-left:0.25rem; background:var(--color-red-dark); color:white; padding:0.1rem 0.5rem; border-radius:50px; font-size:0.68rem; font-weight:800; text-decoration:none; text-transform:uppercase; letter-spacing:0.02em;">
-                                                    🔁 Reprogrammer
-                                                </a>
-                                            @endif
-                                        </span>
-                                    @endforeach
-                                </div>
+                            @if(!empty($examen->lieu))
+                                <span style="display:inline-flex; align-items:center; gap:0.35rem; font-weight:500;">
+                                    📍 {{ $examen->lieu }}
+                                </span>
                             @else
-                                <span style="color:var(--color-gray-500); font-style:italic; font-size:0.8rem;">Aucun candidat</span>
+                                <span style="color: var(--color-gray-500); font-style: italic;">N/A</span>
                             @endif
                         </td>
                         
@@ -224,18 +230,19 @@
                                     ✎
                                 </a>
                                 
-                                <!-- Bouton Supprimer -->
-                                <form method="POST" action="{{ route('examens.destroy', $examen->id) }}" style="display: inline;" onsubmit="return confirm('Supprimer cet examen ?');">
+                                <!-- Bouton Supprimer : ouvre la boîte de dialogue custom au lieu du confirm() natif -->
+                                <form id="delete-form-{{ $examen->id }}" method="POST" action="{{ route('examens.destroy', $examen->id) }}" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
-                                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: #D32F2F; border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; font-size: 1.2rem; padding: 0;"
-                                            onmouseover="this.style.backgroundColor='#D32F2F'; this.style.color='white'; this.style.transform='scale(1.1)'"
-                                            onmouseout="this.style.backgroundColor='var(--color-gray-100)'; this.style.color='#D32F2F'; this.style.transform='scale(1)'"
-                                            title="Supprimer">
-                                        ✕
-                                    </button>
                                 </form>
+                                <button type="button"
+                                        onclick="openDeleteModal('delete-form-{{ $examen->id }}', '{{ addslashes($examen->libelle) }}')"
+                                        style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background-color: var(--color-gray-100); color: #D32F2F; border: none; cursor: pointer; transition: all var(--transition-normal); font-weight: bold; font-size: 1.2rem; padding: 0;"
+                                        onmouseover="this.style.backgroundColor='#D32F2F'; this.style.color='white'; this.style.transform='scale(1.1)'"
+                                        onmouseout="this.style.backgroundColor='var(--color-gray-100)'; this.style.color='#D32F2F'; this.style.transform='scale(1)'"
+                                        title="Supprimer">
+                                    ✕
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -257,4 +264,45 @@
         </div>
         @endif
     </div>
+
+    <!-- Boîte de dialogue de confirmation de suppression -->
+    <div id="deleteModalOverlay" class="del-modal-overlay">
+        <div class="del-modal-box">
+            <div class="del-modal-icon">🗑️</div>
+            <h3 class="del-modal-title">Supprimer cet examen ?</h3>
+            <p class="del-modal-text">
+                Vous êtes sur le point de supprimer <strong id="deleteModalExamName">cet examen</strong>.
+                Cette action est <strong>irréversible</strong>.
+            </p>
+            <div class="del-modal-actions">
+                <button type="button" class="del-modal-btn del-modal-btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+                <button type="button" class="del-modal-btn del-modal-btn-confirm" id="deleteModalConfirmBtn">✕ Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var formIdASupprimer = null;
+
+        function openDeleteModal(formId, libelle) {
+            formIdASupprimer = formId;
+            document.getElementById('deleteModalExamName').textContent = libelle;
+            document.getElementById('deleteModalOverlay').classList.add('open');
+        }
+
+        function closeDeleteModal() {
+            formIdASupprimer = null;
+            document.getElementById('deleteModalOverlay').classList.remove('open');
+        }
+
+        document.getElementById('deleteModalConfirmBtn').addEventListener('click', function() {
+            if (formIdASupprimer) {
+                document.getElementById(formIdASupprimer).submit();
+            }
+        });
+
+        document.getElementById('deleteModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    </script>
 </x-layouts::app>

@@ -39,6 +39,15 @@
 .field-hint { color:var(--text-muted); font-size:0.7rem; font-weight:400; text-transform:none; letter-spacing:0; }
 .field-error { color:#FF8A80; font-size:0.75rem; }
 .field-group.is-hidden { display:none; }
+
+.multi-select {
+    width:100%; min-height:190px; padding:0; border:2px solid var(--border-input);
+    border-radius:var(--radius-md); background:#FFFFFF; color:#1A1A1A; font-size:0.85rem; overflow-y:auto;
+}
+.multi-select option { padding:0.55rem 0.85rem; color:#1A1A1A; background:#FFFFFF; }
+.multi-select option:checked {
+    background: var(--color-green-light) !important; color:white;
+}
 </style>
 
 <div class="content-wrapper">
@@ -50,7 +59,7 @@
             Nouvelle Session de Formation
         </h1>
         <p style="margin:0.5rem 0 0 1.5rem; color:var(--text-muted); font-size:0.875rem;">
-            ℹ️ Une seule session peut être ouverte à la fois. Remplissez les informations puis enregistrez.
+            ℹ️ Une seule session peut être ouverte à la fois. Remplissez les informations puis enregistrez. La session est toujours créée <strong>Ouverte</strong>.
         </p>
     </div>
 
@@ -93,20 +102,11 @@
                 @error('typeSession_id')<span class="field-error">{{ $message }}</span>@enderror
             </div>
 
-            {{-- Statut --}}
-            <div class="field-group">
-                <label class="field-label">Statut <span style="color:var(--color-red);">*</span></label>
-                <select name="statutSession" class="dark-input" required>
-                    <option value="ouvert" selected>🟢 Ouvert</option>
-                    <option value="annule" {{ old('statutSession')=='annule' ? 'selected' : '' }}>⚪ Annulé</option>
-                </select>
-            </div>
-
             {{-- Groupe --}}
             <div class="field-group">
-                <label class="field-label">Groupe <span class="field-hint">(facultatif)</span></label>
-                <select name="groupe_id" id="groupe_id" class="dark-input" onchange="afficherCandidats(this.value)">
-                    <option value="">-- Aucun groupe --</option>
+                <label class="field-label">Groupe <span style="color:var(--color-red);">*</span></label>
+                <select name="groupe_id" id="groupe_id" class="dark-input" onchange="afficherCandidats(this.value)" required>
+                    <option value="">-- Choisir un groupe --</option>
                     @foreach($groupes as $g)
                         <option value="{{ $g->id }}" {{ old('groupe_id') == $g->id ? 'selected' : '' }}
                                 data-candidats="{{ $g->candidats->map(fn($c)=>['id'=>$c->id,'nom'=>$c->nom.' '.$c->prenom])->toJson() }}">
@@ -114,13 +114,13 @@
                         </option>
                     @endforeach
                 </select>
+                @error('groupe_id')<span class="field-error">{{ $message }}</span>@enderror
             </div>
 
             {{-- Moniteur --}}
             <div class="field-group">
                 <label class="field-label">
-                    Moniteur
-                    @if(!$moniteurConnecte)<span class="field-hint">(facultatif)</span>@endif
+                    Moniteur <span style="color:var(--color-red);">*</span>
                 </label>
 
                 @if($moniteurConnecte)
@@ -130,31 +130,54 @@
                     </div>
                     <input type="hidden" name="moniteur_id" value="{{ $moniteurConnecte->id }}">
                 @else
-                    <select name="moniteur_id" class="dark-input">
-                        <option value="">-- Aucun --</option>
+                    <select name="moniteur_id" class="dark-input" required>
+                        <option value="">-- Choisir un moniteur --</option>
                         @foreach($moniteurs as $m)
                             <option value="{{ $m->id }}" {{ old('moniteur_id') == $m->id ? 'selected' : '' }}>
                                 👤 {{ $m->nom }} {{ $m->prenom }}
                             </option>
                         @endforeach
                     </select>
+                    @error('moniteur_id')<span class="field-error">{{ $message }}</span>@enderror
                 @endif
             </div>
 
             {{-- Véhicule : masqué si type de session = Code --}}
             <div class="field-group" id="vehicule-field">
-                <label class="field-label">Véhicule <span class="field-hint">(facultatif)</span></label>
+                <label class="field-label">Véhicule <span id="vehicule-required" style="color:var(--color-red);">*</span></label>
                 <select name="vehicule_id" id="vehicule_id" class="dark-input">
-                    <option value="">-- Aucun --</option>
+                    <option value="">-- Choisir un véhicule --</option>
                     @foreach($vehicules as $v)
                         <option value="{{ $v->id }}" {{ old('vehicule_id') == $v->id ? 'selected' : '' }}>🚗 {{ $v->nomVehicule }}</option>
                     @endforeach
                 </select>
+                @error('vehicule_id')<span class="field-error">{{ $message }}</span>@enderror
             </div>
 
         </div>
 
-        {{-- Aperçu candidats --}}
+        {{-- Candidats sans groupe : sélection multiple --}}
+        <div style="margin-top:2rem;">
+            <label class="field-label">
+                Candidats sans groupe à ajouter <span class="field-hint">(facultatif)</span>
+            </label>
+            <p style="margin:0 0 0.6rem 0; font-size:0.75rem; color:var(--text-muted);">
+                Cliquez sur la flèche pour dérouler la liste, puis maintenez <strong style="color:var(--text-light);">Ctrl</strong>
+                (ou <strong style="color:var(--text-light);">Cmd</strong> sur Mac) enfoncé pour sélectionner plusieurs candidats
+                qui n'appartiennent à aucun groupe. Ils seront ajoutés à cette session en plus des candidats du groupe choisi.
+            </p>
+            <select name="candidats_sans_groupe[]" id="candidats_sans_groupe" class="multi-select" multiple size="6">
+                @forelse($candidatsSansGroupe as $c)
+                    <option value="{{ $c->id }}" {{ collect(old('candidats_sans_groupe', []))->contains($c->id) ? 'selected' : '' }}>
+                        {{ $c->nom }} {{ $c->prenom }}
+                    </option>
+                @empty
+                    <option disabled>Aucun candidat sans groupe</option>
+                @endforelse
+            </select>
+        </div>
+
+        {{-- Aperçu candidats du groupe --}}
         <div id="candidats-preview" style="display:none; margin-top:2rem; padding:1.25rem; background:rgba(0,122,94,0.15); border:2px solid var(--color-green-light); border-radius:var(--radius-md);">
             <h3 style="margin:0 0 0.75rem 0; font-size:0.875rem; font-weight:700; color:#ECF0F1;">
                 👥 Candidats qui seront intégrés à la session :
@@ -195,18 +218,23 @@ function afficherCandidats(groupeId) {
 function onTypeSessionChange(select) {
     const opt = select.options[select.selectedIndex];
     const type = opt ? opt.dataset.type : null;
-    const vehiculeField  = document.getElementById('vehicule-field');
-    const vehiculeSelect = document.getElementById('vehicule_id');
+    const vehiculeField    = document.getElementById('vehicule-field');
+    const vehiculeSelect   = document.getElementById('vehicule_id');
+    const vehiculeRequired = document.getElementById('vehicule-required');
 
     if (type === 'code') {
         // Session Code : pas de véhicule à choisir
         vehiculeField.classList.add('is-hidden');
         vehiculeSelect.value = '';
         vehiculeSelect.disabled = true;
+        vehiculeSelect.required = false;
+        vehiculeRequired.style.display = 'none';
     } else {
-        // Créneau / Conduite : véhicule choisissable
+        // Créneau / Conduite : véhicule obligatoire
         vehiculeField.classList.remove('is-hidden');
         vehiculeSelect.disabled = false;
+        vehiculeSelect.required = true;
+        vehiculeRequired.style.display = 'inline';
     }
 }
 

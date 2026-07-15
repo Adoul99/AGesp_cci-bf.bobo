@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'moniteur.only'       => \App\Http\Middleware\MoniteurOnly::class,
             'admin-or-moniteur'   => \App\Http\Middleware\AdminOrMoniteur::class,
             'admin.or.moniteur'   => \App\Http\Middleware\AdminOrMoniteur::class,
-            'admin.or.secretaire' => \App\Http\Middleware\AdminOrSecretaire::class,
+            'admin.or.superviseur' => \App\Http\Middleware\AdminOrSuperviseur::class,
             'staff'               => \App\Http\Middleware\Staff::class,
         ]);
 

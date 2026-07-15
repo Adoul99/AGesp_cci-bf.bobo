@@ -75,6 +75,14 @@
                 </div>
 
                 <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Lieu de l'examen</label>
+                    <input type="text" name="lieu" value="{{ old('lieu', $examen->lieu) }}" placeholder="Ex: DGTTM Bobo-Dioulasso"
+                           style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
+                           onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
+                    @error('lieu')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
+                </div>
+
+                <div>
                     <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Moniteur</label>
                     <select name="moniteur_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;"
                             onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">

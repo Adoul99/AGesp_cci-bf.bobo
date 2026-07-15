@@ -6,6 +6,7 @@ use App\Models\SessionFormation;
 use App\Models\Vehicule;
 use App\Models\Evaluation;
 use App\Models\Groupe;
+use App\Models\Candidat;
 use App\Models\TypeSession;
 use App\Models\Moniteur;
 use App\Traits\ExportableTrait;
@@ -63,12 +64,20 @@ class SessionFormationController extends Controller
         $typesSessions = TypeSession::all();
         $moniteurs     = Moniteur::all();
 
+        // Candidats qui n'appartiennent à AUCUN groupe : à sélectionner
+        // individuellement (champ de sélection multiple) pour les intégrer
+        // quand même à la session, en plus des candidats du groupe choisi.
+        $candidatsSansGroupe = Candidat::whereDoesntHave('groupes')
+            ->orderBy('nom')
+            ->get();
+
         // Si l'utilisateur connecté est lui-même un moniteur (email correspondant),
         // on pré-remplit automatiquement le champ Moniteur avec son propre nom.
         $moniteurConnecte = Moniteur::pourUtilisateur(Auth::user());
 
         return view('session_formations.create', compact(
-            'vehicules', 'evaluations', 'groupes', 'typesSessions', 'moniteurs', 'moniteurConnecte'
+            'vehicules', 'evaluations', 'groupes', 'typesSessions', 'moniteurs',
+            'moniteurConnecte', 'candidatsSansGroupe'
         ));
     }
 
@@ -77,13 +86,28 @@ class SessionFormationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'dateDebut'      => 'required|date',
-            'statutSession'  => 'required|in:ouvert,ferme,annule',
-            'typeSession_id' => 'required|exists:type_sessions,id',
-            'groupe_id'      => 'nullable|exists:groupes,id',
-            'vehicule_id'    => 'nullable|exists:vehicules,id',
-            'moniteur_id'    => 'nullable|exists:moniteurs,id',
+            'dateDebut'                => 'required|date',
+            'typeSession_id'           => 'required|exists:type_sessions,id',
+            'groupe_id'                => 'required|exists:groupes,id',
+            'moniteur_id'              => 'required|exists:moniteurs,id',
+            'candidats_sans_groupe'    => 'nullable|array',
+            'candidats_sans_groupe.*'  => 'exists:candidats,id',
         ]);
+
+        // Le véhicule n'a de sens que pour les sessions Créneau/Conduite ;
+        // pour une session Code, le champ est masqué et n'est donc pas exigé.
+        $typeSession = TypeSession::find($request->typeSession_id);
+        $typeNom     = $typeSession ? $typeSession->type : null;
+
+        if ($typeNom !== 'code') {
+            $request->validate([
+                'vehicule_id' => 'required|exists:vehicules,id',
+            ]);
+        } else {
+            $request->validate([
+                'vehicule_id' => 'nullable|exists:vehicules,id',
+            ]);
+        }
 
         // Vérifier si une session du MÊME type est déjà ouverte
         $sessionMemeTypeOuverte = SessionFormation::ouverte()
@@ -100,38 +124,48 @@ class SessionFormationController extends Controller
                 );
         }
 
+        // Une session est toujours créée « Ouvert » : ce statut n'est plus
+        // demandé dans le formulaire (valeur par défaut en base de données).
         $session = SessionFormation::create($request->only(
-            'dateDebut', 'statutSession', 'typeSession_id',
+            'dateDebut', 'typeSession_id',
             'groupe_id', 'vehicule_id', 'evaluation_id', 'moniteur_id'
         ));
 
-        // Récupérer le type de session
-        $typeSession = TypeSession::find($request->typeSession_id);
-        $typeNom     = $typeSession ? $typeSession->type : null;
+        // Récupérer les candidats à attacher : ceux du groupe + ceux
+        // sélectionnés individuellement (candidats sans groupe).
+        $candidatsAAttacher = collect();
 
-        // Attacher les candidats du groupe + mettre à jour leur statut
-        if ($session->groupe_id) {
-            $groupe = Groupe::with('candidats')->find($session->groupe_id);
-            if ($groupe) {
-                $pivotData = [];
-                foreach ($groupe->candidats as $candidat) {
-                    $pivotData[$candidat->id] = [
-                        'absent'      => false,
-                        'note'        => null,
-                        'observation' => null,
-                    ];
+        $groupe = Groupe::with('candidats')->find($session->groupe_id);
+        if ($groupe) {
+            $candidatsAAttacher = $candidatsAAttacher->merge($groupe->candidats);
+        }
 
-                    $nouveauStatut = match($typeNom) {
-                        'code'     => 'code_admis',
-                        'creneau'  => 'creneau',
-                        'conduite' => 'ajourne',
-                        default    => $candidat->statut,
-                    };
+        if ($request->filled('candidats_sans_groupe')) {
+            $candidatsIndividuels = Candidat::whereIn('id', $request->candidats_sans_groupe)->get();
+            $candidatsAAttacher   = $candidatsAAttacher->merge($candidatsIndividuels);
+        }
 
-                    $candidat->update(['statut' => $nouveauStatut]);
-                }
-                $session->candidats()->sync($pivotData);
+        $candidatsAAttacher = $candidatsAAttacher->unique('id');
+
+        if ($candidatsAAttacher->isNotEmpty()) {
+            $pivotData = [];
+            foreach ($candidatsAAttacher as $candidat) {
+                $pivotData[$candidat->id] = [
+                    'absent'      => false,
+                    'note'        => null,
+                    'observation' => null,
+                ];
+
+                $nouveauStatut = match($typeNom) {
+                    'code'     => 'code_admis',
+                    'creneau'  => 'creneau',
+                    'conduite' => 'ajourne',
+                    default    => $candidat->statut,
+                };
+
+                $candidat->update(['statut' => $nouveauStatut]);
             }
+            $session->candidats()->sync($pivotData);
         }
 
         return redirect()->route('session_formations.index')
@@ -154,9 +188,16 @@ class SessionFormationController extends Controller
         $moniteurs        = Moniteur::all();
         $candidatsSession = $sessionFormation->candidats()->get();
 
+        // Candidats sans groupe disponibles pour un ajout individuel
+        // supplémentaire (ceux déjà attachés à cette session apparaissent
+        // pré-sélectionnés).
+        $candidatsSansGroupe = Candidat::whereDoesntHave('groupes')
+            ->orderBy('nom')
+            ->get();
+
         return view('session_formations.edit', compact(
             'sessionFormation', 'vehicules', 'evaluations', 'groupes',
-            'typesSessions', 'moniteurs', 'candidatsSession'
+            'typesSessions', 'moniteurs', 'candidatsSession', 'candidatsSansGroupe'
         ));
     }
 
@@ -170,12 +211,25 @@ class SessionFormationController extends Controller
         }
 
         $request->validate([
-            'dateDebut'      => 'required|date',
-            'typeSession_id' => 'required|exists:type_sessions,id',
-            'groupe_id'      => 'nullable|exists:groupes,id',
-            'vehicule_id'    => 'nullable|exists:vehicules,id',
-            'moniteur_id'    => 'nullable|exists:moniteurs,id',
+            'dateDebut'               => 'required|date',
+            'typeSession_id'          => 'required|exists:type_sessions,id',
+            'moniteur_id'             => 'required|exists:moniteurs,id',
+            'candidats_sans_groupe'   => 'nullable|array',
+            'candidats_sans_groupe.*' => 'exists:candidats,id',
         ]);
+
+        $typeSession = TypeSession::find($request->typeSession_id);
+        $typeNom     = $typeSession ? $typeSession->type : null;
+
+        if ($typeNom !== 'code') {
+            $request->validate([
+                'vehicule_id' => 'required|exists:vehicules,id',
+            ]);
+        } else {
+            $request->validate([
+                'vehicule_id' => 'nullable|exists:vehicules,id',
+            ]);
+        }
 
         // Vérifier si une session du MÊME nouveau type est déjà ouverte
         // en excluant la session actuelle
@@ -195,14 +249,38 @@ class SessionFormationController extends Controller
         }
 
         $sessionFormation->update($request->only(
-            'dateDebut', 'typeSession_id', 'groupe_id', 'vehicule_id', 'evaluation_id', 'moniteur_id'
+            'dateDebut', 'typeSession_id', 'vehicule_id', 'evaluation_id', 'moniteur_id'
         ));
 
-        // Mettre à jour le statut des candidats selon le nouveau type
-        $typeSession = TypeSession::find($request->typeSession_id);
-        $typeNom     = $typeSession ? $typeSession->type : null;
+        // Ajouter les candidats sans groupe sélectionnés, SANS toucher aux
+        // candidats déjà attachés (on ne veut pas effacer leurs notes/absences).
+        if ($request->filled('candidats_sans_groupe')) {
+            $idsDejaAttaches = $sessionFormation->candidats()->pluck('candidats.id')->all();
+            $nouveauxIds     = array_diff($request->candidats_sans_groupe, $idsDejaAttaches);
 
+            if (!empty($nouveauxIds)) {
+                $nouveauxCandidats = Candidat::whereIn('id', $nouveauxIds)->get();
+                foreach ($nouveauxCandidats as $candidat) {
+                    $sessionFormation->candidats()->attach($candidat->id, [
+                        'absent'      => false,
+                        'note'        => null,
+                        'observation' => null,
+                    ]);
+
+                    $nouveauStatut = match($typeNom) {
+                        'code'     => 'code_admis',
+                        'creneau'  => 'creneau',
+                        'conduite' => 'ajourne',
+                        default    => $candidat->statut,
+                    };
+                    $candidat->update(['statut' => $nouveauStatut]);
+                }
+            }
+        }
+
+        // Mettre à jour le statut des candidats selon le nouveau type
         if ($typeNom) {
+            $sessionFormation->load('candidats');
             foreach ($sessionFormation->candidats as $candidat) {
                 $nouveauStatut = match($typeNom) {
                     'code'     => 'code_admis',

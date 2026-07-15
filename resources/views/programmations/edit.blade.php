@@ -111,6 +111,27 @@
 .pg-btn-cancel { background:transparent; color:var(--text-light); border:2px solid var(--input-border); }
 .pg-btn-view { background:rgba(252,209,22,0.15); color:var(--color-gold); border:2px solid var(--color-gold); }
 .pg-btn-submit { background:linear-gradient(135deg, var(--color-green) 0%, var(--color-green-dark) 100%); color:white; border:2px solid var(--color-green); box-shadow:0 4px 14px rgba(0,122,94,.4); }
+
+/* --- Dropdown custom (remplace le grand tableau multi-select) --- */
+.pg-dropdown { position: relative; }
+.pg-dropdown-field {
+    display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;
+}
+.pg-dropdown-panel {
+    display:none; position:absolute; top:100%; left:0; right:0; margin-top:6px;
+    background:#fff; border:2px solid var(--input-border); border-radius:12px;
+    max-height:320px; overflow-y:auto; z-index:20; box-shadow:var(--shadow-md);
+}
+.pg-dropdown-panel.open { display:block; }
+.pg-dropdown-search { padding:0.6rem; position:sticky; top:0; background:#fff; border-bottom:1px solid #eee; }
+.pg-dropdown-item {
+    padding:0.6rem 1rem; display:flex; align-items:center; gap:0.6rem;
+    cursor:pointer; font-size:0.85rem; color:#1A1A1A;
+}
+.pg-dropdown-item:hover { background: rgba(0,122,94,0.08); }
+.pg-dropdown-item input[type=checkbox] { width:16px; height:16px; accent-color:var(--color-green); }
+.pg-dropdown-arrow { transition: transform 200ms ease; flex-shrink:0; }
+.pg-dropdown-arrow.open { transform: rotate(180deg); }
 </style>
 
 <div class="content-wrapper">
@@ -143,7 +164,7 @@
 
             @if($errors->any())
             <div style="margin-bottom:1.5rem; padding:1rem 1.25rem; background:rgba(206,17,38,0.15); border-left:4px solid var(--color-red); border-radius:10px; color:#FFD6D0;">
-                <strong>⚠ Erreurs :</strong>
+                <strong>⚠️ Erreurs :</strong>
                 <ul style="margin:.5rem 0 0 1.25rem;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
             </div>
             @endif
@@ -165,7 +186,7 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('typeSession_id')<p class="pg-error">⚠ {{ $message }}</p>@enderror
+                    @error('typeSession_id')<p class="pg-error">⚠️ {{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -179,7 +200,7 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('moniteur_id')<p class="pg-error">⚠ {{ $message }}</p>@enderror
+                    @error('moniteur_id')<p class="pg-error">⚠️ {{ $message }}</p>@enderror
                 </div>
             </div>
         </div>
@@ -219,18 +240,31 @@
         <div id="resultats-container" style="display:none;">
             <div class="pg-card">
                 <div class="pg-section-title">
-                    🏆 <span id="titre-eligibles">Candidats ayant validé</span>
+                    🏆 <span id="titre-eligibles">Candidats aptes à être programmés</span>
                     <span class="pg-count-pill" id="count-eligibles">0</span>
                 </div>
-                <div class="pg-cand-list" id="eligibles-container"></div>
-            </div>
+                <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:1rem;">
+                    Cette liste regroupe, tous groupes confondus, les candidats ayant validé cette étape ET ceux ayant
+                    échoué à un examen de ce type (à reprogrammer). Cliquez sur le champ ci-dessous pour ouvrir la liste
+                    et cochez un ou plusieurs candidats.
+                </p>
 
-            <div class="pg-card">
-                <div class="pg-section-title red">
-                    🚫 <span id="titre-non-eligibles">Note/Mention insuffisante</span>
-                    <span class="pg-count-pill red" id="count-non-eligibles">0</span>
+                {{-- Champ compact type "GROUPE" : ouvre/ferme la liste au clic, plus de gros tableau visible --}}
+                <div class="pg-dropdown" id="eligiblesDropdown">
+                    <div class="pg-input pg-dropdown-field" onclick="toggleEligiblesDropdown()">
+                        <span id="eligiblesFieldLabel">-- Choisir un ou plusieurs candidats --</span>
+                        <svg id="eligiblesArrow" class="pg-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                    <div id="eligiblesPanel" class="pg-dropdown-panel">
+                        <div class="pg-dropdown-search">
+                            <input type="text" id="eligiblesSearch" onkeyup="filterEligibles()"
+                                   placeholder="🔍 Rechercher un candidat par nom ou prénom..." class="pg-input" style="margin:0;">
+                        </div>
+                        <div id="eligiblesList"></div>
+                    </div>
                 </div>
-                <div class="pg-cand-list" id="non-eligibles-container"></div>
             </div>
         </div>
 
@@ -271,99 +305,91 @@
 </div>
 
 <script>
-let idsActuels = new Set([{{ implode(',', $candidatsSelectionnes) }}]);
-let ajoutesManuellement = new Set();
-let typeActuel = null;
+var idsActuels = new Set([{{ implode(',', $candidatsSelectionnes) }}]);
+var ajoutesManuellement = new Set();
+var typeActuel = null;
 
 function chargerCandidatsParType(typeSessionId) {
-    const container = document.getElementById('resultats-container');
-    const select     = document.getElementById('typeSession_id');
-    const opt        = select.options[select.selectedIndex];
-    typeActuel       = opt ? opt.dataset.type : null;
+    var container = document.getElementById('resultats-container');
+    var select     = document.getElementById('typeSession_id');
+    var opt        = select.options[select.selectedIndex];
+    typeActuel     = opt ? opt.dataset.type : null;
 
     if (!typeSessionId) { container.style.display = 'none'; return; }
 
-    const libelles = { code: 'Code', creneau: 'Créneau', conduite: 'Conduite' };
-    const libelle = libelles[typeActuel] || typeActuel;
-    document.getElementById('titre-eligibles').textContent     = `Candidats ayant validé ${libelle}`;
-    document.getElementById('titre-non-eligibles').textContent = typeActuel === 'code' ? 'Note insuffisante (< 25)' : 'Mention insuffisante (Médiocre)';
+    var libelles = { code: 'Code', creneau: 'Créneau', conduite: 'Conduite' };
+    var libelle = libelles[typeActuel] || typeActuel;
+    document.getElementById('titre-eligibles').textContent = 'Candidats aptes pour ' + libelle;
 
     container.style.display = 'block';
-    document.getElementById('eligibles-container').innerHTML     = '<div class="pg-empty-msg">Chargement...</div>';
-    document.getElementById('non-eligibles-container').innerHTML = '';
+    document.getElementById('eligiblesList').innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">Chargement...</div>';
 
-    fetch(`/programmations/candidats-par-type/${typeSessionId}`)
-        .then(r => r.json())
-        .then(data => {
+    fetch('/programmations/candidats-par-type/' + typeSessionId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
             renderEligibles(data.eligibles);
-            renderNonEligibles(data.nonEligibles.concat(data.autres));
-            document.getElementById('count-eligibles').textContent     = data.eligibles.length;
-            document.getElementById('count-non-eligibles').textContent = data.nonEligibles.length + data.autres.length;
+            document.getElementById('count-eligibles').textContent = data.eligibles.length;
             updateSelection();
         });
 }
 
 function renderEligibles(list) {
-    const container = document.getElementById('eligibles-container');
+    var container = document.getElementById('eligiblesList');
     if (!list.length) {
-        container.innerHTML = `<div class="pg-empty-msg">Aucun candidat n'a encore validé cette étape.</div>`;
+        container.innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">Aucun candidat apte pour le moment.</div>';
         return;
     }
-    container.innerHTML = list.map((c, idx) => {
-        const dejaCoche = idsActuels.has(c.id);
-        const medaille = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : ''));
-        const valeur = typeActuel === 'code'
-            ? `<span class="pg-cand-value">${c.note}<small>/30</small></span>`
-            : `<span class="pg-cand-value" style="text-transform:uppercase; font-size:.8rem;">${c.mention === 'bien' ? '🟢 Bien' : '🟡 Passable'}</span>`;
-        return `
-        <label class="pg-cand-row" data-id="${c.id}">
-            <span class="pg-cand-rank">${idx + 1}</span>
-            <input type="checkbox" class="candidat-checkbox-nouveau" value="${c.id}" ${dejaCoche ? 'checked' : ''} onchange="updateSelection()">
-            <span class="pg-cand-name">${c.nom} ${c.prenom} ${medaille}</span>
-            ${valeur}
-        </label>`;
+    container.innerHTML = list.map(function(c) {
+        var dejaCoche = idsActuels.has(c.id);
+        var valeur = '';
+        if (typeActuel === 'code') {
+            valeur = (c.note !== null) ? (c.note + '/30') : '';
+        } else {
+            valeur = c.mention ? (c.mention === 'bien' ? 'Bien' : 'Passable') : '';
+        }
+        var tag = c.reprogrammation ? ' — ↻ à reprogrammer (échec)' : (valeur ? ' — ' + valeur : '');
+        var search = (c.nom + ' ' + c.prenom).toLowerCase();
+        return '<label class="pg-dropdown-item" data-search="' + search + '">'
+            + '<input type="checkbox" value="' + c.id + '" ' + (dejaCoche ? 'checked' : '') + ' onchange="updateSelection()">'
+            + c.nom + ' ' + c.prenom + tag
+            + '</label>';
     }).join('');
 }
 
-function renderNonEligibles(list) {
-    const container = document.getElementById('non-eligibles-container');
-    if (!list.length) {
-        container.innerHTML = `<div class="pg-empty-msg">Aucun candidat dans cette catégorie.</div>`;
-        return;
-    }
-    container.innerHTML = list.map(c => `
-        <div class="pg-cand-row pg-nok-row">
-            <span>🚫</span>
-            <div style="flex:1;">
-                <div class="pg-cand-name">${c.nom} ${c.prenom}</div>
-                <div class="pg-nok-motif">${c.motif}</div>
-            </div>
-        </div>
-    `).join('');
+function filterEligibles() {
+    var query = document.getElementById('eligiblesSearch').value.toLowerCase().trim();
+    document.querySelectorAll('#eligiblesList .pg-dropdown-item').forEach(function(item) {
+        item.style.display = (item.dataset.search || '').indexOf(query) !== -1 ? '' : 'none';
+    });
+}
+
+function toggleEligiblesDropdown() {
+    document.getElementById('eligiblesPanel').classList.toggle('open');
+    document.getElementById('eligiblesArrow').classList.toggle('open');
 }
 
 function rechercherCandidat(q) {
-    const resultsBox = document.getElementById('search-results');
+    var resultsBox = document.getElementById('search-results');
     if (!q || q.length < 2) { resultsBox.style.display = 'none'; return; }
 
-    fetch(`/programmations/rechercher-candidat?q=${encodeURIComponent(q)}`)
-        .then(r => r.json())
-        .then(candidats => {
+    fetch('/programmations/rechercher-candidat?q=' + encodeURIComponent(q))
+        .then(function(r) { return r.json(); })
+        .then(function(candidats) {
             if (!candidats.length) {
                 resultsBox.innerHTML = '<div style="padding:.75rem; color:#888; font-size:.85rem;">Aucun candidat trouvé.</div>';
             } else {
-                resultsBox.innerHTML = candidats.map(c => `
-                    <div class="item" onclick="ajouterManuel(${c.id}, '${c.nom} ${c.prenom}')">
-                        👤 ${c.nom} ${c.prenom} <span style="color:#888; font-size:.75rem;">(${c.statut})</span>
-                    </div>
-                `).join('');
+                resultsBox.innerHTML = candidats.map(function(c) {
+                    return '<div class="item" onclick="ajouterManuel(' + c.id + ', \'' + c.nom + ' ' + c.prenom + '\')">'
+                        + '👤 ' + c.nom + ' ' + c.prenom + ' <span style="color:#888; font-size:.75rem;">(' + c.statut + ')</span>'
+                        + '</div>';
+                }).join('');
             }
             resultsBox.style.display = 'block';
         });
 }
 
 function ajouterManuel(id, nom) {
-    ajoutesManuellement.add(JSON.stringify({id, nom}));
+    ajoutesManuellement.add(JSON.stringify({id: id, nom: nom}));
     renderAjoutesManuellement();
     document.getElementById('search-results').style.display = 'none';
     document.getElementById('search-candidat').value = '';
@@ -371,8 +397,8 @@ function ajouterManuel(id, nom) {
 }
 
 function retirerManuel(id) {
-    ajoutesManuellement.forEach(item => {
-        const parsed = JSON.parse(item);
+    ajoutesManuellement.forEach(function(item) {
+        var parsed = JSON.parse(item);
         if (parsed.id === id) ajoutesManuellement.delete(item);
     });
     renderAjoutesManuellement();
@@ -380,27 +406,34 @@ function retirerManuel(id) {
 }
 
 function renderAjoutesManuellement() {
-    const container = document.getElementById('ajoutes-manuellement');
-    container.innerHTML = Array.from(ajoutesManuellement).map(item => {
-        const c = JSON.parse(item);
-        return `<span class="pg-manual-pill">➕ ${c.nom}<button type="button" onclick="retirerManuel(${c.id})">✕</button></span>`;
+    var container = document.getElementById('ajoutes-manuellement');
+    container.innerHTML = Array.from(ajoutesManuellement).map(function(item) {
+        var c = JSON.parse(item);
+        return '<span class="pg-manual-pill">➕ ' + c.nom + '<button type="button" onclick="retirerManuel(' + c.id + ')">✕</button></span>';
     }).join('');
 }
 
 function updateSelection() {
-    const checkedActuels  = Array.from(document.querySelectorAll('#actuels-container .candidat-checkbox:checked')).map(cb => cb.value);
-    const checkedNouveaux = Array.from(document.querySelectorAll('.candidat-checkbox-nouveau:checked')).map(cb => cb.value);
-    const manuels         = Array.from(ajoutesManuellement).map(item => String(JSON.parse(item).id));
+    var checkedActuels  = Array.from(document.querySelectorAll('#actuels-container .candidat-checkbox:checked')).map(function(cb) { return cb.value; });
+    var checkedNouveaux = Array.from(document.querySelectorAll('#eligiblesList input[type=checkbox]:checked')).map(function(cb) { return cb.value; });
+    var manuels         = Array.from(ajoutesManuellement).map(function(item) { return String(JSON.parse(item).id); });
 
-    const allIds = [...new Set([...checkedActuels, ...checkedNouveaux, ...manuels])];
+    var allIds = Array.from(new Set(checkedActuels.concat(checkedNouveaux, manuels)));
 
     document.getElementById('selection-count').textContent = allIds.length;
     document.getElementById('count-actuels').textContent = checkedActuels.length;
 
-    const hiddenContainer = document.getElementById('candidats-hidden-inputs');
+    var fieldLabel = document.getElementById('eligiblesFieldLabel');
+    if (fieldLabel) {
+        fieldLabel.textContent = checkedNouveaux.length > 0
+            ? (checkedNouveaux.length + ' candidat(s) sélectionné(s)')
+            : '-- Choisir un ou plusieurs candidats --';
+    }
+
+    var hiddenContainer = document.getElementById('candidats-hidden-inputs');
     hiddenContainer.innerHTML = '';
-    allIds.forEach(id => {
-        const input = document.createElement('input');
+    allIds.forEach(function(id) {
+        var input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'candidat_ids[]';
         input.value = id;
@@ -409,6 +442,12 @@ function updateSelection() {
 }
 
 document.addEventListener('click', function(e) {
+    if (!e.target.closest('#eligiblesDropdown')) {
+        var panel = document.getElementById('eligiblesPanel');
+        var arrow = document.getElementById('eligiblesArrow');
+        if (panel) panel.classList.remove('open');
+        if (arrow) arrow.classList.remove('open');
+    }
     if (!e.target.closest('#search-candidat') && !e.target.closest('#search-results')) {
         document.getElementById('search-results').style.display = 'none';
     }

@@ -9,6 +9,12 @@
     --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
     --transition-normal: 300ms ease-in-out; --radius-md: 8px; --radius-lg: 12px;
 }
+.multi-select {
+    width:100%; min-height:180px; padding:0; border:2px solid var(--color-gray-200);
+    border-radius:var(--radius-md); background:#FFFFFF; color:var(--color-dark); font-size:0.85rem; overflow-y:auto;
+}
+.multi-select option { padding:0.55rem 0.85rem; }
+.multi-select option:checked { background: var(--color-green-light) !important; color:white; }
 </style>
 
 <div class="content-wrapper" style="padding:2rem;">
@@ -26,6 +32,13 @@
 
     @if(session('error'))
         <div style="margin-bottom:1.5rem; padding:1rem 1.5rem; background:rgba(206,17,38,0.1); border-left:4px solid var(--color-red); border-radius:var(--radius-md); color:var(--color-red-dark); font-weight:600;">{{ session('error') }}</div>
+    @endif
+
+    @if($errors->any())
+        <div style="margin-bottom:1.5rem; padding:1rem 1.5rem; background:rgba(206,17,38,0.1); border-left:4px solid var(--color-red); border-radius:var(--radius-md); color:var(--color-red-dark);">
+            <strong>⚠️ Erreurs :</strong>
+            <ul style="margin:0.5rem 0 0 1.5rem;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
     @endif
 
     <form method="POST" action="{{ route('session_formations.update', $sessionFormation->id) }}" style="display:contents;">
@@ -47,10 +60,10 @@
 
                 <div>
                     <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Type de session *</label>
-                    <select name="typeSession_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;" required>
+                    <select name="typeSession_id" id="typeSession_id" onchange="onTypeSessionChange(this)" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;" required>
                         <option value="">-- Choisir --</option>
                         @foreach($typesSessions as $t)
-                            <option value="{{ $t->id }}" {{ $sessionFormation->typeSession_id == $t->id ? 'selected' : '' }}>
+                            <option value="{{ $t->id }}" data-type="{{ $t->type }}" {{ $sessionFormation->typeSession_id == $t->id ? 'selected' : '' }}>
                                 @switch($t->type) @case('code') 📋 Code @break @case('creneau') 🔧 Créneau @break @case('conduite') 🚗 Conduite @break @default {{ $t->type }} @endswitch
                             </option>
                         @endforeach
@@ -58,9 +71,9 @@
                 </div>
 
                 <div>
-                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Moniteur</label>
-                    <select name="moniteur_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;">
-                        <option value="">-- Aucun --</option>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Moniteur *</label>
+                    <select name="moniteur_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;" required>
+                        <option value="">-- Choisir un moniteur --</option>
                         @foreach($moniteurs as $m)
                             <option value="{{ $m->id }}" {{ $sessionFormation->moniteur_id == $m->id ? 'selected' : '' }}>
                                 👤 {{ $m->nom }} {{ $m->prenom }}
@@ -69,16 +82,38 @@
                     </select>
                 </div>
 
-                <div>
-                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Véhicule</label>
-                    <select name="vehicule_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;">
-                        <option value="">-- Aucun --</option>
+                <div id="vehicule-field">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                        Véhicule <span id="vehicule-required">*</span>
+                    </label>
+                    <select name="vehicule_id" id="vehicule_id" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;">
+                        <option value="">-- Choisir un véhicule --</option>
                         @foreach($vehicules as $v)
                             <option value="{{ $v->id }}" {{ $sessionFormation->vehicule_id == $v->id ? 'selected' : '' }}>🚗 {{ $v->nomVehicule }}</option>
                         @endforeach
                     </select>
                 </div>
 
+            </div>
+
+            {{-- Candidats sans groupe : ajout supplémentaire --}}
+            <div style="margin-top:1.75rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
+                    Ajouter des candidats sans groupe
+                </label>
+                <p style="margin:0 0 0.6rem 0; font-size:0.78rem; color:var(--color-gray-500);">
+                    Déroulez la liste et maintenez <strong>Ctrl</strong> (ou <strong>Cmd</strong> sur Mac) enfoncé pour sélectionner
+                    plusieurs candidats sans groupe à ajouter à cette session.
+                </p>
+                <select name="candidats_sans_groupe[]" class="multi-select" multiple size="6">
+                    @forelse($candidatsSansGroupe as $c)
+                        <option value="{{ $c->id }}" {{ $candidatsSession->pluck('id')->contains($c->id) ? 'selected' : '' }}>
+                            {{ $c->nom }} {{ $c->prenom }}
+                        </option>
+                    @empty
+                        <option disabled>Aucun candidat sans groupe</option>
+                    @endforelse
+                </select>
             </div>
         </div>
 
@@ -143,7 +178,7 @@
         </div>
         @else
         <div style="margin-bottom:2rem; padding:1.25rem; background:rgba(252,209,22,0.1); border-left:4px solid var(--color-gold); border-radius:var(--radius-md); color:var(--color-gold-dark);">
-            ⚠️ Aucun candidat n'est encore attaché à cette session. Sélectionnez un groupe pour en ajouter.
+            ⚠️ Aucun candidat n'est encore attaché à cette session. Sélectionnez des candidats sans groupe ci-dessus pour en ajouter.
         </div>
         @endif
 
@@ -179,5 +214,29 @@ function toggleNote(checkbox, candidatId) {
         noteInput.style.color = 'var(--color-dark)';
     }
 }
+
+function onTypeSessionChange(select) {
+    const opt = select.options[select.selectedIndex];
+    const type = opt ? opt.dataset.type : null;
+    const vehiculeField    = document.getElementById('vehicule-field');
+    const vehiculeSelect   = document.getElementById('vehicule_id');
+    const vehiculeRequired = document.getElementById('vehicule-required');
+
+    if (type === 'code') {
+        vehiculeField.style.display = 'none';
+        vehiculeSelect.value = '';
+        vehiculeSelect.required = false;
+        vehiculeRequired.style.display = 'none';
+    } else {
+        vehiculeField.style.display = 'block';
+        vehiculeSelect.required = true;
+        vehiculeRequired.style.display = 'inline';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const typeSelect = document.getElementById('typeSession_id');
+    if (typeSelect.value) onTypeSessionChange(typeSelect);
+});
 </script>
 </x-layouts::app>
