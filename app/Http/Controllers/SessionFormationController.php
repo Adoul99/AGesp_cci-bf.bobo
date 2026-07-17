@@ -91,11 +91,15 @@ class SessionFormationController extends Controller
         // Éligibilité de chaque candidat de groupe pour les étapes Créneau et
         // Conduite (basée sur l'historique réel des sessions, pas sur le
         // statut global qui ne distingue pas "a réussi le Code" de "a
-        // réussi le Créneau"). Consommé par le JS de l'aperçu candidats.
+        // réussi le Créneau"). Un candidat déjà ADMIS officiellement
+        // (attestation délivrée) n'est plus jamais éligible à rien : sa
+        // progression est terminée. Consommé par le JS de l'aperçu candidats.
         foreach ($groupes as $g) {
             foreach ($g->candidats as $c) {
-                $c->eligibleCreneau  = $c->aReussiEtapeInterne('code');
-                $c->eligibleConduite = $c->aReussiEtapeInterne('creneau');
+                $dejaAdmis = $c->statut === 'admis';
+                $c->dejaAdmis        = $dejaAdmis;
+                $c->eligibleCreneau  = !$dejaAdmis && $c->aReussiEtapeInterne('code');
+                $c->eligibleConduite = !$dejaAdmis && $c->aReussiEtapeInterne('creneau');
             }
         }
 
@@ -183,17 +187,21 @@ class SessionFormationController extends Controller
         $candidatsAAttacher = $candidatsAAttacher->unique('id');
 
         // ── Filtrage par progression obligatoire ──────────────────
-        // Un candidat ne peut être intégré à une session Créneau que s'il a
-        // réellement réussi le Code, et à une session Conduite que s'il a
-        // réellement réussi le Créneau (vérifié via l'historique des sessions,
-        // pas via le statut global qui ne distingue pas ces deux cas).
-        // Celui qui n'a pas franchi l'étape précédente est retiré et reste
-        // sur sa session en cours.
+        // Un candidat déjà ADMIS officiellement (attestation délivrée) ne
+        // doit plus JAMAIS être réintégré à une session de formation, quel
+        // que soit le type — sa progression est terminée. Ensuite, pour les
+        // candidats non-admis : un candidat ne peut être intégré à une
+        // session Créneau que s'il a réellement réussi le Code, et à une
+        // session Conduite que s'il a réellement réussi le Créneau (vérifié
+        // via l'historique des sessions, pas via le statut global qui ne
+        // distingue pas ces deux cas). Celui qui ne remplit pas ces
+        // conditions est retiré et reste sur sa session/situation en cours.
         $etapeRequise    = $this->etapePrecedenteRequise($typeNom);
-        $candidatsExclus = collect();
+        $candidatsExclus = $candidatsAAttacher->filter(fn($c) => $c->statut === 'admis')->values();
+        $candidatsAAttacher = $candidatsAAttacher->reject(fn($c) => $c->statut === 'admis')->values();
 
         if ($etapeRequise !== null) {
-            $candidatsExclus    = $candidatsAAttacher->reject(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
+            $candidatsExclus    = $candidatsExclus->merge($candidatsAAttacher->reject(fn($c) => $c->aReussiEtapeInterne($etapeRequise)))->values();
             $candidatsAAttacher = $candidatsAAttacher->filter(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
         }
 
@@ -320,9 +328,14 @@ class SessionFormationController extends Controller
             if (!empty($nouveauxIds)) {
                 $nouveauxCandidats = Candidat::whereIn('id', $nouveauxIds)->get();
 
+                // Un candidat déjà ADMIS officiellement ne doit plus jamais
+                // être réintégré à une session, quel que soit le type.
+                $candidatsExclus   = $nouveauxCandidats->filter(fn($c) => $c->statut === 'admis')->values();
+                $nouveauxCandidats = $nouveauxCandidats->reject(fn($c) => $c->statut === 'admis')->values();
+
                 // Même filtrage par progression que pour les candidats de groupe.
                 if ($etapeRequise !== null) {
-                    $candidatsExclus   = $nouveauxCandidats->reject(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
+                    $candidatsExclus   = $candidatsExclus->merge($nouveauxCandidats->reject(fn($c) => $c->aReussiEtapeInterne($etapeRequise)))->values();
                     $nouveauxCandidats = $nouveauxCandidats->filter(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
                 }
 

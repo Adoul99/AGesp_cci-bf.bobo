@@ -95,36 +95,6 @@
             </div>
         </div>
 
-        {{-- ── Candidats programmés disponibles : sélection via liste multiple ── --}}
-        @if($candidatsProgrammes->isNotEmpty())
-        <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
-            <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
-                📋 Candidats programmés disponibles ({{ $candidatsProgrammes->count() }})
-            </h2>
-
-            <div style="margin-bottom:0.75rem;">
-                <input type="text" id="candidatSearchDispo" onkeyup="filterSelect('candidatSearchDispo','candidatSelectDispo')"
-                       placeholder="🔍 Rechercher un candidat par nom ou prénom..."
-                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark);"
-                       onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
-            </div>
-
-            <select name="candidat_ids[]" id="candidatSelectDispo" multiple size="8"
-                    style="width:100%; padding:0.5rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.9rem; color:var(--color-dark); background:white;">
-                @foreach($candidatsProgrammes as $c)
-                    <option value="{{ $c->id }}"
-                            data-search="{{ strtolower($c->nom.' '.$c->prenom) }}"
-                            {{ in_array($c->id, old('candidat_ids', $candidatsSelectionnes)) ? 'selected' : '' }}>
-                        {{ $c->nom }} {{ $c->prenom }} — {{ $c->programmations->last()->typeSession->type ?? '—' }}
-                    </option>
-                @endforeach
-            </select>
-            <p style="margin-top:0.75rem; font-size:0.75rem; color:var(--color-gray-500);">
-                ℹ️ Maintenez <strong>Ctrl</strong> enfoncé pour sélectionner plusieurs candidats.
-            </p>
-        </div>
-        @endif
-
         {{-- ── Candidats inscrits avec saisie résultat : reste en tableau (résultat + observation par ligne) ── --}}
         <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:1.5rem;">
             <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
@@ -210,14 +180,6 @@
 </div>
 
 <script>
-function filterSelect(inputId, selectId) {
-    const query = document.getElementById(inputId).value.toLowerCase().trim();
-    const options = document.querySelectorAll('#' + selectId + ' option');
-    options.forEach(opt => {
-        opt.style.display = opt.dataset.search.includes(query) ? '' : 'none';
-    });
-}
-
 function filterTable(inputId, tbodyId, noResultsId) {
     const query = document.getElementById(inputId).value.toLowerCase().trim();
     const rows = document.querySelectorAll('#' + tbodyId + ' tr');

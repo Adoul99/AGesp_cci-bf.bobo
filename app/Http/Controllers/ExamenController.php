@@ -59,6 +59,7 @@ class ExamenController extends Controller
             'libelle'        => 'required',
             'typeSession_id' => 'required|exists:type_sessions,id',
             'dateDebut'      => 'required|date',
+            'lieu'           => 'nullable|string|max:255',
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
             'candidat_ids'   => 'nullable|array',
         ]);
@@ -71,6 +72,7 @@ class ExamenController extends Controller
             'typeSession_id' => $request->typeSession_id,
             'dateDebut'      => $request->dateDebut,
             'dateFin'        => $request->dateDebut, // Un examen se tient sur une seule date
+            'lieu'           => $request->lieu,
             'statutExamen'   => 'ouvert', // Toujours "ouvert" à la création, non modifiable ici
             'moniteur_id'    => $moniteurId,
         ]);
@@ -98,25 +100,7 @@ class ExamenController extends Controller
         $moniteurs    = Moniteur::all();
         $typeSessions = TypeSession::orderBy('type')->get();
 
-        // Candidats déjà programmés pour LE MÊME TYPE que cet examen, pas encore
-        // inscrits à CET examen précis (mais potentiellement inscrits à d'autres).
-        $idsDejaInscrits = $examen->candidats->pluck('id');
-        $candidatsProgrammes = collect();
-
-        if ($examen->typeSession_id) {
-            $candidatsProgrammes = Candidat::whereHas('programmations', function ($q) use ($examen) {
-                    $q->where('typeSession_id', $examen->typeSession_id);
-                })
-                ->whereNotIn('id', $idsDejaInscrits)
-                ->orderBy('nom')
-                ->get();
-        }
-
-        $candidatsSelectionnes = $examen->candidats->pluck('id')->toArray();
-
-        return view('examens.edit', compact(
-            'examen', 'moniteurs', 'typeSessions', 'candidatsProgrammes', 'candidatsSelectionnes'
-        ));
+        return view('examens.edit', compact('examen', 'moniteurs', 'typeSessions'));
     }
 
     public function update(Request $request, Examen $examen)
@@ -124,6 +108,7 @@ class ExamenController extends Controller
         $request->validate([
             'libelle'      => 'required',
             'dateDebut'    => 'required|date',
+            'lieu'         => 'nullable|string|max:255',
             'statutExamen' => 'required',
             'moniteur_id'  => 'nullable|exists:moniteurs,id',
         ]);
@@ -136,6 +121,7 @@ class ExamenController extends Controller
             'libelle'      => $request->libelle,
             'dateDebut'    => $request->dateDebut,
             'dateFin'      => $request->dateDebut, // Toujours alignée sur Date Début
+            'lieu'         => $request->lieu,
             'statutExamen' => $request->statutExamen,
             'moniteur_id'  => $request->moniteur_id,
         ]);
@@ -153,26 +139,48 @@ class ExamenController extends Controller
             $examen->candidats()->detach();
         }
 
-        // ── Recalcul du statut "admis" ──────────────────────────────
+        // ── Recalcul du statut candidat selon le résultat officiel ──
         // C'est ICI, et UNIQUEMENT ici (juste après la saisie des résultats
-        // officiels de l'examen), que le passage au statut "admis" peut se
-        // produire. mettreAJourStatutApresExamen() vérifie que les 3 phases
-        // (Code + Créneau + Conduite) sont TOUTES "Admis" avant de basculer
-        // le candidat. Sans cet appel, le statut ne se met jamais à jour
-        // automatiquement, même si le résultat "Admis" est bien enregistré
-        // en base — c'est exactement ce qui manquait jusqu'ici.
+        // officiels de l'examen), que le statut du candidat évolue depuis
+        // "en attente" (posé lors de la programmation) :
+        //   - Admis aux 3 phases (Code + Créneau + Conduite) → "admis"
+        //     (mettreAJourStatutApresExamen() vérifie les 3 phases)
+        //   - Ajourné à CET examen → "ajourne" (il devra être reprogrammé)
+        //   - Toujours "En attente" → on ne touche à rien
+        // Sans cet appel, le statut ne se met jamais à jour automatiquement,
+        // même si le résultat est bien enregistré en base.
         $examen->load('candidats'); // recharge le pivot fraîchement mis à jour
-        $nouveauxAdmis = [];
+        $nouveauxAdmis   = [];
+        $nouveauxAjournes = [];
+
         foreach ($examen->candidats as $candidat) {
             if ($candidat->mettreAJourStatutApresExamen()) {
                 $nouveauxAdmis[] = $candidat->nom . ' ' . $candidat->prenom;
+                // Le candidat vient de devenir admis officiellement : il n'a
+                // plus rien à faire dans une session de formation en cours.
+                $candidat->retirerDesSessionsOuvertes();
+                continue;
             }
+
+            // Ne jamais faire régresser un candidat déjà admis officiellement.
+            if ($candidat->statut === 'admis') {
+                continue;
+            }
+
+            if ($candidat->pivot->resultat === 'Ajourné') {
+                $candidat->update(['statut' => 'ajourne']);
+                $nouveauxAjournes[] = $candidat->nom . ' ' . $candidat->prenom;
+            }
+            // resultat === 'En attente' : le statut reste "en_attente", rien à faire.
         }
 
         $message = '✅ Examen mis à jour.';
         if (!empty($nouveauxAdmis)) {
             $message .= ' 🎓 Candidat(s) admis : ' . implode(', ', $nouveauxAdmis)
                 . '. Vous pouvez maintenant établir leur(s) attestation(s).';
+        }
+        if (!empty($nouveauxAjournes)) {
+            $message .= ' ⚠️ Candidat(s) ajourné(s) : ' . implode(', ', $nouveauxAjournes) . '.';
         }
 
         return redirect()->route('examens.index')->with('success', $message);

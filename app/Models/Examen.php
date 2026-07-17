@@ -11,6 +11,7 @@ class Examen extends Model
         'typeSession_id',
         'dateDebut',
         'dateFin',
+        'lieu',
         'statutExamen',
         'moniteur_id',
     ];

@@ -9,6 +9,16 @@
     --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
     --radius-md: 8px; --radius-lg: 12px;
 }
+.locked-box {
+    padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md);
+    background:var(--color-gray-100); color:var(--color-dark); font-weight:700; font-size:0.875rem;
+    display:flex; align-items:center; gap:0.5rem; min-height:2.6rem;
+}
+.locked-box.is-empty { color:var(--color-red); font-weight:600; font-size:0.8rem; }
+.locked-badge {
+    background:var(--color-gray-500); color:white; font-size:0.6rem; padding:0.1rem 0.4rem;
+    border-radius:50px; margin-left:0.3rem; text-transform:uppercase; letter-spacing:0.3px;
+}
 </style>
 
 <div class="content-wrapper" style="padding:2rem;">
@@ -48,7 +58,7 @@
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:1.75rem;">
 
-            {{-- Numéro auto-généré (readonly) --}}
+            {{-- Numéro auto-généré (verrouillé) --}}
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
                     Numéro d'Attestation
@@ -60,7 +70,7 @@
                 <input type="hidden" name="numeroAttestation" value="{{ $numeroAuto }}">
             </div>
 
-            {{-- Candidat --}}
+            {{-- Candidat : SEUL champ librement choisi par l'utilisateur avec la civilité/date/directeur --}}
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
                     Candidat <span style="color:var(--color-red);">*</span>
@@ -74,17 +84,17 @@
                         @php $sug = $suggestions[$c->id] ?? []; @endphp
                         <option value="{{ $c->id }}"
                                 {{ old('candidat_id', $candidatPreselectionne ?? null) == $c->id ? 'selected' : '' }}
-                                data-formation-debut="{{ $sug['formationDateDebut'] ? \Carbon\Carbon::parse($sug['formationDateDebut'])->format('Y-m-d') : '' }}"
-                                data-formation-fin="{{ $sug['formationDateFin'] ? \Carbon\Carbon::parse($sug['formationDateFin'])->format('Y-m-d') : '' }}"
                                 data-admission-code="{{ $sug['dateAdmissionCode'] ? \Carbon\Carbon::parse($sug['dateAdmissionCode'])->format('Y-m-d') : '' }}"
                                 data-admission-conduite="{{ $sug['dateAdmissionConduite'] ? \Carbon\Carbon::parse($sug['dateAdmissionConduite'])->format('Y-m-d') : '' }}"
-                                data-categorie="{{ $sug['categorieObtenue'] ?? '' }}">
+                                data-categorie="{{ $sug['categorieObtenue'] ?? '' }}"
+                                data-examen-id="{{ $sug['examenId'] ?? '' }}"
+                                data-examen-libelle="{{ $sug['examenLibelle'] ?? '' }}">
                             🏆 {{ $c->nom }} {{ $c->prenom }}
                         </option>
                     @endforeach
                 </select>
                 @error('candidat_id')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
-                <div style="font-size:0.7rem; color:var(--color-gray-500); margin-top:0.3rem;">💡 La catégorie et les dates ci-dessous se remplissent automatiquement — vérifiez et corrigez si besoin.</div>
+                <div style="font-size:0.7rem; color:var(--color-gray-500); margin-top:0.3rem;">💡 Tous les champs ci-dessous sont récupérés automatiquement dès que le candidat est choisi.</div>
             </div>
 
             {{-- Civilité --}}
@@ -99,33 +109,23 @@
                 </select>
             </div>
 
-            {{-- Catégorie obtenue --}}
+            {{-- Catégorie obtenue : VERROUILLÉE, calculée automatiquement --}}
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
-                    Catégorie de Permis Obtenue <span style="color:var(--color-red);">*</span>
-                    <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
+                    Catégorie de Permis Obtenue <span class="locked-badge">🔒 Auto</span>
                 </label>
-                <select name="categorieObtenue" id="categorieObtenue" style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; font-weight:700;">
-                    <option value="E" {{ old('categorieObtenue','E') == 'E' ? 'selected' : '' }}>Catégorie E</option>
-                    <option value="D" {{ old('categorieObtenue') == 'D' ? 'selected' : '' }}>Catégorie D</option>
-                </select>
+                <div class="locked-box" id="categorieObtenue-display">Choisissez un candidat</div>
+                <input type="hidden" name="categorieObtenue" id="categorieObtenue">
+                @error('categorieObtenue')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
             </div>
 
-            {{-- Examen --}}
+            {{-- Examen : VERROUILLÉ, déduit de la catégorie du candidat --}}
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
-                    Examen <span style="color:var(--color-gray-500); font-size:0.7rem; font-weight:400;">(Facultatif)</span>
+                    Examen <span class="locked-badge">🔒 Auto</span>
                 </label>
-                <select name="examen_id"
-                        style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:white;"
-                        onfocus="this.style.borderColor='var(--color-green)'" onblur="this.style.borderColor='var(--color-gray-200)'">
-                    <option value="">-- Aucun --</option>
-                    @foreach($examens as $ex)
-                        <option value="{{ $ex->id }}" {{ old('examen_id') == $ex->id ? 'selected' : '' }}>
-                            {{ $ex->libelle }} ({{ \Carbon\Carbon::parse($ex->dateDebut)->format('d/m/Y') }})
-                        </option>
-                    @endforeach
-                </select>
+                <div class="locked-box" id="examen-display">Choisissez un candidat</div>
+                <input type="hidden" name="examen_id" id="examen_id">
             </div>
 
             {{-- Date de délivrance --}}
@@ -139,40 +139,22 @@
                 @error('dateDelivrance')<span style="color:var(--color-red); font-size:0.75rem;">{{ $message }}</span>@enderror
             </div>
 
-            {{-- Formation : du --}}
+            {{-- Date d'admission Code : VERROUILLÉE --}}
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
-                    Formation — Du <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
+                    Date d'admission — Code <span class="locked-badge">🔒 Auto</span>
                 </label>
-                <input type="date" name="formationDateDebut" id="formationDateDebut" value="{{ old('formationDateDebut') }}"
-                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+                <input type="date" name="dateAdmissionCode" id="dateAdmissionCode" readonly
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; background:var(--color-gray-100); color:var(--color-dark);">
             </div>
 
-            {{-- Formation : au --}}
+            {{-- Date d'admission Conduite : VERROUILLÉE --}}
             <div>
                 <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
-                    Formation — Au <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
+                    Date d'admission — Conduite <span class="locked-badge">🔒 Auto</span>
                 </label>
-                <input type="date" name="formationDateFin" id="formationDateFin" value="{{ old('formationDateFin') }}"
-                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
-            </div>
-
-            {{-- Date d'admission Code --}}
-            <div>
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
-                    Date d'admission — Code <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
-                </label>
-                <input type="date" name="dateAdmissionCode" id="dateAdmissionCode" value="{{ old('dateAdmissionCode') }}"
-                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
-            </div>
-
-            {{-- Date d'admission Conduite --}}
-            <div>
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
-                    Date d'admission — Conduite <span style="background:var(--color-gold); color:var(--color-dark); font-size:0.6rem; padding:0.1rem 0.4rem; border-radius:50px; margin-left:0.3rem;">SUGGÉRÉ</span>
-                </label>
-                <input type="date" name="dateAdmissionConduite" id="dateAdmissionConduite" value="{{ old('dateAdmissionConduite') }}"
-                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem;">
+                <input type="date" name="dateAdmissionConduite" id="dateAdmissionConduite" readonly
+                       style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; background:var(--color-gray-100); color:var(--color-dark);">
             </div>
 
             {{-- Directeur (signataire) --}}
@@ -215,26 +197,51 @@
 <script>
 function appliquerSuggestions(select) {
     const opt = select.options[select.selectedIndex];
-    if (!opt) return;
-    const map = {
-        'formationDateDebut':    opt.dataset.formationDebut,
-        'formationDateFin':      opt.dataset.formationFin,
-        'dateAdmissionCode':     opt.dataset.admissionCode,
-        'dateAdmissionConduite': opt.dataset.admissionConduite,
-    };
-    for (const [id, val] of Object.entries(map)) {
-        if (val) document.getElementById(id).value = val;
+    const categorieDisplay = document.getElementById('categorieObtenue-display');
+    const examenDisplay    = document.getElementById('examen-display');
+
+    if (!opt || !opt.value) {
+        categorieDisplay.textContent = 'Choisissez un candidat';
+        categorieDisplay.classList.remove('is-empty');
+        examenDisplay.textContent = 'Choisissez un candidat';
+        examenDisplay.classList.remove('is-empty');
+        document.getElementById('categorieObtenue').value = '';
+        document.getElementById('examen_id').value = '';
+        document.getElementById('dateAdmissionCode').value = '';
+        document.getElementById('dateAdmissionConduite').value = '';
+        return;
     }
 
-    // Auto-remplissage de la catégorie de permis obtenue
+    // Dates d'admission officielles (verrouillées)
+    document.getElementById('dateAdmissionCode').value     = opt.dataset.admissionCode || '';
+    document.getElementById('dateAdmissionConduite').value = opt.dataset.admissionConduite || '';
+
+    // Catégorie obtenue (verrouillée)
     const categorie = opt.dataset.categorie;
+    document.getElementById('categorieObtenue').value = categorie || '';
     if (categorie) {
-        document.getElementById('categorieObtenue').value = categorie;
+        categorieDisplay.textContent = 'Catégorie ' + categorie;
+        categorieDisplay.classList.remove('is-empty');
+    } else {
+        categorieDisplay.textContent = '⚠️ Catégorie introuvable — vérifiez l\'inscription du candidat';
+        categorieDisplay.classList.add('is-empty');
+    }
+
+    // Examen correspondant (verrouillé)
+    const examenId      = opt.dataset.examenId;
+    const examenLibelle  = opt.dataset.examenLibelle;
+    document.getElementById('examen_id').value = examenId || '';
+    if (examenLibelle) {
+        examenDisplay.textContent = '📋 ' + examenLibelle;
+        examenDisplay.classList.remove('is-empty');
+    } else {
+        examenDisplay.textContent = '⚠️ Aucun examen correspondant trouvé';
+        examenDisplay.classList.add('is-empty');
     }
 }
 
 // Si un candidat est présélectionné (via ?candidat_id=... depuis le module Examens),
-// on applique immédiatement ses suggestions au chargement de la page.
+// on applique immédiatement ses informations au chargement de la page.
 document.addEventListener('DOMContentLoaded', function () {
     const select = document.getElementById('candidat_id');
     if (select && select.value) {

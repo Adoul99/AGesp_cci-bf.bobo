@@ -165,6 +165,16 @@ class ProgrammationController extends Controller
 
         $programmation->candidats()->sync($request->candidat_ids);
 
+        // Le candidat est désormais programmé pour un examen officiel : son
+        // statut passe à "en attente" (résultat pas encore connu). Ce statut
+        // sera ensuite mis à jour vers "admis" ou "ajourne" dès la saisie du
+        // résultat officiel dans ExamenController::update(), exactement
+        // comme la progression interne (Code/Créneau) le fait déjà.
+        $candidatsProgrammes = Candidat::whereIn('id', $request->candidat_ids)->get();
+        foreach ($candidatsProgrammes as $candidat) {
+            $candidat->marquerEnAttenteExamen();
+        }
+
         return redirect()->route('programmations.show', $programmation->id)
             ->with('success', '✅ Programmation créée avec succès.');
     }
@@ -250,6 +260,15 @@ class ProgrammationController extends Controller
 
         $candidatIds = $request->candidat_ids ?? [];
         $programmation->candidats()->sync($candidatIds);
+
+        // Idem qu'à la création : tout candidat (nouvellement) rattaché à
+        // cette programmation passe "en attente" d'un résultat officiel.
+        if (!empty($candidatIds)) {
+            $candidatsProgrammes = Candidat::whereIn('id', $candidatIds)->get();
+            foreach ($candidatsProgrammes as $candidat) {
+                $candidat->marquerEnAttenteExamen();
+            }
+        }
 
         return redirect()->route('programmations.show', $programmation->id)
             ->with('success', '✅ Programmation mise à jour.');

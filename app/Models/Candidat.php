@@ -83,6 +83,7 @@ class Candidat extends Model
             'inscrit'      => 'Inscrit',
             'en_formation' => 'En formation',
             'code_admis'   => 'Code admis',
+            'en_attente'   => 'En attente (examen officiel)',
             'admis'        => 'Admis',
             'ajourne'      => 'Ajourné',
             default        => 'Inconnu',
@@ -98,10 +99,26 @@ class Candidat extends Model
             'inscrit'      => '#666666',
             'en_formation' => '#007A5E',
             'code_admis'   => '#E5B800',
+            'en_attente'   => '#FCD116',
             'admis'        => '#007A5E',
             'ajourne'      => '#CE1126',
             default        => '#666666',
         };
+    }
+
+    /**
+     * Marque le candidat comme "en attente" d'un résultat d'examen officiel
+     * (Code, Créneau ou Conduite). À appeler dès qu'un candidat est ajouté à
+     * une Programmation. Ne fait rien si le candidat est déjà "admis"
+     * officiellement (statut définitif, jamais régressé).
+     */
+    public function marquerEnAttenteExamen(): void
+    {
+        if ($this->statut === 'admis') {
+            return;
+        }
+
+        $this->update(['statut' => 'en_attente']);
     }
 
     /**
@@ -231,6 +248,26 @@ class Candidat extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Détache ce candidat de toute session de formation encore OUVERTE.
+     * Un candidat admis officiellement n'a plus rien à faire dans une
+     * session de formation en cours (Code/Créneau/Conduite) : sa
+     * progression est terminée. À appeler dès que le candidat devient
+     * "admis" (voir ExamenController::update()), et utilisable également
+     * pour nettoyer rétroactivement les données existantes.
+     */
+    public function retirerDesSessionsOuvertes(): void
+    {
+        $idsSessionsOuvertes = $this->sessions()
+            ->get()
+            ->filter(fn($session) => $session->statutSession === 'ouvert')
+            ->pluck('id');
+
+        if ($idsSessionsOuvertes->isNotEmpty()) {
+            $this->sessions()->detach($idsSessionsOuvertes);
+        }
     }
 
     /**

@@ -43,9 +43,13 @@
     .rank-cell { font-weight:800; text-align:center; width:40px; }
     .note-cell { font-weight:800; text-align:center; color:var(--v); }
 
+    /* Blocs de signature : largeur fixe et resserrée pour que chaque bloc
+       se colle réellement au bord gauche / droit de la page (space-between),
+       plutôt que d'être centré au milieu de sa moitié de page. Le texte reste
+       sur une seule ligne même pour le libellé le plus long. */
     .doc-signatures { display:flex; justify-content:space-between; font-size:0.9rem; font-weight:bold; margin-top:40px; }
-    .doc-signatures div { text-align:center; width:45%; }
-    .sig-line { margin-top:50px; border-top:1px solid #000; padding-top:6px; font-size:0.8rem; font-weight:400; }
+    .doc-signatures div { text-align:center; width:230px; }
+    .sig-line { margin-top:50px; border-top:1px solid #000; padding-top:6px; font-size:0.78rem; font-weight:400; white-space:nowrap; }
 
     .btn-group { display:flex; justify-content:center; gap:10px; margin-top:20px; }
     .btn-print { background:var(--dk); color:white; border:none; border-radius:8px; padding:11px 24px; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.88rem; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }

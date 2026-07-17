@@ -113,7 +113,7 @@
                     <option value="" disabled {{ old('groupe_id') ? '' : 'selected' }}>-- Choisir un groupe --</option>
                     @foreach($groupes as $g)
                         <option value="{{ $g->id }}" {{ old('groupe_id') == $g->id ? 'selected' : '' }}
-                                data-candidats="{{ $g->candidats->map(fn($c)=>['id'=>$c->id,'nom'=>$c->nom.' '.$c->prenom,'eligibleCreneau'=>$c->eligibleCreneau,'eligibleConduite'=>$c->eligibleConduite])->toJson() }}">
+                                data-candidats="{{ $g->candidats->map(fn($c)=>['id'=>$c->id,'nom'=>$c->nom.' '.$c->prenom,'eligibleCreneau'=>$c->eligibleCreneau,'eligibleConduite'=>$c->eligibleConduite,'dejaAdmis'=>$c->dejaAdmis])->toJson() }}">
                             👥 {{ $g->nomGroupe }} ({{ $g->candidats->count() }} candidat(s))
                         </option>
                     @endforeach
@@ -165,7 +165,7 @@
             </h3>
             <div id="candidats-list" style="display:flex; flex-wrap:wrap; gap:0.5rem;"></div>
             <p id="candidats-exclus-note" style="display:none; margin:0.85rem 0 0 0; font-size:0.75rem; color:#FF8A80;">
-                🚫 Les candidats barrés n'ont pas encore franchi l'étape précédente requise et ne seront <strong>pas</strong> intégrés à cette session. Ils restent sur leur étape en cours.
+                🚫 Les candidats barrés ne seront <strong>pas</strong> intégrés à cette session (survolez leur nom pour voir le motif exact).
             </p>
         </div>
 
@@ -187,16 +187,20 @@
 <script>
 // Détermine si un candidat est éligible pour le type de session sélectionné,
 // à partir des flags précalculés côté serveur (Candidat::aReussiEtapeInterne()).
-// On ne se base plus sur le champ "statut" brut : une réussite au Code ET une
-// réussite au Créneau produisent toutes les deux "code_admis", donc le statut
-// seul ne permet pas de distinguer les deux étapes.
+// Un candidat déjà ADMIS officiellement (attestation délivrée) n'est plus
+// JAMAIS éligible, quel que soit le type — sa progression est terminée.
+// On ne se base pas non plus sur le champ "statut" brut pour Créneau/Conduite :
+// une réussite au Code ET une réussite au Créneau produisent toutes les deux
+// "code_admis", donc le statut seul ne permet pas de distinguer les deux étapes.
 function estEligible(candidat, type) {
+    if (candidat.dejaAdmis) return false;
     if (type === 'creneau')  return !!candidat.eligibleCreneau;
     if (type === 'conduite') return !!candidat.eligibleConduite;
-    return true; // 'code' : première étape, aucun prérequis
+    return true; // 'code' : première étape, aucun prérequis (sauf déjà admis, géré ci-dessus)
 }
 
-function motifExclusion(type) {
+function motifExclusion(candidat, type) {
+    if (candidat.dejaAdmis) return 'déjà admis officiellement — attestation délivrée, plus besoin de formation';
     if (type === 'creneau')  return "n'a pas encore réussi le Code";
     if (type === 'conduite') return "n'a pas encore réussi le Créneau";
     return '';
@@ -228,7 +232,7 @@ function afficherCandidats() {
             html += `<span class="candidat-chip-ok">👤 ${c.nom}</span>`;
         } else {
             aUnExclu = true;
-            html += `<span class="candidat-chip-exclu" title="${motifExclusion(type)}">🚫 ${c.nom}</span>`;
+            html += `<span class="candidat-chip-exclu" title="${motifExclusion(c, type)}">🚫 ${c.nom}</span>`;
         }
     });
 

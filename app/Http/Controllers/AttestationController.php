@@ -23,16 +23,16 @@ class AttestationController extends Controller
 
         $candidats = Candidat::where('statut', 'admis')
             ->whereNotIn('id', $candidatsAvecAttestation)
-            ->with(['evaluations.typeSession', 'sessions', 'inscriptions.categoriePermis'])
+            ->with(['examens.typeSession', 'inscriptions.categoriePermis'])
             ->orderBy('nom')
             ->get();
-
-        $examens = Examen::orderBy('dateDebut', 'desc')->get();
 
         // Numéro pré-généré automatiquement
         $numeroAuto = Attestation::genererNumero();
 
-        // Suggestions de dates + catégorie par candidat (auto-remplissage JS, modifiable)
+        // Tout est désormais calculé automatiquement à partir du candidat :
+        // catégorie obtenue, examen correspondant, dates d'admission officielles.
+        // Rien de tout cela n'est plus modifiable manuellement dans le formulaire.
         $suggestions = $candidats->mapWithKeys(fn($c) => [$c->id => $this->calculerSuggestions($c)]);
 
         // Candidat présélectionné depuis le lien "🎓 Attestation" du module Examens
@@ -44,7 +44,7 @@ class AttestationController extends Controller
         }
 
         return view('attestations.create', compact(
-            'candidats', 'examens', 'numeroAuto', 'suggestions', 'candidatPreselectionne'
+            'candidats', 'numeroAuto', 'suggestions', 'candidatPreselectionne'
         ));
     }
 
@@ -57,8 +57,6 @@ class AttestationController extends Controller
             'examen_id'             => 'nullable|exists:examens,id',
             'civilite'              => 'required|in:Monsieur,Madame,Mademoiselle',
             'categorieObtenue'      => 'required|in:E,D',
-            'formationDateDebut'    => 'nullable|date',
-            'formationDateFin'      => 'nullable|date',
             'dateAdmissionCode'     => 'nullable|date',
             'dateAdmissionConduite' => 'nullable|date',
             'directeurCivilite'     => 'required|in:Monsieur,Madame',
@@ -67,7 +65,7 @@ class AttestationController extends Controller
 
         Attestation::create($request->only(
             'dateDelivrance', 'numeroAttestation', 'candidat_id', 'examen_id',
-            'civilite', 'categorieObtenue', 'formationDateDebut', 'formationDateFin',
+            'civilite', 'categorieObtenue',
             'dateAdmissionCode', 'dateAdmissionConduite', 'directeurCivilite', 'directeurNom'
         ));
 
@@ -93,14 +91,12 @@ class AttestationController extends Controller
             $q->where('statut', 'admis')
               ->whereNotIn('id', $candidatsAvecAttestation);
         })->orWhere('id', $attestation->candidat_id)
-          ->with(['evaluations.typeSession', 'sessions', 'inscriptions.categoriePermis'])
+          ->with(['examens.typeSession', 'inscriptions.categoriePermis'])
           ->orderBy('nom')->get();
-
-        $examens = Examen::orderBy('dateDebut', 'desc')->get();
 
         $suggestions = $candidats->mapWithKeys(fn($c) => [$c->id => $this->calculerSuggestions($c)]);
 
-        return view('attestations.edit', compact('attestation', 'candidats', 'examens', 'suggestions'));
+        return view('attestations.edit', compact('attestation', 'candidats', 'suggestions'));
     }
 
     public function update(Request $request, Attestation $attestation)
@@ -112,8 +108,6 @@ class AttestationController extends Controller
             'examen_id'             => 'nullable|exists:examens,id',
             'civilite'              => 'required|in:Monsieur,Madame,Mademoiselle',
             'categorieObtenue'      => 'required|in:E,D',
-            'formationDateDebut'    => 'nullable|date',
-            'formationDateFin'      => 'nullable|date',
             'dateAdmissionCode'     => 'nullable|date',
             'dateAdmissionConduite' => 'nullable|date',
             'directeurCivilite'     => 'required|in:Monsieur,Madame',
@@ -122,7 +116,7 @@ class AttestationController extends Controller
 
         $attestation->update($request->only(
             'dateDelivrance', 'numeroAttestation', 'candidat_id', 'examen_id',
-            'civilite', 'categorieObtenue', 'formationDateDebut', 'formationDateFin',
+            'civilite', 'categorieObtenue',
             'dateAdmissionCode', 'dateAdmissionConduite', 'directeurCivilite', 'directeurNom'
         ));
 
@@ -138,28 +132,52 @@ class AttestationController extends Controller
     }
 
     /**
-     * Calcule des suggestions (dates + catégorie de permis) pour un candidat,
-     * utilisées pour pré-remplir automatiquement le formulaire (reste modifiable).
+     * Calcule TOUTES les informations automatiques d'un candidat pour son
+     * attestation — catégorie obtenue, examen correspondant, dates
+     * d'admission officielles. Ces valeurs ne sont plus de simples
+     * "suggestions" modifiables : elles verrouillent les champs du
+     * formulaire (voir vues create/edit), l'utilisateur ne choisissant que
+     * le candidat lui-même.
      */
     private function calculerSuggestions(Candidat $candidat): array
     {
-        $dateAdmissionCode = $candidat->evaluations
-            ->filter(fn($e) => $e->typeSession?->type === 'code' && $e->resultat === 'Admis')
-            ->max('dateEvaluation');
+        $categorie = $this->determinerCategorieObtenue($candidat);
 
-        $dateAdmissionConduite = $candidat->evaluations
-            ->filter(fn($e) => $e->typeSession?->type === 'conduite' && $e->resultat === 'Admis')
-            ->max('dateEvaluation');
+        // Examens officiels où le candidat a été déclaré "Admis"
+        $examensAdmis = $candidat->examens->filter(fn($e) => $e->pivot->resultat === 'Admis');
 
-        $formationDateDebut = $candidat->sessions->min('dateDebut');
-        $formationDateFin   = $dateAdmissionConduite ?: $candidat->sessions->max('dateDebut');
+        // Date d'admission Code / Conduite = date à laquelle le résultat
+        // officiel "Admis" a été enregistré pour ce type d'examen (timestamp
+        // de mise à jour du pivot candidat_examen), PAS une simple date de
+        // formation interne.
+        $dateAdmissionCode = $examensAdmis
+            ->filter(fn($e) => strtolower($e->typeSession?->type ?? '') === 'code')
+            ->map(fn($e) => $e->pivot->updated_at)
+            ->max();
+
+        $dateAdmissionConduite = $examensAdmis
+            ->filter(fn($e) => strtolower($e->typeSession?->type ?? '') === 'conduite')
+            ->map(fn($e) => $e->pivot->updated_at)
+            ->max();
+
+        // Examen correspondant à la catégorie du candidat (le libellé de
+        // l'examen contient "E" ou "D" selon la catégorie du permis passé —
+        // ex : "Permis E"). On privilégie l'examen de Conduite (dernière
+        // étape officielle) si plusieurs examens de cette catégorie existent.
+        $examen = null;
+        if ($categorie) {
+            $examen = $examensAdmis
+                ->filter(fn($e) => str_contains(strtoupper($e->libelle), $categorie))
+                ->sortByDesc(fn($e) => strtolower($e->typeSession?->type ?? '') === 'conduite' ? 1 : 0)
+                ->first();
+        }
 
         return [
             'dateAdmissionCode'     => $dateAdmissionCode,
             'dateAdmissionConduite' => $dateAdmissionConduite,
-            'formationDateDebut'    => $formationDateDebut,
-            'formationDateFin'      => $formationDateFin,
-            'categorieObtenue'      => $this->determinerCategorieObtenue($candidat),
+            'categorieObtenue'      => $categorie,
+            'examenId'              => $examen?->id,
+            'examenLibelle'         => $examen?->libelle,
         ];
     }
 
