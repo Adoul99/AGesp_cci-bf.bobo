@@ -105,6 +105,57 @@ class Candidat extends Model
     }
 
     /**
+     * Vérifie si le candidat a réellement réussi une étape INTERNE donnée
+     * ('code', 'creneau' ou 'conduite'), en se basant sur l'historique réel
+     * de ses sessions de formation (et, en repli, sur ses anciennes
+     * évaluations) — PAS sur le champ Candidat::statut.
+     *
+     * Pourquoi ne pas utiliser statut ? Parce qu'une réussite interne au
+     * Code ET une réussite interne au Créneau produisent toutes les deux
+     * le même statut "code_admis" (voir SessionFormation::appliquerResultats()).
+     * Le statut seul ne permet donc pas de savoir PRÉCISÉMENT quelle étape
+     * a été franchie : il faut regarder les sessions/évaluations elles-mêmes.
+     *
+     * Utilisé pour déterminer l'éligibilité d'un candidat à une session
+     * Créneau (nécessite d'avoir réussi 'code') ou Conduite (nécessite
+     * d'avoir réussi 'creneau').
+     */
+    public function aReussiEtapeInterne(string $type): bool
+    {
+        $type = strtolower($type);
+
+        // 1) Voie principale : sessions de formation (session_candidat),
+        //    alimentées par SessionFormation::appliquerResultats() —
+        //    point d'entrée unique pour la clôture classique ET le module
+        //    Évaluation.
+        $viaSessions = $this->sessions()
+            ->whereHas('typeSession', fn($q) => $q->whereRaw('LOWER(type) = ?', [$type]))
+            ->get()
+            ->contains(function ($session) use ($type) {
+                if ($session->pivot->absent) {
+                    return false;
+                }
+                if ($type === 'code') {
+                    return !is_null($session->pivot->note) && $session->pivot->note >= 14;
+                }
+                // Créneau / Conduite : réussite via mention
+                return in_array($session->pivot->mention, ['bien', 'passable']);
+            });
+
+        if ($viaSessions) {
+            return true;
+        }
+
+        // 2) Repli : ancien système Evaluation (utilisé avant la mise en
+        //    place du pivot session_candidat, ou en parallèle pour certains
+        //    modules).
+        return $this->evaluations()
+            ->whereHas('typeSession', fn($q) => $q->whereRaw('LOWER(type) = ?', [$type]))
+            ->where('statut', 'reussi')
+            ->exists();
+    }
+
+    /**
      * Met à jour la progression du candidat selon ses évaluations INTERNES
      * (formation : code, conduite, créneau évalués en interne par les
      * moniteurs). Cette méthode ne déclenche JAMAIS le statut "admis" :

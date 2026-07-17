@@ -17,6 +17,30 @@ class SessionFormationController extends Controller
 {
     use ExportableTrait;
 
+    // ── HELPER ───────────────────────────────────────────────────
+
+    /**
+     * Retourne l'étape interne ('code' ou 'creneau') que le candidat doit
+     * avoir déjà réussie pour pouvoir être intégré à une session du type
+     * donné (progression obligatoire Code -> Créneau -> Conduite).
+     * Retourne null si le type ne requiert aucun prérequis (cas de "code",
+     * première étape).
+     *
+     * NB : on ne peut PAS se baser sur le champ Candidat::statut pour cette
+     * vérification, car une réussite interne au Code ET une réussite interne
+     * au Créneau produisent toutes les deux le même statut "code_admis"
+     * (voir SessionFormation::appliquerResultats()). Il faut donc consulter
+     * l'historique réel des sessions du candidat via Candidat::aReussiEtapeInterne().
+     */
+    private function etapePrecedenteRequise(?string $typeNom): ?string
+    {
+        return match($typeNom) {
+            'creneau'  => 'code',    // il faut avoir réussi le Code
+            'conduite' => 'creneau', // il faut avoir réussi le Créneau
+            default    => null,      // 'code' ou type inconnu : pas de prérequis
+        };
+    }
+
     // ── INDEX ────────────────────────────────────────────────────
 
     public function index()
@@ -63,6 +87,17 @@ class SessionFormationController extends Controller
         $groupes       = Groupe::with('candidats')->get();
         $typesSessions = TypeSession::all();
         $moniteurs     = Moniteur::all();
+
+        // Éligibilité de chaque candidat de groupe pour les étapes Créneau et
+        // Conduite (basée sur l'historique réel des sessions, pas sur le
+        // statut global qui ne distingue pas "a réussi le Code" de "a
+        // réussi le Créneau"). Consommé par le JS de l'aperçu candidats.
+        foreach ($groupes as $g) {
+            foreach ($g->candidats as $c) {
+                $c->eligibleCreneau  = $c->aReussiEtapeInterne('code');
+                $c->eligibleConduite = $c->aReussiEtapeInterne('creneau');
+            }
+        }
 
         // Candidats qui n'appartiennent à AUCUN groupe : à sélectionner
         // individuellement (champ de sélection multiple) pour les intégrer
@@ -147,6 +182,21 @@ class SessionFormationController extends Controller
 
         $candidatsAAttacher = $candidatsAAttacher->unique('id');
 
+        // ── Filtrage par progression obligatoire ──────────────────
+        // Un candidat ne peut être intégré à une session Créneau que s'il a
+        // réellement réussi le Code, et à une session Conduite que s'il a
+        // réellement réussi le Créneau (vérifié via l'historique des sessions,
+        // pas via le statut global qui ne distingue pas ces deux cas).
+        // Celui qui n'a pas franchi l'étape précédente est retiré et reste
+        // sur sa session en cours.
+        $etapeRequise    = $this->etapePrecedenteRequise($typeNom);
+        $candidatsExclus = collect();
+
+        if ($etapeRequise !== null) {
+            $candidatsExclus    = $candidatsAAttacher->reject(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
+            $candidatsAAttacher = $candidatsAAttacher->filter(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
+        }
+
         if ($candidatsAAttacher->isNotEmpty()) {
             $pivotData = [];
             foreach ($candidatsAAttacher as $candidat) {
@@ -168,8 +218,14 @@ class SessionFormationController extends Controller
             $session->candidats()->sync($pivotData);
         }
 
+        $messageSuccess = '✅ Session créée avec succès.';
+        if ($candidatsExclus->isNotEmpty()) {
+            $noms = $candidatsExclus->map(fn($c) => $c->nom . ' ' . $c->prenom)->implode(', ');
+            $messageSuccess .= " ⚠️ Non intégré(s) car étape précédente non franchie : $noms.";
+        }
+
         return redirect()->route('session_formations.index')
-            ->with('success', '✅ Session créée avec succès.');
+            ->with('success', $messageSuccess);
     }
 
     // ── EDIT ─────────────────────────────────────────────────────
@@ -254,12 +310,22 @@ class SessionFormationController extends Controller
 
         // Ajouter les candidats sans groupe sélectionnés, SANS toucher aux
         // candidats déjà attachés (on ne veut pas effacer leurs notes/absences).
+        $etapeRequise    = $this->etapePrecedenteRequise($typeNom);
+        $candidatsExclus = collect();
+
         if ($request->filled('candidats_sans_groupe')) {
             $idsDejaAttaches = $sessionFormation->candidats()->pluck('candidats.id')->all();
             $nouveauxIds     = array_diff($request->candidats_sans_groupe, $idsDejaAttaches);
 
             if (!empty($nouveauxIds)) {
                 $nouveauxCandidats = Candidat::whereIn('id', $nouveauxIds)->get();
+
+                // Même filtrage par progression que pour les candidats de groupe.
+                if ($etapeRequise !== null) {
+                    $candidatsExclus   = $nouveauxCandidats->reject(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
+                    $nouveauxCandidats = $nouveauxCandidats->filter(fn($c) => $c->aReussiEtapeInterne($etapeRequise))->values();
+                }
+
                 foreach ($nouveauxCandidats as $candidat) {
                     $sessionFormation->candidats()->attach($candidat->id, [
                         'absent'      => false,
@@ -303,8 +369,14 @@ class SessionFormationController extends Controller
             }
         }
 
+        $messageSuccess = '✅ Session mise à jour.';
+        if ($candidatsExclus->isNotEmpty()) {
+            $noms = $candidatsExclus->map(fn($c) => $c->nom . ' ' . $c->prenom)->implode(', ');
+            $messageSuccess .= " ⚠️ Non intégré(s) car étape précédente non franchie : $noms.";
+        }
+
         return redirect()->route('session_formations.index')
-            ->with('success', '✅ Session mise à jour.');
+            ->with('success', $messageSuccess);
     }
 
     // ── CLÔTURE ──────────────────────────────────────────────────

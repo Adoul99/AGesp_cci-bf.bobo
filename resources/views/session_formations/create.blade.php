@@ -1,4 +1,4 @@
-<x-layouts::app title="Nouvelle Session de Formation">
+<x-layouts::app.sidebar title="Nouvelle Session de Formation">
 <style>
 :root {
     --color-red: #CE1126; --color-green: #007A5E; --color-gold: #FCD116;
@@ -40,13 +40,14 @@
 .field-error { color:#FF8A80; font-size:0.75rem; }
 .field-group.is-hidden { display:none; }
 
-.multi-select {
-    width:100%; min-height:190px; padding:0; border:2px solid var(--border-input);
-    border-radius:var(--radius-md); background:#FFFFFF; color:#1A1A1A; font-size:0.85rem; overflow-y:auto;
+.candidat-chip-ok {
+    background:var(--bg-card-header); border:1.5px solid var(--color-green-light); color:#ECF0F1;
+    padding:0.3rem 0.75rem; border-radius:50px; font-size:0.8rem; font-weight:600;
 }
-.multi-select option { padding:0.55rem 0.85rem; color:#1A1A1A; background:#FFFFFF; }
-.multi-select option:checked {
-    background: var(--color-green-light) !important; color:white;
+.candidat-chip-exclu {
+    background:rgba(206,17,38,0.15); border:1.5px dashed var(--color-red); color:#FF8A80;
+    padding:0.3rem 0.75rem; border-radius:50px; font-size:0.8rem; font-weight:600;
+    text-decoration:line-through; opacity:0.8; cursor:help;
 }
 </style>
 
@@ -59,7 +60,7 @@
             Nouvelle Session de Formation
         </h1>
         <p style="margin:0.5rem 0 0 1.5rem; color:var(--text-muted); font-size:0.875rem;">
-            ℹ️ Une seule session peut être ouverte à la fois. Remplissez les informations puis enregistrez. La session est toujours créée <strong>Ouverte</strong>.
+            ℹ️ Une seule session peut être ouverte à la fois. Remplissez les informations puis enregistrez.
         </p>
     </div>
 
@@ -74,6 +75,9 @@
 
     <form method="POST" action="{{ route('session_formations.store') }}" style="background:var(--bg-card); padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid rgba(255,255,255,0.05);">
         @csrf
+
+        {{-- Statut forcé à "ouvert" : plus modifiable depuis le formulaire --}}
+        <input type="hidden" name="statutSession" value="ouvert">
 
         <h2 style="font-size:1rem; font-weight:700; color:var(--text-light); margin-bottom:1.5rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
             Configuration de la Session
@@ -92,7 +96,7 @@
             <div class="field-group">
                 <label class="field-label">Type de session <span style="color:var(--color-red);">*</span></label>
                 <select name="typeSession_id" id="typeSession_id" class="dark-input" onchange="onTypeSessionChange(this)" required>
-                    <option value="">-- Choisir --</option>
+                    <option value="" disabled {{ old('typeSession_id') ? '' : 'selected' }}>-- Choisir --</option>
                     @foreach($typesSessions as $t)
                         <option value="{{ $t->id }}" data-type="{{ $t->type }}" {{ old('typeSession_id') == $t->id ? 'selected' : '' }}>
                             @switch($t->type) @case('code') 📋 Code @break @case('creneau') 🔧 Créneau @break @case('conduite') 🚗 Conduite @break @default {{ $t->type }} @endswitch
@@ -102,14 +106,14 @@
                 @error('typeSession_id')<span class="field-error">{{ $message }}</span>@enderror
             </div>
 
-            {{-- Groupe --}}
+            {{-- Groupe (désormais obligatoire) --}}
             <div class="field-group">
                 <label class="field-label">Groupe <span style="color:var(--color-red);">*</span></label>
-                <select name="groupe_id" id="groupe_id" class="dark-input" onchange="afficherCandidats(this.value)" required>
-                    <option value="">-- Choisir un groupe --</option>
+                <select name="groupe_id" id="groupe_id" class="dark-input" onchange="afficherCandidats()" required>
+                    <option value="" disabled {{ old('groupe_id') ? '' : 'selected' }}>-- Choisir un groupe --</option>
                     @foreach($groupes as $g)
                         <option value="{{ $g->id }}" {{ old('groupe_id') == $g->id ? 'selected' : '' }}
-                                data-candidats="{{ $g->candidats->map(fn($c)=>['id'=>$c->id,'nom'=>$c->nom.' '.$c->prenom])->toJson() }}">
+                                data-candidats="{{ $g->candidats->map(fn($c)=>['id'=>$c->id,'nom'=>$c->nom.' '.$c->prenom,'eligibleCreneau'=>$c->eligibleCreneau,'eligibleConduite'=>$c->eligibleConduite])->toJson() }}">
                             👥 {{ $g->nomGroupe }} ({{ $g->candidats->count() }} candidat(s))
                         </option>
                     @endforeach
@@ -117,11 +121,9 @@
                 @error('groupe_id')<span class="field-error">{{ $message }}</span>@enderror
             </div>
 
-            {{-- Moniteur --}}
+            {{-- Moniteur (désormais obligatoire quand modifiable) --}}
             <div class="field-group">
-                <label class="field-label">
-                    Moniteur <span style="color:var(--color-red);">*</span>
-                </label>
+                <label class="field-label">Moniteur <span style="color:var(--color-red);">*</span></label>
 
                 @if($moniteurConnecte)
                     <div style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-green-light); border-radius:var(--radius-md); font-size:0.875rem; color:#FFFFFF; background:rgba(0,165,114,0.15); font-weight:700; display:flex; align-items:center; justify-content:space-between;">
@@ -131,7 +133,7 @@
                     <input type="hidden" name="moniteur_id" value="{{ $moniteurConnecte->id }}">
                 @else
                     <select name="moniteur_id" class="dark-input" required>
-                        <option value="">-- Choisir un moniteur --</option>
+                        <option value="" disabled {{ old('moniteur_id') ? '' : 'selected' }}>-- Choisir un moniteur --</option>
                         @foreach($moniteurs as $m)
                             <option value="{{ $m->id }}" {{ old('moniteur_id') == $m->id ? 'selected' : '' }}>
                                 👤 {{ $m->nom }} {{ $m->prenom }}
@@ -142,11 +144,11 @@
                 @endif
             </div>
 
-            {{-- Véhicule : masqué si type de session = Code --}}
+            {{-- Véhicule : masqué si type de session = Code, sinon obligatoire --}}
             <div class="field-group" id="vehicule-field">
-                <label class="field-label">Véhicule <span id="vehicule-required" style="color:var(--color-red);">*</span></label>
-                <select name="vehicule_id" id="vehicule_id" class="dark-input">
-                    <option value="">-- Choisir un véhicule --</option>
+                <label class="field-label">Véhicule <span style="color:var(--color-red);">*</span></label>
+                <select name="vehicule_id" id="vehicule_id" class="dark-input" required>
+                    <option value="" disabled {{ old('vehicule_id') ? '' : 'selected' }}>-- Choisir un véhicule --</option>
                     @foreach($vehicules as $v)
                         <option value="{{ $v->id }}" {{ old('vehicule_id') == $v->id ? 'selected' : '' }}>🚗 {{ $v->nomVehicule }}</option>
                     @endforeach
@@ -156,33 +158,15 @@
 
         </div>
 
-        {{-- Candidats sans groupe : sélection multiple --}}
-        <div style="margin-top:2rem;">
-            <label class="field-label">
-                Candidats sans groupe à ajouter <span class="field-hint">(facultatif)</span>
-            </label>
-            <p style="margin:0 0 0.6rem 0; font-size:0.75rem; color:var(--text-muted);">
-                Cliquez sur la flèche pour dérouler la liste, puis maintenez <strong style="color:var(--text-light);">Ctrl</strong>
-                (ou <strong style="color:var(--text-light);">Cmd</strong> sur Mac) enfoncé pour sélectionner plusieurs candidats
-                qui n'appartiennent à aucun groupe. Ils seront ajoutés à cette session en plus des candidats du groupe choisi.
-            </p>
-            <select name="candidats_sans_groupe[]" id="candidats_sans_groupe" class="multi-select" multiple size="6">
-                @forelse($candidatsSansGroupe as $c)
-                    <option value="{{ $c->id }}" {{ collect(old('candidats_sans_groupe', []))->contains($c->id) ? 'selected' : '' }}>
-                        {{ $c->nom }} {{ $c->prenom }}
-                    </option>
-                @empty
-                    <option disabled>Aucun candidat sans groupe</option>
-                @endforelse
-            </select>
-        </div>
-
-        {{-- Aperçu candidats du groupe --}}
+        {{-- Aperçu candidats --}}
         <div id="candidats-preview" style="display:none; margin-top:2rem; padding:1.25rem; background:rgba(0,122,94,0.15); border:2px solid var(--color-green-light); border-radius:var(--radius-md);">
             <h3 style="margin:0 0 0.75rem 0; font-size:0.875rem; font-weight:700; color:#ECF0F1;">
                 👥 Candidats qui seront intégrés à la session :
             </h3>
             <div id="candidats-list" style="display:flex; flex-wrap:wrap; gap:0.5rem;"></div>
+            <p id="candidats-exclus-note" style="display:none; margin:0.85rem 0 0 0; font-size:0.75rem; color:#FF8A80;">
+                🚫 Les candidats barrés n'ont pas encore franchi l'étape précédente requise et ne seront <strong>pas</strong> intégrés à cette session. Ils restent sur leur étape en cours.
+            </p>
         </div>
 
         {{-- Boutons --}}
@@ -201,49 +185,87 @@
 </div>
 
 <script>
-function afficherCandidats(groupeId) {
-    const preview = document.getElementById('candidats-preview');
-    const list    = document.getElementById('candidats-list');
+// Détermine si un candidat est éligible pour le type de session sélectionné,
+// à partir des flags précalculés côté serveur (Candidat::aReussiEtapeInterne()).
+// On ne se base plus sur le champ "statut" brut : une réussite au Code ET une
+// réussite au Créneau produisent toutes les deux "code_admis", donc le statut
+// seul ne permet pas de distinguer les deux étapes.
+function estEligible(candidat, type) {
+    if (type === 'creneau')  return !!candidat.eligibleCreneau;
+    if (type === 'conduite') return !!candidat.eligibleConduite;
+    return true; // 'code' : première étape, aucun prérequis
+}
+
+function motifExclusion(type) {
+    if (type === 'creneau')  return "n'a pas encore réussi le Code";
+    if (type === 'conduite') return "n'a pas encore réussi le Créneau";
+    return '';
+}
+
+function afficherCandidats() {
+    const groupeSelect = document.getElementById('groupe_id');
+    const typeSelect   = document.getElementById('typeSession_id');
+    const preview      = document.getElementById('candidats-preview');
+    const list         = document.getElementById('candidats-list');
+    const exclusNote   = document.getElementById('candidats-exclus-note');
+
+    const groupeId = groupeSelect.value;
     if (!groupeId) { preview.style.display = 'none'; return; }
+
     const opt = document.querySelector(`#groupe_id option[value="${groupeId}"]`);
     if (!opt) return;
     const candidats = JSON.parse(opt.dataset.candidats || '[]');
     if (!candidats.length) { preview.style.display = 'none'; return; }
-    list.innerHTML = candidats.map(c =>
-        `<span style="background:var(--bg-card-header); border:1.5px solid var(--color-green-light); color:#ECF0F1; padding:0.3rem 0.75rem; border-radius:50px; font-size:0.8rem; font-weight:600;">👤 ${c.nom}</span>`
-    ).join('');
+
+    const typeOpt = typeSelect.options[typeSelect.selectedIndex];
+    const type    = typeOpt ? typeOpt.dataset.type : null;
+
+    let html = '';
+    let aUnExclu = false;
+
+    candidats.forEach(c => {
+        if (estEligible(c, type)) {
+            html += `<span class="candidat-chip-ok">👤 ${c.nom}</span>`;
+        } else {
+            aUnExclu = true;
+            html += `<span class="candidat-chip-exclu" title="${motifExclusion(type)}">🚫 ${c.nom}</span>`;
+        }
+    });
+
+    list.innerHTML = html;
+    exclusNote.style.display = aUnExclu ? 'block' : 'none';
     preview.style.display = 'block';
 }
 
 function onTypeSessionChange(select) {
     const opt = select.options[select.selectedIndex];
     const type = opt ? opt.dataset.type : null;
-    const vehiculeField    = document.getElementById('vehicule-field');
-    const vehiculeSelect   = document.getElementById('vehicule_id');
-    const vehiculeRequired = document.getElementById('vehicule-required');
+    const vehiculeField  = document.getElementById('vehicule-field');
+    const vehiculeSelect = document.getElementById('vehicule_id');
 
     if (type === 'code') {
-        // Session Code : pas de véhicule à choisir
+        // Session Code : pas de véhicule à choisir -> champ masqué et désactivé
+        // (un champ disabled n'est pas soumis et n'est pas soumis à la validation "required")
         vehiculeField.classList.add('is-hidden');
         vehiculeSelect.value = '';
         vehiculeSelect.disabled = true;
-        vehiculeSelect.required = false;
-        vehiculeRequired.style.display = 'none';
     } else {
         // Créneau / Conduite : véhicule obligatoire
         vehiculeField.classList.remove('is-hidden');
         vehiculeSelect.disabled = false;
-        vehiculeSelect.required = true;
-        vehiculeRequired.style.display = 'inline';
     }
+
+    // Le type de session détermine aussi le filtre du groupe : on rafraîchit
+    // l'aperçu des candidats à chaque changement de type.
+    afficherCandidats();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const g = document.getElementById('groupe_id');
-    if (g.value) afficherCandidats(g.value);
+    if (g.value) afficherCandidats();
 
     const typeSelect = document.getElementById('typeSession_id');
     if (typeSelect.value) onTypeSessionChange(typeSelect);
 });
 </script>
-</x-layouts::app>
+</x-layouts::app.sidebar>

@@ -15,6 +15,7 @@
     --text-muted: #A9C4B4;
     --radius-md: 10px; --radius-lg: 16px;
     --shadow-md: 0 10px 30px rgba(0,0,0,0.35);
+    --shadow-lg: 0 20px 50px rgba(0,0,0,0.5);
 }
 
 .content-wrapper {
@@ -64,45 +65,6 @@
 .gp-input:focus { outline: none; border-color: var(--color-gold); box-shadow: 0 0 0 3px rgba(252,209,22,0.18); }
 .gp-input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.7); }
 
-/* ── Multi-select "listbox" façon image de référence ── */
-.gp-multiselect {
-    width: 100%;
-    min-height: 210px;
-    padding: 0.4rem;
-    border: 1.5px solid var(--input-border);
-    border-radius: var(--radius-md);
-    background: var(--input-bg);
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-.gp-multiselect:focus { outline: none; border-color: var(--color-gold); box-shadow: 0 0 0 3px rgba(252,209,22,0.18); }
-.gp-multiselect option {
-    padding: 0.55rem 0.75rem;
-    border-radius: 6px;
-    color: var(--text-light);
-    background: transparent;
-}
-.gp-multiselect option:checked {
-    background: linear-gradient(0deg, var(--color-green) 0%, var(--color-green) 100%);
-    background-color: var(--color-green) !important;
-    color: white;
-}
-.gp-multiselect option:disabled {
-    color: rgba(255,138,128,0.75);
-    background: rgba(206,17,38,0.08);
-}
-
-.gp-search-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
-.gp-search-input { flex: 1; min-width: 220px; }
-
-.gp-filter-chip {
-    display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
-    font-size: 0.78rem; font-weight: 600; color: #BFEBD8;
-    background: rgba(0,122,94,0.18); padding: 0.6rem 0.9rem; border-radius: var(--radius-md);
-    border: 1px solid rgba(0,165,114,0.35); white-space: nowrap;
-}
-.gp-filter-chip input { width: 1.05rem; height: 1.05rem; accent-color: var(--color-green-light); cursor: pointer; }
-
 .gp-counter { color: #BFEBD8; font-weight: 800; }
 
 .gp-btn-primary {
@@ -121,6 +83,72 @@
     border-left: 4px solid var(--color-green-light); border-radius: var(--radius-md);
     color: #D7F5E8; font-size: 0.85rem;
 }
+
+/* --- Champ déclencheur de la modale --- */
+.gp-trigger-field {
+    display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;
+}
+.gp-trigger-arrow { transition: transform 200ms ease; flex-shrink:0; color: var(--text-light); }
+
+/* --- Modale centrée (fixe à l'écran, ne dépend pas du scroll de la page) --- */
+.gp-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(11,47,29,0.75);
+    z-index: 1000; align-items: center; justify-content: center; padding: 1.5rem;
+    backdrop-filter: blur(2px);
+}
+.gp-modal-overlay.open { display: flex; }
+.gp-modal-box {
+    background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+    max-width: 560px; width: 100%; max-height: 85vh; display: flex; flex-direction: column;
+    overflow: hidden;
+}
+.gp-modal-header {
+    padding: 1.25rem 1.5rem; border-bottom: 1px solid #eee; display: flex;
+    justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+.gp-modal-title { font-size: 1rem; font-weight: 800; color: #1A1A1A; margin: 0; }
+.gp-modal-close {
+    background: #F1F1F1; border: none; width: 32px; height: 32px; border-radius: 50%;
+    font-size: 1rem; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.gp-modal-close:hover { background: #E0E0E0; }
+.gp-modal-toolbar {
+    padding: 1rem 1.5rem; border-bottom: 1px solid #eee; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 0.6rem;
+}
+.gp-modal-toolbar .gp-input { color:#1A1A1A; background:#fff; border:1.5px solid #D1D1D1; }
+.gp-modal-toolbar .gp-input::placeholder { color:#999; }
+
+.gp-modal-chip {
+    display:flex; align-items:center; gap:0.5rem; cursor:pointer;
+    font-size:0.8rem; font-weight:600; color:#004D3A;
+    background:rgba(0,122,94,0.1); padding:0.55rem 0.8rem; border-radius:var(--radius-md);
+    border:1px solid rgba(0,122,94,0.25);
+}
+.gp-modal-chip input { width:1rem; height:1rem; accent-color:var(--color-green); cursor:pointer; }
+
+.gp-modal-list { overflow-y: auto; flex: 1; padding: 0.5rem 0; }
+.gp-modal-item {
+    padding:0.75rem 1.5rem; display:flex; align-items:center; gap:0.7rem;
+    cursor:pointer; font-size:0.9rem; color:#1A1A1A;
+}
+.gp-modal-item:hover { background: rgba(0,122,94,0.08); }
+.gp-modal-item input[type=checkbox] { width:17px; height:17px; accent-color:var(--color-green); flex-shrink:0; }
+.gp-modal-item.locked { color:#A00D20; cursor:not-allowed; background:rgba(206,17,38,0.04); }
+.gp-modal-item.locked:hover { background:rgba(206,17,38,0.04); }
+.gp-modal-item.locked input[type=checkbox] { accent-color:#A00D20; }
+
+.gp-modal-footer {
+    padding: 1rem 1.5rem; border-top: 1px solid #eee; flex-shrink: 0;
+    display: flex; justify-content: flex-end;
+}
+.gp-modal-done-btn {
+    background: var(--color-green); color: white; border: none; padding: 0.7rem 1.75rem;
+    border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; cursor: pointer;
+}
+.gp-modal-done-btn:hover { background: var(--color-green-dark); }
+
+.gp-empty-msg { padding:1.25rem 1.5rem; text-align:center; color:#666; font-size:0.85rem; }
 </style>
 
 <div class="content-wrapper">
@@ -138,7 +166,7 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('groupes.store') }}">
+    <form id="groupeForm" method="POST" action="{{ route('groupes.store') }}">
         @csrf
 
         <div class="gp-card">
@@ -170,29 +198,13 @@
                 </h2>
             </div>
 
-            <div class="gp-search-row">
-                <input type="text" id="rechercheCandidat" class="gp-input gp-search-input"
-                       placeholder="🔍 Rechercher un candidat par nom...">
-                <label class="gp-filter-chip">
-                    <input type="checkbox" id="filtreSansGroupe">
-                    Afficher uniquement les candidats sans groupe
-                </label>
+            {{-- Champ déclencheur : ouvre la modale centrée --}}
+            <div class="gp-input gp-trigger-field" onclick="ouvrirModaleCandidats()">
+                <span id="candidatsFieldLabel">-- Choisir un ou plusieurs candidats --</span>
+                <svg class="gp-trigger-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 9l-7 7-7-7"/>
+                </svg>
             </div>
-
-            <select id="candidatsSelect" name="candidat_ids[]" multiple size="10" class="gp-multiselect">
-                @foreach($candidats as $candidat)
-                    @php $groupeExistant = $candidat->groupes->first(); @endphp
-                    @if($groupeExistant)
-                        <option value="{{ $candidat->id }}" disabled data-nom="{{ strtolower($candidat->nom.' '.$candidat->prenom) }}" data-a-groupe="1">
-                            {{ $candidat->nom }} {{ $candidat->prenom }} 🔒 (déjà dans : {{ $groupeExistant->nomGroupe }})
-                        </option>
-                    @else
-                        <option value="{{ $candidat->id }}" data-nom="{{ strtolower($candidat->nom.' '.$candidat->prenom) }}" data-a-groupe="0">
-                            {{ $candidat->nom }} {{ $candidat->prenom }}
-                        </option>
-                    @endif
-                @endforeach
-            </select>
         </div>
 
         <div style="display:flex; gap:1rem;">
@@ -202,38 +214,82 @@
     </form>
 
     <div class="gp-info">
-        ℹ️ <strong>Rappel d'affectation :</strong> Un candidat ne peut être inscrit que dans un seul groupe de formation actif à la fois. Les candidats déjà inscrits ailleurs sont grisés et protégés (maintenez Ctrl/Cmd pour sélectionner plusieurs candidats).
+        ℹ️ <strong>Rappel d'affectation :</strong> Un candidat ne peut être inscrit que dans un seul groupe de formation actif à la fois. Les candidats déjà inscrits ailleurs sont grisés et protégés.
+    </div>
+</div>
+
+{{-- ── Modale centrée de sélection des candidats (fixe à l'écran, hors du flux de la page) ── --}}
+<div id="candidatsModalOverlay" class="gp-modal-overlay">
+    <div class="gp-modal-box">
+        <div class="gp-modal-header">
+            <h3 class="gp-modal-title">👥 Sélectionner les candidats</h3>
+            <button type="button" class="gp-modal-close" onclick="fermerModaleCandidats()">✕</button>
+        </div>
+        <div class="gp-modal-toolbar">
+            <input type="text" id="rechercheCandidat" class="gp-input"
+                   placeholder="🔍 Rechercher un candidat par nom..." onkeyup="appliquerFiltres()">
+            <label class="gp-modal-chip">
+                <input type="checkbox" id="filtreSansGroupe" onchange="appliquerFiltres()">
+                Afficher uniquement les candidats sans groupe
+            </label>
+        </div>
+        <div id="candidatsList" class="gp-modal-list">
+            @forelse($candidats as $candidat)
+                @php $groupeExistant = $candidat->groupes->first(); @endphp
+                @if($groupeExistant)
+                    <label class="gp-modal-item locked" data-nom="{{ strtolower($candidat->nom.' '.$candidat->prenom) }}" data-a-groupe="1">
+                        <input type="checkbox" value="{{ $candidat->id }}" disabled>
+                        {{ $candidat->nom }} {{ $candidat->prenom }} 🔒 (déjà dans : {{ $groupeExistant->nomGroupe }})
+                    </label>
+                @else
+                    <label class="gp-modal-item" data-nom="{{ strtolower($candidat->nom.' '.$candidat->prenom) }}" data-a-groupe="0">
+                        <input type="checkbox" name="candidat_ids[]" value="{{ $candidat->id }}" onchange="majCompteur()" form="groupeForm">
+                        {{ $candidat->nom }} {{ $candidat->prenom }}
+                    </label>
+                @endif
+            @empty
+                <div class="gp-empty-msg">📭 Aucun candidat disponible.</div>
+            @endforelse
+        </div>
+        <div class="gp-modal-footer">
+            <button type="button" class="gp-modal-done-btn" onclick="fermerModaleCandidats()">✓ Terminé</button>
+        </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const selectEl   = document.getElementById('candidatsSelect');
-    const compteurEl = document.getElementById('compteurCandidats');
-    const rechercheEl = document.getElementById('rechercheCandidat');
-    const filtreEl   = document.getElementById('filtreSansGroupe');
+function ouvrirModaleCandidats() {
+    document.getElementById('candidatsModalOverlay').classList.add('open');
+}
 
-    function majCompteur() {
-        compteurEl.textContent = Array.from(selectEl.selectedOptions).length;
-    }
+function fermerModaleCandidats() {
+    document.getElementById('candidatsModalOverlay').classList.remove('open');
+}
 
-    function appliquerFiltres() {
-        const terme = rechercheEl.value.trim().toLowerCase();
-        const seulementSansGroupe = filtreEl.checked;
+function majCompteur() {
+    var checked = document.querySelectorAll('#candidatsList input[type=checkbox]:checked').length;
+    document.getElementById('compteurCandidats').textContent = checked;
+    document.getElementById('candidatsFieldLabel').textContent = checked > 0
+        ? (checked + ' candidat(s) sélectionné(s)')
+        : '-- Choisir un ou plusieurs candidats --';
+}
 
-        Array.from(selectEl.options).forEach(opt => {
-            const correspondNom = !terme || opt.dataset.nom.includes(terme);
-            const correspondFiltre = !seulementSansGroupe || opt.dataset.aGroupe === '0';
-            opt.hidden = !(correspondNom && correspondFiltre);
-        });
-    }
+function appliquerFiltres() {
+    var terme = document.getElementById('rechercheCandidat').value.trim().toLowerCase();
+    var seulementSansGroupe = document.getElementById('filtreSansGroupe').checked;
 
-    selectEl.addEventListener('change', majCompteur);
-    rechercheEl.addEventListener('input', appliquerFiltres);
-    filtreEl.addEventListener('change', appliquerFiltres);
+    document.querySelectorAll('#candidatsList .gp-modal-item').forEach(function(item) {
+        var correspondNom = !terme || (item.dataset.nom || '').indexOf(terme) !== -1;
+        var correspondFiltre = !seulementSansGroupe || item.dataset.aGroupe === '0';
+        item.style.display = (correspondNom && correspondFiltre) ? '' : 'none';
+    });
+}
 
-    majCompteur();
+document.getElementById('candidatsModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) fermerModaleCandidats();
 });
+
+document.addEventListener('DOMContentLoaded', majCompteur);
 </script>
 
 </x-layouts::app>

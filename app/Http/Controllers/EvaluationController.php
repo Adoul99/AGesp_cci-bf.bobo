@@ -250,7 +250,7 @@ class EvaluationController extends Controller
             false, $type, $request->note, $request->mention
         );
 
-        Evaluation::create([
+        $evaluation = Evaluation::create([
             'candidat_id'    => $request->candidat_id,
             'typeSession_id' => $request->typeSession_id,
             'dateEvaluation' => $request->dateEvaluation,
@@ -261,6 +261,10 @@ class EvaluationController extends Controller
             'moniteur_id'    => $request->moniteur_id,
             'observation'    => $request->observation,
         ]);
+
+        // Recalcule le statut du candidat pour refléter cette nouvelle évaluation
+        // (cas manquant jusqu'ici : seul le formulaire groupé le faisait).
+        $evaluation->candidat?->mettreAJourStatut();
 
         return redirect()->route('evaluations.index')
             ->with('success', 'Évaluation enregistrée avec succès.');
@@ -290,6 +294,13 @@ class EvaluationController extends Controller
             'moniteur_id'    => 'nullable|exists:moniteurs,id',
         ]);
 
+        // On mémorise l'ancien candidat AVANT modification, au cas où
+        // candidat_id changerait dans ce formulaire (rare, mais possible) :
+        // il faut recalculer le statut de L'ANCIEN candidat aussi, sinon un
+        // statut obsolète (ex: "code_admis") pourrait lui rester attribué
+        // à tort après que son évaluation lui a été retirée.
+        $ancienCandidatId = $evaluation->candidat_id;
+
         $typeSession = $request->typeSession_id ? TypeSession::find($request->typeSession_id) : null;
         $type        = $typeSession?->type;
 
@@ -309,6 +320,17 @@ class EvaluationController extends Controller
             'observation'    => $request->observation,
         ]);
 
+        // Recalcule le statut du candidat actuel (résultat modifié : ex.
+        // reussi -> echoue) — sans cet appel, un ancien statut "code_admis"
+        // pouvait rester figé en base même après correction de l'évaluation.
+        $evaluation->candidat?->mettreAJourStatut();
+
+        // Si le candidat a changé dans ce formulaire, recalcule aussi
+        // l'ancien candidat qui vient de perdre cette évaluation.
+        if ($ancienCandidatId && $ancienCandidatId != $request->candidat_id) {
+            Candidat::find($ancienCandidatId)?->mettreAJourStatut();
+        }
+
         return redirect()->route('evaluations.index')
             ->with('success', 'Évaluation mise à jour.');
     }
@@ -317,7 +339,16 @@ class EvaluationController extends Controller
 
     public function destroy(Evaluation $evaluation)
     {
+        // On récupère le candidat AVANT suppression, sinon la référence est perdue.
+        $candidat = $evaluation->candidat;
+
         $evaluation->delete();
+
+        // Sans cet appel, le statut du candidat (ex: "code_admis") reste figé
+        // en base même si la preuve qui le justifiait (cette évaluation) vient
+        // de disparaître — c'est exactement le bug observé en production.
+        $candidat?->mettreAJourStatut();
+
         return redirect()->route('evaluations.index')
             ->with('success', 'Évaluation supprimée.');
     }

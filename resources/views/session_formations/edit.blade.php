@@ -9,12 +9,6 @@
     --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
     --transition-normal: 300ms ease-in-out; --radius-md: 8px; --radius-lg: 12px;
 }
-.multi-select {
-    width:100%; min-height:180px; padding:0; border:2px solid var(--color-gray-200);
-    border-radius:var(--radius-md); background:#FFFFFF; color:var(--color-dark); font-size:0.85rem; overflow-y:auto;
-}
-.multi-select option { padding:0.55rem 0.85rem; }
-.multi-select option:checked { background: var(--color-green-light) !important; color:white; }
 </style>
 
 <div class="content-wrapper" style="padding:2rem;">
@@ -94,34 +88,24 @@
                     </select>
                 </div>
 
-            </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">Groupe</label>
+                    <div style="width:100%; padding:0.75rem 1rem; border:2px solid var(--color-gray-200); border-radius:var(--radius-md); font-size:0.875rem; color:var(--color-dark); background:var(--color-gray-100); font-weight:600;">
+                        👥 {{ $sessionFormation->groupe->nomGroupe ?? '—' }}
+                    </div>
+                    <p style="margin:0.4rem 0 0 0; font-size:0.72rem; color:var(--color-gray-500);">
+                        Le groupe est fixé à la création de la session et ne peut pas être modifié ici.
+                    </p>
+                </div>
 
-            {{-- Candidats sans groupe : ajout supplémentaire --}}
-            <div style="margin-top:1.75rem;">
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600; font-size:0.8rem; text-transform:uppercase; color:var(--color-dark);">
-                    Ajouter des candidats sans groupe
-                </label>
-                <p style="margin:0 0 0.6rem 0; font-size:0.78rem; color:var(--color-gray-500);">
-                    Déroulez la liste et maintenez <strong>Ctrl</strong> (ou <strong>Cmd</strong> sur Mac) enfoncé pour sélectionner
-                    plusieurs candidats sans groupe à ajouter à cette session.
-                </p>
-                <select name="candidats_sans_groupe[]" class="multi-select" multiple size="6">
-                    @forelse($candidatsSansGroupe as $c)
-                        <option value="{{ $c->id }}" {{ $candidatsSession->pluck('id')->contains($c->id) ? 'selected' : '' }}>
-                            {{ $c->nom }} {{ $c->prenom }}
-                        </option>
-                    @empty
-                        <option disabled>Aucun candidat sans groupe</option>
-                    @endforelse
-                </select>
             </div>
         </div>
 
-        {{-- SAISIE ABSENCES + NOTES --}}
+        {{-- SAISIE ABSENCES + NOTES : candidats du groupe, en lecture/gestion des présences uniquement --}}
         @if($candidatsSession->isNotEmpty())
         <div style="background:white; padding:2rem; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); border:1px solid var(--color-gray-100); margin-bottom:2rem;">
             <h2 style="font-size:1rem; font-weight:700; color:var(--color-dark); margin-bottom:0.5rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-gold);">
-                📋 Présences / Absences & Notes des candidats
+                📋 Présences / Absences & Notes des candidats du groupe
             </h2>
             <p style="color:var(--color-gray-500); font-size:0.8rem; margin:0 0 1.25rem 0;">
                 Cochez la case <strong>Absent</strong> si le candidat n'est pas présent. Les candidats présents doivent recevoir une note avant la clôture.
@@ -178,7 +162,7 @@
         </div>
         @else
         <div style="margin-bottom:2rem; padding:1.25rem; background:rgba(252,209,22,0.1); border-left:4px solid var(--color-gold); border-radius:var(--radius-md); color:var(--color-gold-dark);">
-            ⚠️ Aucun candidat n'est encore attaché à cette session. Sélectionnez des candidats sans groupe ci-dessus pour en ajouter.
+            ⚠️ Aucun candidat n'est attaché à cette session. Vérifiez que le groupe sélectionné à la création contient bien des candidats.
         </div>
         @endif
 

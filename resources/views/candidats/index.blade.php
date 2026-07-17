@@ -144,6 +144,34 @@
         /* ── Vague décorative en bas de carte ── */
         .wave-footer { position: relative; height: 34px; overflow: hidden; }
         .wave-footer svg { position: absolute; bottom: -2px; left: 0; width: 100%; height: 100%; }
+
+        /* ── Boîte de dialogue custom de confirmation de suppression (identique à examens/index) ── */
+        .del-modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(26,26,26,0.6);
+            z-index: 1000; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .del-modal-overlay.open { display: flex; }
+        .del-modal-box {
+            background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+            max-width: 420px; width: 100%; padding: 2rem; text-align: center;
+            border-top: 5px solid var(--color-red);
+        }
+        .del-modal-icon {
+            width: 56px; height: 56px; border-radius: 50%; background: rgba(206,17,38,0.1);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+            font-size: 1.6rem;
+        }
+        .del-modal-title { font-size: 1.1rem; font-weight: 800; color: var(--color-dark); margin: 0 0 0.5rem; }
+        .del-modal-text { font-size: 0.875rem; color: var(--color-gray-500); margin: 0 0 1.5rem; line-height: 1.5; }
+        .del-modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
+        .del-modal-btn {
+            padding: 0.7rem 1.5rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; border: 2px solid transparent; transition: all var(--transition-normal);
+        }
+        .del-modal-btn-cancel { background: var(--color-gray-100); color: var(--color-dark); }
+        .del-modal-btn-cancel:hover { background: var(--color-gray-200); }
+        .del-modal-btn-confirm { background: var(--color-red); color: white; border-color: var(--color-red); }
+        .del-modal-btn-confirm:hover { background: var(--color-red-dark); }
     </style>
 
     <div class="content-wrapper page-bg">
@@ -321,16 +349,17 @@
                                    onmouseout="this.style.backgroundColor='var(--color-gray-100)';this.style.color='var(--color-green)';this.style.transform='scale(1)'"
                                    title="Éditer">✎</a>
 
-                                {{-- Supprimer --}}
-                                <form action="{{ route('candidats.destroy', $candidat->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce candidat ?');">
+                                {{-- Supprimer : ouvre la boîte de dialogue custom au lieu du confirm() natif --}}
+                                <form id="delete-candidat-form-{{ $candidat->id }}" action="{{ route('candidats.destroy', $candidat->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
-                                            style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);background-color:var(--color-gray-100);color:#D32F2F;border:none;cursor:pointer;font-size:1.2rem;padding:0;"
-                                            onmouseover="this.style.backgroundColor='#D32F2F';this.style.color='white';this.style.transform='scale(1.1)'"
-                                            onmouseout="this.style.backgroundColor='var(--color-gray-100)';this.style.color='#D32F2F';this.style.transform='scale(1)'"
-                                            title="Supprimer">✕</button>
                                 </form>
+                                <button type="button"
+                                        onclick="openDeleteModal('delete-candidat-form-{{ $candidat->id }}', '{{ addslashes($candidat->nom . ' ' . $candidat->prenom) }}')"
+                                        style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);background-color:var(--color-gray-100);color:#D32F2F;border:none;cursor:pointer;font-size:1.2rem;padding:0;"
+                                        onmouseover="this.style.backgroundColor='#D32F2F';this.style.color='white';this.style.transform='scale(1.1)'"
+                                        onmouseout="this.style.backgroundColor='var(--color-gray-100)';this.style.color='#D32F2F';this.style.transform='scale(1)'"
+                                        title="Supprimer">✕</button>
                             </div>
                         </td>
                     </tr>
@@ -361,4 +390,45 @@
         </div>
         @endif
     </div>
+
+    {{-- Boîte de dialogue de confirmation de suppression --}}
+    <div id="deleteModalOverlay" class="del-modal-overlay">
+        <div class="del-modal-box">
+            <div class="del-modal-icon">🗑️</div>
+            <h3 class="del-modal-title">Supprimer ce candidat ?</h3>
+            <p class="del-modal-text">
+                Vous êtes sur le point de supprimer <strong id="deleteModalCandidatName">ce candidat</strong>.
+                Cette action est <strong>irréversible</strong> et supprimera également son dossier, ses inscriptions et son historique.
+            </p>
+            <div class="del-modal-actions">
+                <button type="button" class="del-modal-btn del-modal-btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+                <button type="button" class="del-modal-btn del-modal-btn-confirm" id="deleteModalConfirmBtn">✕ Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var formIdASupprimer = null;
+
+        function openDeleteModal(formId, nomComplet) {
+            formIdASupprimer = formId;
+            document.getElementById('deleteModalCandidatName').textContent = nomComplet;
+            document.getElementById('deleteModalOverlay').classList.add('open');
+        }
+
+        function closeDeleteModal() {
+            formIdASupprimer = null;
+            document.getElementById('deleteModalOverlay').classList.remove('open');
+        }
+
+        document.getElementById('deleteModalConfirmBtn').addEventListener('click', function() {
+            if (formIdASupprimer) {
+                document.getElementById(formIdASupprimer).submit();
+            }
+        });
+
+        document.getElementById('deleteModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    </script>
 </x-layouts::app>

@@ -152,39 +152,65 @@
         </div>
 
         <div id="placeholder-empty" class="pg-card" style="text-align:center; color:var(--text-muted); padding:3rem;">
-            👆 Choisissez un <strong style="color:var(--text-light);">type d'examen</strong> ci-dessus pour afficher la liste des candidats aptes (ayant validé cette étape ou à reprogrammer suite à un échec).
+            👆 Choisissez un <strong style="color:var(--text-light);">type d'examen</strong> ci-dessus pour afficher les candidats validés et ceux à reprogrammer.
         </div>
 
         <div id="resultats-container" style="display:none;">
 
-            {{-- Candidats aptes : validés + à reprogrammer après échec --}}
+            {{-- Liste 1 : Candidats VALIDÉS (formation validée, prêts à passer l'examen) --}}
             <div class="pg-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-green-light);">
                     <h2 class="pg-section-title" style="color:#6EE7C0;">
-                        🏆 <span id="titre-eligibles">Candidats aptes à être programmés</span>
-                        <span id="count-eligibles" class="pg-count-badge" style="background:rgba(0,122,94,0.3); color:#6EE7C0;">0</span>
+                        ✅ <span id="titre-valides">Candidats validés</span>
+                        <span id="count-valides" class="pg-count-badge" style="background:rgba(0,122,94,0.3); color:#6EE7C0;">0</span>
                     </h2>
                 </div>
                 <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem;">
-                    Cette liste regroupe, tous groupes confondus, les candidats ayant validé cette étape ET ceux ayant
-                    échoué à un examen de ce type (à reprogrammer). Cliquez sur le champ ci-dessous pour ouvrir la liste
-                    et cochez un ou plusieurs candidats.
+                    Candidats ayant validé cette étape de formation et prêts à passer l'examen officiel pour la première fois.
                 </p>
 
-                {{-- Champ compact type "GROUPE" : ouvre/ferme la liste au clic, plus de gros tableau visible --}}
-                <div class="pg-dropdown" id="eligiblesDropdown">
-                    <div class="pg-input pg-dropdown-field" onclick="toggleEligiblesDropdown()">
-                        <span id="eligiblesFieldLabel">-- Choisir un ou plusieurs candidats --</span>
-                        <svg id="eligiblesArrow" class="pg-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="pg-dropdown" id="validesDropdown">
+                    <div class="pg-input pg-dropdown-field" onclick="toggleDropdown('valides')">
+                        <span id="validesFieldLabel">-- Choisir un ou plusieurs candidats --</span>
+                        <svg id="validesArrow" class="pg-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 9l-7 7-7-7"/>
                         </svg>
                     </div>
-                    <div id="eligiblesPanel" class="pg-dropdown-panel">
+                    <div id="validesPanel" class="pg-dropdown-panel">
                         <div class="pg-dropdown-search">
-                            <input type="text" id="eligiblesSearch" onkeyup="filterEligibles()"
-                                   placeholder="🔍 Rechercher un candidat par nom ou prénom..." class="pg-input" style="margin:0;">
+                            <input type="text" id="validesSearch" onkeyup="filterList('valides')"
+                                   placeholder="🔍 Rechercher un candidat..." class="pg-input" style="margin:0;">
                         </div>
-                        <div id="eligiblesList"></div>
+                        <div id="validesList"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Liste 2 : Candidats ÉCHOUÉS à reprogrammer --}}
+            <div class="pg-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:2px solid var(--color-red-light);">
+                    <h2 class="pg-section-title" style="color:#FFB3AA;">
+                        ↻ <span id="titre-reprog">Candidats à reprogrammer (échec)</span>
+                        <span id="count-reprog" class="pg-count-badge" style="background:rgba(206,17,38,0.3); color:#FFB3AA;">0</span>
+                    </h2>
+                </div>
+                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem;">
+                    Candidats ayant échoué (Ajourné) à un précédent examen officiel de ce type et devant le repasser.
+                </p>
+
+                <div class="pg-dropdown" id="reprogDropdown">
+                    <div class="pg-input pg-dropdown-field" onclick="toggleDropdown('reprog')">
+                        <span id="reprogFieldLabel">-- Choisir un ou plusieurs candidats --</span>
+                        <svg id="reprogArrow" class="pg-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                    <div id="reprogPanel" class="pg-dropdown-panel">
+                        <div class="pg-dropdown-search">
+                            <input type="text" id="reprogSearch" onkeyup="filterList('reprog')"
+                                   placeholder="🔍 Rechercher un candidat..." class="pg-input" style="margin:0;">
+                        </div>
+                        <div id="reprogList"></div>
                     </div>
                 </div>
             </div>
@@ -220,7 +246,7 @@
 <script>
 let ajoutesManuellement = new Set();
 let typeActuel = null;
-let candidatsCourants = [];
+let listesCourantes = { valides: [], reprog: [] };
 
 function chargerCandidatsParType(typeSessionId) {
     var placeholder = document.getElementById('placeholder-empty');
@@ -238,26 +264,34 @@ function chargerCandidatsParType(typeSessionId) {
     var libelles = { code: 'Code', creneau: 'Créneau', conduite: 'Conduite' };
     var libelle = libelles[typeActuel] || typeActuel;
 
-    document.getElementById('titre-eligibles').textContent = 'Candidats aptes pour ' + libelle;
+    document.getElementById('titre-valides').textContent = 'Candidats validés — ' + libelle;
+    document.getElementById('titre-reprog').textContent  = 'À reprogrammer — ' + libelle;
 
     placeholder.style.display = 'none';
     container.style.display   = 'block';
-    document.getElementById('eligiblesList').innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">Chargement...</div>';
+    document.getElementById('validesList').innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">Chargement...</div>';
+    document.getElementById('reprogList').innerHTML  = '<div class="pg-dropdown-item" style="cursor:default;">Chargement...</div>';
 
     fetch('/programmations/candidats-par-type/' + typeSessionId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            candidatsCourants = data.eligibles;
-            renderEligibles(candidatsCourants);
-            document.getElementById('count-eligibles').textContent = candidatsCourants.length;
+            listesCourantes.valides = data.valides;
+            listesCourantes.reprog  = data.a_reprogrammer;
+            renderListe('valides', listesCourantes.valides);
+            renderListe('reprog', listesCourantes.reprog);
+            document.getElementById('count-valides').textContent = listesCourantes.valides.length;
+            document.getElementById('count-reprog').textContent  = listesCourantes.reprog.length;
             updateSelection();
         });
 }
 
-function renderEligibles(list) {
-    var container = document.getElementById('eligiblesList');
+function renderListe(key, list) {
+    var container = document.getElementById(key + 'List');
     if (!list.length) {
-        container.innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">Aucun candidat apte pour le moment. Utilisez l\u2019ajout manuel si besoin.</div>';
+        var msg = key === 'valides'
+            ? 'Aucun candidat validé pour le moment.'
+            : 'Aucun candidat à reprogrammer pour le moment.';
+        container.innerHTML = '<div class="pg-dropdown-item" style="cursor:default;">' + msg + '</div>';
         return;
     }
 
@@ -268,25 +302,25 @@ function renderEligibles(list) {
         } else {
             valeur = c.mention ? (c.mention === 'bien' ? 'Bien' : 'Passable') : '';
         }
-        var tag = c.reprogrammation ? ' — ↻ à reprogrammer (échec)' : (valeur ? ' — ' + valeur : '');
+        var tag = valeur ? ' — ' + valeur : '';
         var search = (c.nom + ' ' + c.prenom).toLowerCase();
         return '<label class="pg-dropdown-item" data-search="' + search + '">'
-            + '<input type="checkbox" value="' + c.id + '" onchange="updateSelection()">'
+            + '<input type="checkbox" class="chk-' + key + '" value="' + c.id + '" onchange="updateSelection()">'
             + c.nom + ' ' + c.prenom + tag
             + '</label>';
     }).join('');
 }
 
-function filterEligibles() {
-    var query = document.getElementById('eligiblesSearch').value.toLowerCase().trim();
-    document.querySelectorAll('#eligiblesList .pg-dropdown-item').forEach(function(item) {
+function filterList(key) {
+    var query = document.getElementById(key + 'Search').value.toLowerCase().trim();
+    document.querySelectorAll('#' + key + 'List .pg-dropdown-item').forEach(function(item) {
         item.style.display = (item.dataset.search || '').indexOf(query) !== -1 ? '' : 'none';
     });
 }
 
-function toggleEligiblesDropdown() {
-    document.getElementById('eligiblesPanel').classList.toggle('open');
-    document.getElementById('eligiblesArrow').classList.toggle('open');
+function toggleDropdown(key) {
+    document.getElementById(key + 'Panel').classList.toggle('open');
+    document.getElementById(key + 'Arrow').classList.toggle('open');
 }
 
 function rechercherCandidat(q) {
@@ -338,16 +372,21 @@ function renderAjoutesManuellement() {
 }
 
 function updateSelection() {
-    var checkedEligibles = Array.from(document.querySelectorAll('#eligiblesList input[type=checkbox]:checked')).map(function(cb) { return cb.value; });
+    var checkedValides = Array.from(document.querySelectorAll('.chk-valides:checked')).map(function(cb) { return cb.value; });
+    var checkedReprog  = Array.from(document.querySelectorAll('.chk-reprog:checked')).map(function(cb) { return cb.value; });
     var manuels = Array.from(ajoutesManuellement).map(function(item) { return String(JSON.parse(item).id); });
-    var allIds = Array.from(new Set(checkedEligibles.concat(manuels)));
+    var allIds = Array.from(new Set(checkedValides.concat(checkedReprog, manuels)));
 
     var info = document.getElementById('selection-info');
     document.getElementById('selection-count').textContent = allIds.length;
     info.style.display = allIds.length > 0 ? 'block' : 'none';
 
-    document.getElementById('eligiblesFieldLabel').textContent = allIds.length > 0
-        ? (allIds.length + ' candidat(s) sélectionné(s)')
+    document.getElementById('validesFieldLabel').textContent = checkedValides.length > 0
+        ? (checkedValides.length + ' candidat(s) sélectionné(s)')
+        : '-- Choisir un ou plusieurs candidats --';
+
+    document.getElementById('reprogFieldLabel').textContent = checkedReprog.length > 0
+        ? (checkedReprog.length + ' candidat(s) sélectionné(s)')
         : '-- Choisir un ou plusieurs candidats --';
 
     var hiddenContainer = document.getElementById('candidats-hidden-inputs');
@@ -362,10 +401,12 @@ function updateSelection() {
 }
 
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('#eligiblesDropdown')) {
-        document.getElementById('eligiblesPanel').classList.remove('open');
-        document.getElementById('eligiblesArrow').classList.remove('open');
-    }
+    ['valides', 'reprog'].forEach(function(key) {
+        if (!e.target.closest('#' + key + 'Dropdown')) {
+            document.getElementById(key + 'Panel').classList.remove('open');
+            document.getElementById(key + 'Arrow').classList.remove('open');
+        }
+    });
     if (!e.target.closest('#search-candidat') && !e.target.closest('#search-results')) {
         document.getElementById('search-results').style.display = 'none';
     }

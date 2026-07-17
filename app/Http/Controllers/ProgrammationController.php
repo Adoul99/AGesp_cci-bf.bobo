@@ -39,28 +39,32 @@ class ProgrammationController extends Controller
     }
 
     /**
-     * AJAX : retourne, pour un type de session donné, la liste UNIQUE des
-     * candidats à proposer dans le champ de sélection multiple de la
-     * programmation.
+     * AJAX : retourne, pour un type de session donné, DEUX listes distinctes
+     * à proposer dans la programmation :
      *
-     * Cette liste regroupe, SANS distinction de groupe et même si la
-     * session de formation correspondante est déjà clôturée :
-     *   1. les candidats ayant VALIDÉ la session de formation
-     *      (Code : meilleure note ≥ 25/30 — Créneau/Conduite : mention
-     *      "bien" ou "passable"),
-     *   2. les candidats ayant ÉCHOUÉ à un examen de ce même type
-     *      (résultat "Ajourné") et qui doivent donc être reprogrammés.
+     *   - "valides"        : candidats ayant VALIDÉ la session de formation
+     *                        (Code : meilleure note >= 25/30 — Créneau/Conduite :
+     *                        mention "bien" ou "passable"), prêts à passer
+     *                        l'examen officiel de ce type pour la première fois.
      *
-     * Les candidats pas encore évalués ne sont PAS affichés ici (leurs
-     * notes restent enregistrées en base, simplement non montrées dans
-     * cette liste). Un candidat déjà admis à ce type précis, ou déjà
-     * programmé et en attente de son examen, est exclu (pas de doublon).
+     *   - "a_reprogrammer" : candidats ayant ÉCHOUÉ à un examen OFFICIEL de ce
+     *                        même type (résultat "Ajourné") et qui doivent
+     *                        donc repasser cet examen.
+     *
+     * Un candidat déjà ADMIS officiellement à ce type précis est exclu
+     * DÉFINITIVEMENT des deux listes (il n'a plus besoin d'être programmé
+     * pour ce type). Un candidat déjà programmé et en attente de son
+     * résultat est également exclu (pas de doublon).
+     *
+     * Note : un candidat qui a validé sa formation interne ET échoué un
+     * examen officiel apparaît dans "valides" uniquement (aValide prime),
+     * pour éviter les doublons entre les deux listes.
      */
     public function candidatsParType(Request $request, TypeSession $typeSession)
     {
         $type = strtolower($typeSession->type);
 
-        // Déjà admis à ce type → plus besoin d'être (re)programmé
+        // Déjà admis à ce type → exclu définitivement, plus jamais reproposé
         $dejaAdmisIds = Candidat::whereHas('examens', function ($q) use ($typeSession) {
             $q->where('typeSession_id', $typeSession->id)
               ->where('candidat_examen.resultat', 'Admis');
@@ -84,7 +88,8 @@ class ProgrammationController extends Controller
             ->orderBy('nom')
             ->get();
 
-        $eligibles = collect();
+        $valides        = collect();
+        $aReprogrammer  = collect();
 
         foreach ($candidats as $c) {
             $evalsType = $c->evaluations->filter(fn($e) => $e->typeSession?->type === $type);
@@ -104,38 +109,36 @@ class ProgrammationController extends Controller
                 $meilleureNote = $evalsType->whereNotNull('note')->max('note');
                 $item['note']    = $meilleureNote;
                 $item['mention'] = null;
-
                 $aValide = !is_null($meilleureNote) && $meilleureNote >= 25;
-
-                if ($aValide || $aEchoueExamen) {
-                    $item['reprogrammation'] = $aEchoueExamen && !$aValide;
-                    $eligibles->push($item);
-                }
             } else {
                 $meilleureMention = $evalsType->whereNotNull('mention')
                     ->sortByDesc(fn($e) => $this->rangMention($e->mention))
                     ->first()?->mention;
-
                 $item['note']    = null;
                 $item['mention'] = $meilleureMention;
-
                 $aValide = in_array($meilleureMention, ['bien', 'passable']);
+            }
 
-                if ($aValide || $aEchoueExamen) {
-                    $item['reprogrammation'] = $aEchoueExamen && !$aValide;
-                    $eligibles->push($item);
-                }
+            // Priorité à "valides" pour éviter qu'un candidat apparaisse
+            // dans les deux listes à la fois.
+            if ($aValide) {
+                $valides->push($item);
+            } elseif ($aEchoueExamen) {
+                $aReprogrammer->push($item);
             }
         }
 
         if ($type === 'code') {
-            $eligibles = $eligibles->sortByDesc('note')->values();
+            $valides       = $valides->sortByDesc('note')->values();
+            $aReprogrammer = $aReprogrammer->sortByDesc('note')->values();
         } else {
-            $eligibles = $eligibles->sortByDesc(fn($e) => $this->rangMention($e['mention']))->values();
+            $valides       = $valides->sortByDesc(fn($e) => $this->rangMention($e['mention']))->values();
+            $aReprogrammer = $aReprogrammer->sortByDesc(fn($e) => $this->rangMention($e['mention']))->values();
         }
 
         return response()->json([
-            'eligibles' => $eligibles,
+            'valides'        => $valides,
+            'a_reprogrammer' => $aReprogrammer,
         ]);
     }
 
